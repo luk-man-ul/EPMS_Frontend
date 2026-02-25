@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import api from '../../../../utils/api'
 
 interface Task {
   id: string
@@ -13,10 +14,47 @@ interface Task {
 
 interface TasksTableProps {
   tasks: Task[]
+  role?: string
 }
 
-const TasksTable = ({ tasks }: TasksTableProps) => {
+const TasksTable = ({ tasks, role }: TasksTableProps) => {
   const navigate = useNavigate()
+
+  ////////////////////////////////////////////////////////////////
+  // STATUS UPDATE (EMPLOYEE + TEAM_LEAD)
+  ////////////////////////////////////////////////////////////////
+
+  const handleStatusChange = async (
+    taskId: string,
+    newStatus: string
+  ) => {
+    try {
+      await api.patch(`/tasks/${taskId}`, {
+        status: mapToBackendStatus(newStatus),
+      })
+
+      window.location.reload() // simple refresh for now
+    } catch (err) {
+      console.error('Failed to update status', err)
+    }
+  }
+
+  const mapToBackendStatus = (status: string) => {
+    switch (status) {
+      case 'todo':
+        return 'TODO'
+      case 'in-progress':
+        return 'IN_PROGRESS'
+      case 'review':
+        return 'REVIEW'
+      case 'completed':
+        return 'COMPLETED'
+      default:
+        return status.toUpperCase()
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////
 
   const getPriorityConfig = (priority: string) => {
     switch (priority) {
@@ -48,6 +86,8 @@ const TasksTable = ({ tasks }: TasksTableProps) => {
     }
   }
 
+  ////////////////////////////////////////////////////////////////
+
   return (
     <div style={{
       background: '#ffffff',
@@ -55,17 +95,18 @@ const TasksTable = ({ tasks }: TasksTableProps) => {
       border: '1px solid #e5e5e5',
       overflow: 'hidden',
     }}>
-      {/* Table Header */}
+
+      {/* Header */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '100px 1fr 140px 110px 100px 100px 90px 120px',
+        gridTemplateColumns: '100px 1fr 140px 120px 100px 130px 100px 120px',
         gap: '12px',
         padding: '16px 20px',
         background: '#fafafa',
         borderBottom: '1px solid #e5e5e5',
         fontSize: '13px',
         fontWeight: 600,
-        color: '#666666',
+        color: '#666',
       }}>
         <div>Task ID</div>
         <div>Task Title</div>
@@ -77,7 +118,7 @@ const TasksTable = ({ tasks }: TasksTableProps) => {
         <div>Progress</div>
       </div>
 
-      {/* Table Body */}
+      {/* Rows */}
       {tasks.map((task) => {
         const priorityConfig = getPriorityConfig(task.priority)
         const statusConfig = getStatusConfig(task.status)
@@ -87,54 +128,27 @@ const TasksTable = ({ tasks }: TasksTableProps) => {
             key={task.id}
             style={{
               display: 'grid',
-              gridTemplateColumns: '100px 1fr 140px 110px 100px 100px 90px 120px',
+              gridTemplateColumns: '100px 1fr 140px 120px 100px 130px 100px 120px',
               gap: '12px',
               padding: '16px 20px',
               borderBottom: '1px solid #f5f5f5',
               cursor: 'pointer',
-              transition: 'all 0.2s ease',
             }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#fafafa'}
-            onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
-            onClick={() => navigate(`/teamlead/tasks/${task.id}`)}
+            onClick={() => navigate(`/app/tasks/${task.id}`)}
           >
-            <div style={{
-              fontSize: '12px',
-              fontFamily: 'monospace',
-              fontWeight: 600,
-              color: '#1a1a1a',
-            }}>
-              {task.id}
+            <div style={{ fontSize: '12px', fontFamily: 'monospace', fontWeight: 600 }}>
+              {task.id.slice(0, 8)}
             </div>
 
-            <div style={{
-              fontSize: '14px',
-              fontWeight: 500,
-              color: '#1a1a1a',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}>
+            <div style={{ fontSize: '14px', fontWeight: 500 }}>
               {task.title}
             </div>
 
-            <div style={{
-              fontSize: '12px',
-              color: '#666666',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}>
+            <div style={{ fontSize: '12px', color: '#666' }}>
               {task.project}
             </div>
 
-            <div style={{
-              fontSize: '12px',
-              color: '#666666',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}>
+            <div style={{ fontSize: '12px', color: '#666' }}>
               {task.assignedTo}
             </div>
 
@@ -152,52 +166,60 @@ const TasksTable = ({ tasks }: TasksTableProps) => {
               </span>
             </div>
 
-            <div>
-              <span style={{
-                padding: '3px 8px',
-                borderRadius: '6px',
-                fontSize: '10px',
-                fontWeight: 600,
-                color: statusConfig.color,
-                background: statusConfig.bg,
-              }}>
-                {statusConfig.label}
-              </span>
+            {/* STATUS COLUMN */}
+            <div onClick={(e) => e.stopPropagation()}>
+              {role === 'EMPLOYEE' ? (
+                <select
+                  value={task.status}
+                  onChange={(e) =>
+                    handleStatusChange(task.id, e.target.value)
+                  }
+                  style={{
+                    padding: '4px 6px',
+                    fontSize: '11px',
+                    borderRadius: '6px',
+                  }}
+                >
+                  <option value="todo">To Do</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="review">Review</option>
+                  <option value="completed">Completed</option>
+                </select>
+              ) : (
+                <span style={{
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  color: statusConfig.color,
+                  background: statusConfig.bg,
+                }}>
+                  {statusConfig.label}
+                </span>
+              )}
             </div>
 
-            <div style={{
-              fontSize: '12px',
-              color: '#666666',
-            }}>
-              {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              {task.dueDate
+                ? new Date(task.dueDate).toLocaleDateString()
+                : '-'}
             </div>
 
             <div>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{
                   flex: 1,
                   height: '6px',
                   background: '#f5f5f5',
                   borderRadius: '3px',
-                  overflow: 'hidden',
                 }}>
                   <div style={{
                     width: `${task.progress}%`,
                     height: '100%',
                     background: task.progress === 100 ? '#10b981' : '#4a90e2',
-                    transition: 'width 0.3s ease',
                   }} />
                 </div>
-                <span style={{
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: '#666666',
-                  minWidth: '32px',
-                }}>
+                <span style={{ fontSize: '11px', fontWeight: 600 }}>
                   {task.progress}%
                 </span>
               </div>
@@ -210,12 +232,9 @@ const TasksTable = ({ tasks }: TasksTableProps) => {
         <div style={{
           textAlign: 'center',
           padding: '60px 20px',
-          color: '#666666',
+          color: '#666',
         }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
-          <div style={{ fontSize: '16px', fontWeight: 500 }}>
-            No tasks found
-          </div>
+          No tasks found
         </div>
       )}
     </div>

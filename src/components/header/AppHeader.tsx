@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getCurrentUser, logout } from '../../utils/auth'
 
-const TeamLeadHeader = () => {
+const AppHeader = () => {
   const navigate = useNavigate()
   const user = getCurrentUser()
   const [showDropdown, setShowDropdown] = useState(false)
@@ -83,4 +83,4 @@ const TeamLeadHeader = () => {
   )
 }
 
-export default TeamLeadHeader
+export default AppHeader

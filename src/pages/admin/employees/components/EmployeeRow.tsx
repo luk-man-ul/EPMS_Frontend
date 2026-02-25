@@ -1,12 +1,17 @@
-import  type { Employee } from '../types/employee.types'
+import type { Employee } from '../types/employee.types'
 import EmployeeStatusBadge from './EmployeeStatus'
 import EmployeeActions from './EmployeeActions'
 
 interface Props {
   employee: Employee
+  onRefresh: () => void
 }
 
-const EmployeeRow = ({ employee }: Props) => {
+const EmployeeRow = ({ employee, onRefresh }: Props) => {
+  const fullName = `${employee.firstName} ${employee.lastName}`
+  const roleNames =
+    employee.roles?.map((r) => r.role.name).join(', ') || '—'
+
   return (
     <tr
       style={{
@@ -20,6 +25,7 @@ const EmployeeRow = ({ employee }: Props) => {
         (e.currentTarget.style.backgroundColor = 'transparent')
       }
     >
+      {/* Name + Email */}
       <td style={{ padding: '16px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div
@@ -36,11 +42,12 @@ const EmployeeRow = ({ employee }: Props) => {
               fontSize: '14px',
             }}
           >
-            {employee.name[0]}
+            {employee.firstName?.[0] ?? '?'}
           </div>
+
           <div>
             <div style={{ fontWeight: 500, color: '#1a1a1a', fontSize: '14px' }}>
-              {employee.name}
+              {fullName}
             </div>
             <div style={{ fontSize: '13px', color: '#666', marginTop: '2px' }}>
               {employee.email}
@@ -49,20 +56,19 @@ const EmployeeRow = ({ employee }: Props) => {
         </div>
       </td>
 
-      <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1a1a1a' }}>
-        {employee.role}
+      {/* Role */}
+      <td style={{ padding: '16px 20px', fontSize: '14px' }}>
+        {roleNames}
       </td>
-      <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1a1a1a' }}>
-        {employee.department}
-      </td>
+
+      {/* Status */}
       <td style={{ padding: '16px 20px' }}>
         <EmployeeStatusBadge status={employee.status} />
       </td>
-      <td style={{ padding: '16px 20px', fontSize: '14px', color: '#666' }}>
-        {employee.joinedDate}
-      </td>
+
+      {/* Actions */}
       <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-        <EmployeeActions />
+        <EmployeeActions employee={employee} onRefresh={onRefresh} />
       </td>
     </tr>
   )

@@ -1,15 +1,30 @@
-export type EmployeeStatus = 'ACTIVE' | 'INACTIVE'
+export type EmployeeStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED'
+
+export interface EmployeeRole {
+  role: {
+    name: string
+  }
+}
+
+export interface EmployeeSkill {
+  skill: {
+    id: string
+    name: string
+  }
+}
+
 
 export interface Employee {
   id: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
-  phone: string
-  role: string
-  department: string
-  designation: string
+  phone?: string
+  department?: string
+  skills: EmployeeSkill[]
+  profilePhoto?: string
+  joinedAt?: string
   status: EmployeeStatus
-  joinedDate: string
-  skills: string[]
-  avatar?: string
+  roles: EmployeeRole[]
 }
+

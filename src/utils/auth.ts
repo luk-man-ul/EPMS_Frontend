@@ -1,79 +1,107 @@
-// Dummy user data for testing
-export const DUMMY_USERS = [
-  {
-    email: 'admin@ispm.com',
-    password: 'admin123',
-    fullName: 'Admin User',
-    role: 'admin',
-  },
-  {
-    email: 'teamlead@ispm.com',
-    password: 'lead123',
-    fullName: 'Team Lead',
-    role: 'teamlead',
-  },
-  {
-    email: 'user@ispm.com',
-    password: 'user123',
-    fullName: 'Regular User',
-    role: 'user',
-  },
-]
+const API_URL = 'http://localhost:3000'
 
-// Simple authentication functions
-export const login = (email: string, password: string) => {
-  const user = DUMMY_USERS.find(
-    (u) => u.email === email && u.password === password
-  )
+//////////////////////////////////////////////////////////
+// TYPES
+//////////////////////////////////////////////////////////
 
-  if (user) {
-    // Store user in localStorage
-    localStorage.setItem('ispm_user', JSON.stringify({
-      email: user.email,
-      fullName: user.fullName,
-      role: user.role,
-    }))
-    return { success: true, user }
-  }
-
-  return { success: false, error: 'Invalid email or password' }
+export interface AuthUser {
+  id: string
+  email: string
+  role: string
+  permissions: string[]
 }
 
-export const signup = (fullName: string, email: string, password: string) => {
-  // Check if user already exists
-  const existingUser = DUMMY_USERS.find((u) => u.email === email)
-  
-  if (existingUser) {
-    return { success: false, error: 'User already exists' }
-  }
-
-  // In a real app, you'd save this to a database
-  const newUser = {
-    email,
-    fullName,
-    role: 'user',
-  }
-
-  localStorage.setItem('ispm_user', JSON.stringify(newUser))
-  return { success: true, user: newUser }
+export interface LoginResponse {
+  success: boolean
+  user?: AuthUser
+  error?: string
 }
 
-export const logout = () => {
-  localStorage.removeItem('ispm_user')
-}
+//////////////////////////////////////////////////////////
+// LOGIN
+//////////////////////////////////////////////////////////
 
-export const getCurrentUser = () => {
-  const userStr = localStorage.getItem('ispm_user')
-  if (userStr) {
-    try {
-      return JSON.parse(userStr)
-    } catch {
-      return null
+export const login = async (
+  email: string,
+  password: string
+): Promise<LoginResponse> => {
+  try {
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data.message || 'Login failed',
+      }
+    }
+
+    // 🔥 Save token
+    localStorage.setItem('token', data.access_token)
+
+    // 🔥 Save user (IMPORTANT — must match AuthContext)
+    localStorage.setItem('user', JSON.stringify(data.user))
+
+    return {
+      success: true,
+      user: data.user,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Server error. Please try again.',
     }
   }
-  return null
 }
 
+//////////////////////////////////////////////////////////
+// GET CURRENT USER
+//////////////////////////////////////////////////////////
+
+export const getCurrentUser = (): AuthUser | null => {
+  const userStr = localStorage.getItem('user')
+  if (!userStr) return null
+
+  try {
+    return JSON.parse(userStr)
+  } catch {
+    return null
+  }
+}
+
+//////////////////////////////////////////////////////////
+// LOGOUT
+//////////////////////////////////////////////////////////
+
+export const logout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+}
+
+//////////////////////////////////////////////////////////
+// CHECK AUTH
+//////////////////////////////////////////////////////////
+
 export const isAuthenticated = () => {
-  return getCurrentUser() !== null
+  return !!localStorage.getItem('token')
+}
+
+//////////////////////////////////////////////////////////
+// AUTH HEADERS
+//////////////////////////////////////////////////////////
+
+export const getAuthHeaders = () => {
+  const token = localStorage.getItem('token')
+
+  return {
+    'Content-Type': 'application/json',
+    Authorization: token ? `Bearer ${token}` : '',
+  }
 }

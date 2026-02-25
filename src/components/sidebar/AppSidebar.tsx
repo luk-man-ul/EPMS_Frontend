@@ -1,34 +1,31 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { hasPermission } from '../../utils/hasPermission'
-
+  
 const menuItems = [
-  { label: 'Dashboard', path: '/admin/dashboard', permission: 'dashboard.view' },
-  { label: 'Employees', path: '/admin/employees', permission: 'employees.view' },
-  { label: 'Projects', path: '/admin/projects', permission: 'projects.view' },
-  { label: 'Tasks', path: '/admin/tasks', permission: 'tasks.view' },
-  { label: 'Tickets', path: '/admin/tickets', permission: 'tasks.view' },
-  { label: 'Attendance', path: '/admin/attendance', permission: 'dashboard.view' },
-  { label: 'Finance', path: '/admin/finance', permission: 'finance.view' },
-  { label: 'Reports', path: '/admin/reports', permission: 'reports.view' },
-  { label: 'Notifications', path: '/admin/notifications', permission: 'dashboard.view' },
-  { label: 'Settings', path: '/admin/settings', permission: 'settings.view' },
+  { label: 'Dashboard', path: '/App/dashboard', permission: 'dashboard.view' },
+  { label: 'My Projects', path: '/App/projects', permission: 'projects.view' },
+  { label: 'Team Tasks', path: '/App/tasks', permission: 'tasks.view' },
+  { label: 'Ticket Center', path: '/App/tickets', permission: 'tasks.view' }, // adjust later
+  { label: 'Work Approval', path: '/App/work-approval', permission: 'tasks.update' },
+  { label: 'Team Attendance', path: '/App/attendance', permission: 'dashboard.view' }, // temp
+  { label: 'Time Logs', path: '/App/time-logs', permission: 'tasks.view' }, // temp
+  { label: 'Project Finance', path: '/App/finance', permission: 'finance.view' },
+  { label: 'Reports', path: '/App/reports', permission: 'reports.view' },
+  { label: 'Team Chat', path: '/App/chat', permission: 'dashboard.view' }, // temp
+  { label: 'Profile & Settings', path: '/App/settings', permission: 'settings.view' },
 ]
 
-const AdminSidebar = () => {
+const AppSidebar = () => {
   const { user } = useAuth()
 
-  // 🔥 ADMIN sees everything
-  const filteredMenu =
-    user?.role === 'ADMIN'
-      ? menuItems
-      : menuItems.filter(item =>
-          hasPermission(user?.permissions || [], item.permission)
-        )
+  const filteredMenu = menuItems.filter(item =>
+    hasPermission(user?.permissions, item.permission)
+  )
 
   return (
     <aside className="sidebar">
-      <h2
+      <h2 
         className="sidebar-title"
         style={{
           fontSize: '28px',
@@ -49,7 +46,7 @@ const AdminSidebar = () => {
           e.currentTarget.style.letterSpacing = '0.5px'
         }}
       >
-        EPMS
+        ISPM
       </h2>
 
       <nav className="sidebar-nav">
@@ -69,4 +66,4 @@ const AdminSidebar = () => {
   )
 }
 
-export default AdminSidebar
+export default AppSidebar

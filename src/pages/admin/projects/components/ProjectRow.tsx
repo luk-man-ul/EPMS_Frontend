@@ -1,12 +1,26 @@
-import type { Project } from '../types/project.types'
 import ProjectStatus from './ProjectStatus'
 import ProjectActions from './ProjectActions'
+import type { ProjectListItem } from '../types/project.types'
 
 interface Props {
-  project: Project
+  project: ProjectListItem
+  onEdit: (id: string) => void
+  onDelete: (id: string) => void
 }
 
-const ProjectRow = ({ project }: Props) => {
+const ProjectRow = ({ project, onEdit, onDelete }: Props) => {
+  const teamSize = project.teamSize ?? 0
+
+  const leadName = project.lead
+    ? `${project.lead.firstName} ${project.lead.lastName}`
+    : '—'
+
+  const progress = project.progress ?? 0
+
+  const deadline = project.endDate
+    ? new Date(project.endDate).toLocaleDateString()
+    : '—'
+
   return (
     <tr
       style={{
@@ -20,53 +34,87 @@ const ProjectRow = ({ project }: Props) => {
         (e.currentTarget.style.backgroundColor = 'transparent')
       }
     >
+      {/* Project Name */}
       <td style={{ padding: '16px 20px' }}>
-        <div style={{ fontWeight: 500, color: '#1a1a1a', fontSize: '14px' }}>
+        <div
+          style={{
+            fontWeight: 500,
+            color: '#1a1a1a',
+            fontSize: '14px',
+          }}
+        >
           {project.name}
         </div>
       </td>
 
+      {/* Lead */}
       <td style={{ padding: '16px 20px', fontSize: '14px', color: '#666' }}>
-        {project.lead}
+        {leadName}
       </td>
 
+      {/* Status */}
       <td style={{ padding: '16px 20px' }}>
         <ProjectStatus status={project.status} />
       </td>
 
-      <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1a1a1a' }}>
-        {project.teamSize} members
+      {/* Team Size */}
+      <td
+        style={{
+          padding: '16px 20px',
+          fontSize: '14px',
+          color: '#1a1a1a',
+        }}
+      >
+        {teamSize} members
       </td>
 
+      {/* Progress */}
       <td style={{ padding: '16px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ 
-            flex: 1, 
-            height: '6px', 
-            background: '#f0f0f0', 
-            borderRadius: '3px',
-            overflow: 'hidden',
-            minWidth: '80px'
-          }}>
-            <div style={{ 
-              height: '100%', 
-              width: `${project.progress}%`, 
-              background: '#1a1a1a', 
-              borderRadius: '3px' 
-            }} />
+          <div
+            style={{
+              flex: 1,
+              height: '6px',
+              background: '#f0f0f0',
+              borderRadius: '3px',
+              overflow: 'hidden',
+              minWidth: '80px',
+            }}
+          >
+            <div
+              style={{
+                height: '100%',
+                width: `${progress}%`,
+                background: '#1a1a1a',
+                borderRadius: '3px',
+              }}
+            />
           </div>
-          <span style={{ fontSize: '13px', fontWeight: 500, color: '#1a1a1a', minWidth: '35px' }}>
-            {project.progress}%
+          <span
+            style={{
+              fontSize: '13px',
+              fontWeight: 500,
+              color: '#1a1a1a',
+              minWidth: '35px',
+            }}
+          >
+            {progress}%
           </span>
         </div>
       </td>
 
+      {/* Deadline */}
       <td style={{ padding: '16px 20px', fontSize: '14px', color: '#666' }}>
-        {project.deadline}
+        {deadline}
       </td>
 
+      {/* Actions */}
       <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-        <ProjectActions projectId={project.id} />
+        <ProjectActions
+          projectId={project.id}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       </td>
     </tr>
   )

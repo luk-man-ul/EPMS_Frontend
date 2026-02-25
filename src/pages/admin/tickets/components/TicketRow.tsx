@@ -8,31 +8,41 @@ interface Props {
 }
 
 const TicketRow = ({ ticket }: Props) => {
-  const isCritical = ticket.priority === 'CRITICAL'
-  const isUrgent = ticket.slaTime.includes('m remaining') || ticket.slaTime.includes('h remaining')
+  const isCritical = ticket.priority === 'URGENT'
+
+  const createdBy = `${ticket.reporter.firstName} ${ticket.reporter.lastName}`
+  const assignedTo = ticket.assignee
+    ? `${ticket.assignee.firstName} ${ticket.assignee.lastName}`
+    : 'Unassigned'
+
+  const projectName = ticket.project?.name ?? '—'
 
   return (
     <tr
       style={{
         borderBottom: '1px solid #f5f5f5',
         transition: 'background 0.15s ease',
-        backgroundColor: isCritical ? '#fafafa' : 'transparent'
+        backgroundColor: isCritical ? '#fafafa' : 'transparent',
       }}
       onMouseEnter={(e) =>
         (e.currentTarget.style.backgroundColor = '#fafafa')
       }
       onMouseLeave={(e) =>
-        (e.currentTarget.style.backgroundColor = isCritical ? '#fafafa' : 'transparent')
+        (e.currentTarget.style.backgroundColor = isCritical
+          ? '#fafafa'
+          : 'transparent')
       }
     >
       <td style={{ padding: '16px 20px' }}>
-        <div style={{ 
-          fontWeight: 600, 
-          color: '#1a1a1a', 
-          fontSize: '13px',
-          fontFamily: 'monospace'
-        }}>
-          {ticket.id}
+        <div
+          style={{
+            fontWeight: 600,
+            color: '#1a1a1a',
+            fontSize: '13px',
+            fontFamily: 'monospace',
+          }}
+        >
+          {ticket.id.slice(0, 8)}
         </div>
       </td>
 
@@ -40,10 +50,22 @@ const TicketRow = ({ ticket }: Props) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {isCritical && <span style={{ fontSize: '16px' }}>🚨</span>}
           <div>
-            <div style={{ fontWeight: 500, color: '#1a1a1a', fontSize: '14px' }}>
+            <div
+              style={{
+                fontWeight: 500,
+                color: '#1a1a1a',
+                fontSize: '14px',
+              }}
+            >
               {ticket.title}
             </div>
-            <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
+            <div
+              style={{
+                fontSize: '12px',
+                color: '#999',
+                marginTop: '2px',
+              }}
+            >
               {ticket.type}
             </div>
           </div>
@@ -51,15 +73,15 @@ const TicketRow = ({ ticket }: Props) => {
       </td>
 
       <td style={{ padding: '16px 20px', fontSize: '14px', color: '#666' }}>
-        {ticket.project}
+        {projectName}
       </td>
 
       <td style={{ padding: '16px 20px', fontSize: '14px', color: '#666' }}>
-        {ticket.createdBy}
+        {createdBy}
       </td>
 
       <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1a1a1a' }}>
-        {ticket.assignedTo}
+        {assignedTo}
       </td>
 
       <td style={{ padding: '16px 20px' }}>
@@ -67,13 +89,7 @@ const TicketRow = ({ ticket }: Props) => {
       </td>
 
       <td style={{ padding: '16px 20px' }}>
-        <span style={{ 
-          fontSize: '13px', 
-          fontWeight: 500,
-          color: isUrgent ? '#1a1a1a' : '#666'
-        }}>
-          {ticket.slaTime}
-        </span>
+        <TicketPriority priority={ticket.priority} />
       </td>
 
       <td style={{ padding: '16px 20px', textAlign: 'right' }}>

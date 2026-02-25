@@ -4,27 +4,59 @@ interface Props {
   status: TicketStatusType
 }
 
-const statusConfig = {
-  OPEN: { bg: '#fafafa', color: '#666', label: 'Open' },
-  IN_PROGRESS: { bg: '#f0f0f0', color: '#1a1a1a', label: 'In Progress' },
-  PENDING: { bg: '#fafafa', color: '#666', label: 'Pending' },
-  RESOLVED: { bg: '#1a1a1a', color: '#fff', label: 'Resolved' },
-  CLOSED: { bg: '#1a1a1a', color: '#fff', label: 'Closed' }
+const statusConfig: Record<
+  TicketStatusType,
+  { bg: string; color: string; label: string }
+> = {
+  OPEN: {
+    bg: '#e0f2fe',
+    color: '#0369a1',
+    label: 'Open',
+  },
+  IN_PROGRESS: {
+    bg: '#fef3c7',
+    color: '#92400e',
+    label: 'In Progress',
+  },
+  RESOLVED: {
+    bg: '#dcfce7',
+    color: '#166534',
+    label: 'Resolved',
+  },
+  CLOSED: {
+    bg: '#f3f4f6',
+    color: '#374151',
+    label: 'Closed',
+  },
+  WAITING_FOR_USER: {
+    bg: '#fee2e2',
+    color: '#991b1b',
+    label: 'Waiting',
+  },
+  REJECTED: {
+    bg: '#fde2e2',
+    color: '#b91c1c',
+    label: 'Rejected',
+  },
+  REOPENED: {
+    bg: '#e0e7ff',
+    color: '#3730a3',
+    label: 'Reopened',
+  },
 }
 
 const TicketStatus = ({ status }: Props) => {
   const config = statusConfig[status]
-  
+
   return (
     <span
       style={{
         padding: '6px 12px',
-        borderRadius: '8px',
+        borderRadius: '20px',
         fontSize: '12px',
         fontWeight: 500,
-        backgroundColor: config.bg,
+        background: config.bg,
         color: config.color,
-        border: '1px solid #e5e5e5',
       }}
     >
       {config.label}

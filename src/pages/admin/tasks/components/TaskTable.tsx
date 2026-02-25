@@ -1,7 +1,37 @@
-import { tasksData } from '../data/tasksData'
+import type { Task, TaskStatus } from '../types/task.types'
 import TaskRow from './TaskRow'
 
-const TaskTable = () => {
+interface Props {
+  tasks: Task[]
+  loading: boolean
+  onStatusChange: (taskId: string, status: TaskStatus) => void
+  onEdit: (taskId: string) => void
+  onDelete: (taskId: string) => void
+}
+
+const TaskTable = ({
+  tasks,
+  loading,
+  onStatusChange,
+  onEdit,
+  onDelete,
+}: Props) => {
+  if (loading) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+        Loading tasks...
+      </div>
+    )
+  }
+
+  if (!tasks.length) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
+        No tasks found
+      </div>
+    )
+  }
+
   return (
     <table
       style={{
@@ -19,19 +49,27 @@ const TaskTable = () => {
             borderBottom: '1px solid #e5e5e5',
           }}
         >
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>Task Title</th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>Project</th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>Assigned To</th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>Priority</th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>Status</th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>Deadline</th>
-          <th style={{ padding: '16px 20px', textAlign: 'right', fontWeight: 500 }}>Actions</th>
+          <th style={{ padding: '16px 20px' }}>Task Title</th>
+          <th style={{ padding: '16px 20px' }}>Project</th>
+          <th style={{ padding: '16px 20px' }}>Assigned To</th>
+          <th style={{ padding: '16px 20px' }}>Priority</th>
+          <th style={{ padding: '16px 20px' }}>Status</th>
+          <th style={{ padding: '16px 20px' }}>Deadline</th>
+          <th style={{ padding: '16px 20px', textAlign: 'right' }}>
+            Actions
+          </th>
         </tr>
       </thead>
 
       <tbody>
-        {tasksData.map((task) => (
-          <TaskRow key={task.id} task={task} />
+        {tasks.map((task) => (
+          <TaskRow
+            key={task.id}
+            task={task}
+            onStatusChange={onStatusChange}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         ))}
       </tbody>
     </table>

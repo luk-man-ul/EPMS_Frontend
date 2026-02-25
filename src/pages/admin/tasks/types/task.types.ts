@@ -1,44 +1,91 @@
-export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'REVIEW' | 'COMPLETED' | 'BLOCKED'
-export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
+////////////////////////////////////////////////////////////
+// ENUM TYPES (Aligned With Prisma)
+////////////////////////////////////////////////////////////
+
+export type TaskStatus =
+  | 'TODO'
+  | 'IN_PROGRESS'
+  | 'REVIEW'
+  | 'COMPLETED'
+  | 'CANCELLED'
+
+export type TaskPriority =
+  | 'LOW'
+  | 'MEDIUM'
+  | 'HIGH'
+  | 'URGENT'
+
+////////////////////////////////////////////////////////////
+// MAIN TASK TYPE (Backend Shape)
+////////////////////////////////////////////////////////////
 
 export interface Task {
   id: string
   title: string
-  description: string
-  project: string
-  assignedTo: string
-  priority: TaskPriority
+  description?: string
+
   status: TaskStatus
-  deadline: string
+  priority: TaskPriority
+
+  dueDate?: string
+  estimatedHrs?: number
+  actualHrs?: number
+  completedAt?: string
+
   createdAt: string
+  updatedAt: string
+
+  project: {
+    id: string
+    name: string
+  }
+
+  assignee?: {
+    id: string
+    firstName: string
+    lastName: string
+  }
 }
 
-export interface TaskComment {
+////////////////////////////////////////////////////////////
+// STATUS HISTORY (Aligned With Backend)
+////////////////////////////////////////////////////////////
+
+export interface TaskStatusHistory {
   id: string
-  author: string
-  content: string
-  timestamp: string
+  oldStatus: TaskStatus
+  newStatus: TaskStatus
+  changedBy: {
+    id: string
+    firstName: string
+    lastName: string
+  }
+  changedAt: string
+}
+
+////////////////////////////////////////////////////////////
+// OPTIONAL FUTURE EXTENSIONS
+////////////////////////////////////////////////////////////
+
+export interface TaskTimeLog {
+  id: string
+  user: {
+    id: string
+    firstName: string
+    lastName: string
+  }
+  hours: number
+  logDate: string
+  description: string
 }
 
 export interface TaskAttachment {
   id: string
-  name: string
-  size: string
-  uploadedBy: string
+  filePath: string
+  uploadedBy: {
+    id: string
+    firstName: string
+    lastName: string
+  }
   uploadedAt: string
-}
-
-export interface TaskTimeLog {
-  id: string
-  user: string
-  hours: number
-  date: string
-  description: string
-}
-
-export interface TaskStatusHistory {
-  id: string
-  status: TaskStatus
-  changedBy: string
-  timestamp: string
 }

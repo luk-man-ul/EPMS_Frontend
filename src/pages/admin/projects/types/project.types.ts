@@ -1,46 +1,46 @@
-export type ProjectStatus = 'ACTIVE' | 'ON_HOLD' | 'COMPLETED' | 'ARCHIVED'
+export type ProjectStatus =
+  | 'PLANNING'
+  | 'IN_PROGRESS'
+  | 'ON_HOLD'
+  | 'COMPLETED'
+  | 'CANCELLED'
 
-export interface Project {
+/* =========================
+   LIST RESPONSE TYPE
+========================= */
+export interface ProjectListItem {
   id: string
   name: string
-  lead: string
-  status: ProjectStatus
-  teamSize: number
-  progress: number
-  deadline: string
   description?: string
+
+  status: ProjectStatus
+  progress: number
+
+  endDate?: string
+
+  teamSize: number
+
+  lead: {
+    id: string
+    firstName: string
+    lastName: string
+  }
+}
+
+/* =========================
+   DETAIL RESPONSE TYPE
+========================= */
+export interface ProjectDetail extends Omit<ProjectListItem, 'teamSize'> {
+  startDate?: string
   budget?: number
-}
 
-export interface TeamMember {
-  id: string
-  name: string
-  email: string
-  role: string
-  avatar?: string
-}
-
-export interface ProjectTask {
-  id: string
-  title: string
-  status: 'TODO' | 'IN_PROGRESS' | 'REVIEW' | 'DONE'
-  assignee: string
-  priority: 'LOW' | 'MEDIUM' | 'HIGH'
-  dueDate: string
-}
-
-export interface ProjectTicket {
-  id: string
-  title: string
-  type: 'BUG' | 'FEATURE' | 'SUPPORT'
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
-  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED'
-  assignee: string
-  isBlocker: boolean
-}
-
-export interface ProjectFinance {
-  income: number
-  expense: number
-  profit: number
+  members: {
+    userId: string
+    user?: {
+      id: string
+      firstName: string
+      lastName: string
+      email: string
+    }
+  }[]
 }

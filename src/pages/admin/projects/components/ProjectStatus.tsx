@@ -1,19 +1,58 @@
 import type { ProjectStatus as ProjectStatusType } from '../types/project.types'
 
 interface Props {
-  status: ProjectStatusType
+  status: ProjectStatusType | string
 }
 
-const statusConfig = {
-  ACTIVE: { bg: '#f0f0f0', color: '#1a1a1a', label: 'Active' },
-  ON_HOLD: { bg: '#fafafa', color: '#666', label: 'On Hold' },
-  COMPLETED: { bg: '#1a1a1a', color: '#fff', label: 'Completed' },
-  ARCHIVED: { bg: '#fafafa', color: '#999', label: 'Archived' }
+const statusConfig: Record<string, { bg: string; color: string; label: string }> = {
+  PLANNING: {
+    bg: '#eef2ff',
+    color: '#3730a3',
+    label: 'Planning',
+  },
+  IN_PROGRESS: {
+    bg: '#fef3c7',
+    color: '#92400e',
+    label: 'In Progress',
+  },
+  ON_HOLD: {
+    bg: '#f3f4f6',
+    color: '#4b5563',
+    label: 'On Hold',
+  },
+  COMPLETED: {
+    bg: '#dcfce7',
+    color: '#166534',
+    label: 'Completed',
+  },
+  CANCELLED: {
+    bg: '#fee2e2',
+    color: '#991b1b',
+    label: 'Cancelled',
+  },
 }
 
 const ProjectStatus = ({ status }: Props) => {
   const config = statusConfig[status]
-  
+
+  if (!config) {
+    return (
+      <span
+        style={{
+          padding: '6px 12px',
+          borderRadius: '8px',
+          fontSize: '12px',
+          fontWeight: 500,
+          backgroundColor: '#f5f5f5',
+          color: '#999',
+          border: '1px solid #e5e5e5',
+        }}
+      >
+        {status || 'Unknown'}
+      </span>
+    )
+  }
+
   return (
     <span
       style={{

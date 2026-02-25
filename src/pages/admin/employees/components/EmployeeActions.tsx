@@ -1,27 +1,41 @@
-const EmployeeActions = () => {
+import type { Employee } from '../types/employee.types'
+import { getAuthHeaders } from '../../../../utils/auth'
+
+interface Props {
+  employee: Employee
+  onRefresh: () => void
+}
+
+
+const EmployeeActions = ({ employee, onRefresh }: Props) => {
+  const roleNames = employee.roles.map(r => r.role.name)
+
+  const callApi = async (endpoint: string) => {
+    await fetch(`http://localhost:3000/users/${employee.id}/${endpoint}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+    })
+    onRefresh()
+  }
+
   return (
-    <button
-      style={{
-        border: '1px solid #e5e5e5',
-        background: '#fff',
-        cursor: 'pointer',
-        fontSize: '18px',
-        padding: '6px 10px',
-        borderRadius: '8px',
-        color: '#666',
-        transition: 'all 0.15s ease',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = '#fafafa'
-        e.currentTarget.style.borderColor = '#d4d4d4'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = '#fff'
-        e.currentTarget.style.borderColor = '#e5e5e5'
-      }}
-    >
-      ⋮
-    </button>
+    <>
+      {roleNames.includes('EMPLOYEE') && (
+        <button onClick={() => callApi('promote')}>
+          Promote
+        </button>
+      )}
+
+      {roleNames.includes('TEAMLEAD') && (
+        <button onClick={() => callApi('demote')}>
+          Demote
+        </button>
+      )}
+
+      <button onClick={() => callApi('deactivate')}>
+        Deactivate
+      </button>
+    </>
   )
 }
 

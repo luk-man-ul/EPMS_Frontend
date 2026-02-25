@@ -1,7 +1,13 @@
-import { projectsData } from '../data/projectsData'
 import ProjectRow from './ProjectRow'
+import type { ProjectListItem } from '../types/project.types'
 
-const ProjectTable = () => {
+interface Props {
+  projects: ProjectListItem[]
+  onEdit: (id: string) => void
+  onDelete: (id: string) => void
+}
+
+const ProjectTable = ({ projects, onEdit, onDelete }: Props) => {
   return (
     <table
       style={{
@@ -19,19 +25,44 @@ const ProjectTable = () => {
             borderBottom: '1px solid #e5e5e5',
           }}
         >
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>Project Name</th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>Lead</th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>Status</th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>Team Size</th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>Progress</th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>Deadline</th>
-          <th style={{ padding: '16px 20px', textAlign: 'right', fontWeight: 500 }}>Actions</th>
+          <th style={{ padding: '16px 20px', fontWeight: 500 }}>
+            Project Name
+          </th>
+          <th style={{ padding: '16px 20px', fontWeight: 500 }}>
+            Lead
+          </th>
+          <th style={{ padding: '16px 20px', fontWeight: 500 }}>
+            Status
+          </th>
+          <th style={{ padding: '16px 20px', fontWeight: 500 }}>
+            Team Size
+          </th>
+          <th style={{ padding: '16px 20px', fontWeight: 500 }}>
+            Progress
+          </th>
+          <th style={{ padding: '16px 20px', fontWeight: 500 }}>
+            Deadline
+          </th>
+          <th
+            style={{
+              padding: '16px 20px',
+              textAlign: 'right',
+              fontWeight: 500,
+            }}
+          >
+            Actions
+          </th>
         </tr>
       </thead>
 
       <tbody>
-        {projectsData.map((project) => (
-          <ProjectRow key={project.id} project={project} />
+        {projects.map((project) => (
+          <ProjectRow
+            key={project.id}
+            project={project}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         ))}
       </tbody>
     </table>

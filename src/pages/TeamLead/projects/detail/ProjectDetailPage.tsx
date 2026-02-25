@@ -1,237 +1,276 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { projects } from '../data/projectsData'
-import ProjectStatus from '../components/ProjectStatus'
-import OverviewTab from './components/OverviewTab'
-import TeamMembersTab from './components/TeamMembersTab'
-import TaskBoardTab from './components/TaskBoardTab'
-import TicketsTab from './components/TicketsTab'
+import api from '../../../../utils/api'
 
 const ProjectDetailPage = () => {
-  const { projectId } = useParams()
+  const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<'overview' | 'team' | 'tasks' | 'tickets'>('overview')
 
-  const project = projects.find(p => p.id === projectId)
+  const [project, setProject] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [userRole, setUserRole] = useState<string | null>(null)
+  const [updating, setUpdating] = useState(false)
 
-  if (!project) {
-    return (
-      <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-        <div style={{ fontSize: '48px', marginBottom: '16px' }}>📁</div>
-        <div style={{ fontSize: '18px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>
-          Project Not Found
-        </div>
-        <button
-          onClick={() => navigate('/teamlead/projects')}
-          style={{
-            marginTop: '20px',
-            padding: '10px 20px',
-            background: '#1a1a1a',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          ← Back to Projects
-        </button>
-      </div>
-    )
+  //////////////////////////////////////////////////////////////
+  // FETCH PROJECT
+  //////////////////////////////////////////////////////////////
+
+  useEffect(() => {
+    const fetchProject = async () => {
+      try {
+        const res = await api.get(`/projects/${projectId}`)
+        setProject(res.data)
+      } catch (err) {
+        console.error('Error fetching project:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      const parsed = JSON.parse(storedUser)
+      setUserRole(parsed?.role || null)
+    }
+
+    if (projectId) fetchProject()
+  }, [projectId])
+
+  //////////////////////////////////////////////////////////////
+  // STATUS UPDATE
+  //////////////////////////////////////////////////////////////
+
+  const updateStatus = async (newStatus: string) => {
+    if (!project || updating) return
+
+    try {
+      setUpdating(true)
+
+      const res = await api.patch(
+        `/projects/${project.id}/status`,
+        { status: newStatus }
+      )
+
+      setProject(res.data)
+    } catch (err: any) {
+      console.error('Error updating status:', err?.response?.data || err)
+      alert(err?.response?.data?.message || 'Update failed')
+    } finally {
+      setUpdating(false)
+    }
   }
 
-  const tabs = [
-    { id: 'overview' as const, label: '📁 Overview', icon: '📁' },
-    { id: 'team' as const, label: '👥 Team Members', icon: '👥' },
-    { id: 'tasks' as const, label: '🧩 Task Board', icon: '🧩' },
-    { id: 'tickets' as const, label: '🎫 Tickets', icon: '🎫' },
-  ]
+  //////////////////////////////////////////////////////////////
+  // STATUS STYLE
+  //////////////////////////////////////////////////////////////
+
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'PLANNING':
+        return { bg: '#fef3c7', color: '#d97706' }
+      case 'ACTIVE':
+        return { bg: '#d1fae5', color: '#16a34a' }
+      case 'COMPLETED':
+        return { bg: '#dbeafe', color: '#2563eb' }
+      case 'ON_HOLD':
+        return { bg: '#fee2e2', color: '#dc2626' }
+      default:
+        return { bg: '#f3f4f6', color: '#6b7280' }
+    }
+  }
+
+  //////////////////////////////////////////////////////////////
+  // LOADING STATES
+  //////////////////////////////////////////////////////////////
+
+  if (loading) return <div>Loading project...</div>
+  if (!project) return <div>Project not found</div>
+
+  const statusStyle = getStatusStyle(project.status)
+
+  const canEdit =
+    userRole === 'TEAM_LEAD' || userRole === 'EMPLOYEE'
+
+  //////////////////////////////////////////////////////////////
+  // RENDER
+  //////////////////////////////////////////////////////////////
 
   return (
-    <div>
-      {/* Header */}
+    <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+
+      {/* BACK */}
+      <button
+        onClick={() => navigate(-1)}
+        style={{
+          marginBottom: 20,
+          background: 'none',
+          border: 'none',
+          fontWeight: 600,
+          cursor: 'pointer'
+        }}
+      >
+        ← Back
+      </button>
+
+      {/* HEADER CARD */}
       <div style={{
         background: '#ffffff',
-        padding: '24px',
-        borderRadius: '12px',
-        border: '1px solid #e5e5e5',
-        marginBottom: '24px',
+        padding: 32,
+        borderRadius: 20,
+        border: '1px solid #e5e7eb',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
+        marginBottom: 24
       }}>
-        {/* Back Button */}
-        <button
-          onClick={() => navigate('/teamlead/projects')}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#666666',
-            fontSize: '14px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            marginBottom: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            transition: 'color 0.2s ease',
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.color = '#1a1a1a'}
-          onMouseLeave={(e) => e.currentTarget.style.color = '#666666'}
-        >
-          ← Back to Projects
-        </button>
 
-        {/* Project Info */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'flex-start',
+          alignItems: 'center'
         }}>
+
           <div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              marginBottom: '8px',
+            <h1 style={{
+              fontSize: 32,
+              fontWeight: 700,
+              marginBottom: 8
             }}>
-              <h1 style={{
-                fontSize: '28px',
-                fontWeight: 700,
-                color: '#1a1a1a',
-                letterSpacing: '-0.02em',
-              }}>
-                {project.name}
-              </h1>
-              <ProjectStatus status={project.status} />
-            </div>
-            <p style={{
-              fontSize: '14px',
-              color: '#666666',
-              maxWidth: '600px',
+              {project.name}
+            </h1>
+
+            <span style={{
+              padding: '6px 14px',
+              borderRadius: 999,
+              fontSize: 12,
+              fontWeight: 600,
+              background: statusStyle.bg,
+              color: statusStyle.color
             }}>
-              {project.description}
-            </p>
+              {project.status}
+            </span>
           </div>
 
-          {/* Quick Stats */}
-          <div style={{
-            display: 'flex',
-            gap: '16px',
-          }}>
-            <div style={{
-              padding: '12px 16px',
-              background: '#fafafa',
-              borderRadius: '10px',
-              textAlign: 'center',
-            }}>
-              <div style={{
-                fontSize: '24px',
-                fontWeight: 600,
-                color: '#1a1a1a',
-              }}>
-                {project.progress}%
-              </div>
-              <div style={{
-                fontSize: '11px',
-                color: '#666666',
-              }}>
-                Complete
-              </div>
-            </div>
-            <div style={{
-              padding: '12px 16px',
-              background: '#fafafa',
-              borderRadius: '10px',
-              textAlign: 'center',
-            }}>
-              <div style={{
-                fontSize: '24px',
-                fontWeight: 600,
-                color: '#1a1a1a',
-              }}>
-                {project.teamMembersCount}
-              </div>
-              <div style={{
-                fontSize: '11px',
-                color: '#666666',
-              }}>
-                Members
-              </div>
-            </div>
-            <div style={{
-              padding: '12px 16px',
-              background: '#fafafa',
-              borderRadius: '10px',
-              textAlign: 'center',
-            }}>
-              <div style={{
-                fontSize: '24px',
-                fontWeight: 600,
-                color: '#1a1a1a',
-              }}>
-                {project.openTasks}
-              </div>
-              <div style={{
-                fontSize: '11px',
-                color: '#666666',
-              }}>
-                Open Tasks
-              </div>
-            </div>
-          </div>
+          {canEdit && (
+            <select
+              value={project.status}
+              disabled={updating}
+              onChange={(e) => updateStatus(e.target.value)}
+              style={{
+                padding: '10px 14px',
+                borderRadius: 8,
+                border: '1px solid #d1d5db',
+                cursor: 'pointer'
+              }}
+            >
+              {userRole === 'TEAM_LEAD' && (
+                <>
+                  <option value="PLANNING">PLANNING</option>
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="ON_HOLD">ON_HOLD</option>
+                  <option value="COMPLETED">COMPLETED</option>
+                </>
+              )}
+
+              {userRole === 'EMPLOYEE' && (
+                <>
+                  {project.status === 'ACTIVE' && (
+                    <>
+                      <option value="ACTIVE">ACTIVE</option>
+                      <option value="ON_HOLD">ON_HOLD</option>
+                    </>
+                  )}
+
+                  {project.status === 'ON_HOLD' && (
+                    <>
+                      <option value="ON_HOLD">ON_HOLD</option>
+                      <option value="ACTIVE">ACTIVE</option>
+                    </>
+                  )}
+
+                  {(project.status === 'PLANNING' ||
+                    project.status === 'COMPLETED') && (
+                    <option value={project.status}>
+                      {project.status}
+                    </option>
+                  )}
+                </>
+              )}
+            </select>
+          )}
+
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* KPI GRID */}
       <div style={{
-        display: 'flex',
-        gap: '8px',
-        marginBottom: '24px',
-        borderBottom: '1px solid #e5e5e5',
-        paddingBottom: '0',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: 20,
+        marginBottom: 24
       }}>
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              padding: '12px 20px',
-              background: 'none',
-              border: 'none',
-              borderBottom: activeTab === tab.id ? '2px solid #1a1a1a' : '2px solid transparent',
-              fontSize: '14px',
-              fontWeight: activeTab === tab.id ? 600 : 500,
-              color: activeTab === tab.id ? '#1a1a1a' : '#666666',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}
-            onMouseEnter={(e) => {
-              if (activeTab !== tab.id) {
-                e.currentTarget.style.color = '#1a1a1a'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (activeTab !== tab.id) {
-                e.currentTarget.style.color = '#666666'
-              }
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
+
+        <InfoCard
+          title="Start Date"
+          value={
+            project.startDate
+              ? new Date(project.startDate).toLocaleDateString()
+              : 'N/A'
+          }
+        />
+
+        <InfoCard
+          title="End Date"
+          value={
+            project.endDate
+              ? new Date(project.endDate).toLocaleDateString()
+              : 'N/A'
+          }
+        />
+
+        <InfoCard
+          title="Budget"
+          value={project.budget ? `$${project.budget}` : 'N/A'}
+        />
+
+        <InfoCard
+          title="Team Size"
+          value={project.teamSize ?? 'N/A'}
+        />
+
       </div>
 
-      {/* Tab Content */}
-      <div>
-        {activeTab === 'overview' && <OverviewTab project={project} />}
-        {activeTab === 'team' && <TeamMembersTab />}
-        {activeTab === 'tasks' && <TaskBoardTab />}
-        {activeTab === 'tickets' && <TicketsTab />}
+      {/* DESCRIPTION */}
+      <div style={{
+        background: '#ffffff',
+        padding: 24,
+        borderRadius: 16,
+        border: '1px solid #e5e7eb'
+      }}>
+        <h3 style={{ marginBottom: 12 }}>
+          Project Description
+        </h3>
+        <p style={{ lineHeight: 1.6 }}>
+          {project.description || 'No description available'}
+        </p>
       </div>
+
     </div>
   )
 }
+
+//////////////////////////////////////////////////////////////
+// REUSABLE CARD
+//////////////////////////////////////////////////////////////
+
+const InfoCard = ({ title, value }: any) => (
+  <div style={{
+    background: '#ffffff',
+    padding: 20,
+    borderRadius: 16,
+    border: '1px solid #e5e7eb'
+  }}>
+    <h3>{title}</h3>
+    <div>{value}</div>
+  </div>
+)
 
 export default ProjectDetailPage

@@ -1,7 +1,12 @@
-import { ticketsData } from '../data/ticketsData'
+import type { Ticket } from '../types/ticket.types'
 import TicketRow from './TicketRow'
 
-const TicketTable = () => {
+interface Props {
+  tickets: Ticket[]
+  loading: boolean
+}
+
+const TicketTable = ({ tickets, loading }: Props) => {
   return (
     <table
       style={{
@@ -25,15 +30,37 @@ const TicketTable = () => {
           <th style={{ padding: '16px 20px', fontWeight: 500 }}>Created By</th>
           <th style={{ padding: '16px 20px', fontWeight: 500 }}>Assigned To</th>
           <th style={{ padding: '16px 20px', fontWeight: 500 }}>Status</th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>SLA Time</th>
-          <th style={{ padding: '16px 20px', textAlign: 'right', fontWeight: 500 }}>Actions</th>
+          <th style={{ padding: '16px 20px', fontWeight: 500 }}>SLA</th>
+          <th
+            style={{
+              padding: '16px 20px',
+              textAlign: 'right',
+              fontWeight: 500,
+            }}
+          >
+            Actions
+          </th>
         </tr>
       </thead>
 
       <tbody>
-        {ticketsData.map((ticket) => (
-          <TicketRow key={ticket.id} ticket={ticket} />
-        ))}
+        {loading ? (
+          <tr>
+            <td colSpan={8} style={{ padding: 40, textAlign: 'center' }}>
+              Loading tickets...
+            </td>
+          </tr>
+        ) : tickets.length === 0 ? (
+          <tr>
+            <td colSpan={8} style={{ padding: 40, textAlign: 'center' }}>
+              No tickets found
+            </td>
+          </tr>
+        ) : (
+          tickets.map((ticket) => (
+            <TicketRow key={ticket.id} ticket={ticket} />
+          ))
+        )}
       </tbody>
     </table>
   )

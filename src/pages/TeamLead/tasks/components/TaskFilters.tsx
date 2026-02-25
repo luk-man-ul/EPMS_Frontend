@@ -7,6 +7,7 @@ interface TaskFiltersProps {
   onStatusChange: (value: string) => void
   onPriorityChange: (value: string) => void
   onCreateTask: () => void
+    isTeamLead: boolean  
 }
 
 const TaskFilters = ({

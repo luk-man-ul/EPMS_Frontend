@@ -1,21 +1,35 @@
-import { summaryStats } from '../data/dashboardData'
+interface Summary {
+  totalTasks?: number
+  activeTasks?: number
+  completedTasks?: number
+  overdueTasks?: number
+  completionRate?: number
+  totalProjects?: number
+  openTickets?: number
+}
 
-const SummaryCards = () => {
-  const cards = [
-    { label: 'Active Projects', value: summaryStats.activeProjects, icon: '📊' },
-    { label: 'Pending Tasks', value: summaryStats.pendingTasks, icon: '📝' },
-    { label: 'Open Tickets', value: summaryStats.openTickets, icon: '🎫' },
-    { label: 'Pending Approvals', value: summaryStats.pendingApprovals, icon: '✋' },
-    { label: 'Team Members Online', value: summaryStats.teamMembersOnline, icon: '👥' },
-  ]
+interface Props {
+  summary: Summary
+}
 
+const SummaryCards = ({ summary }: Props) => {
+ const cards = [
+  { label: 'Projects', value: summary.totalProjects ?? 0, icon: '📁' },
+  { label: 'Total Tasks', value: summary.totalTasks ?? 0, icon: '📊' },
+  { label: 'Active Tasks', value: summary.activeTasks ?? 0, icon: '📝' },
+  { label: 'Completed', value: summary.completedTasks ?? 0, icon: '✅' },
+  { label: 'Overdue', value: summary.overdueTasks ?? 0, icon: '⚠️' },
+  { label: 'Open Tickets', value: summary.openTickets ?? 0, icon: '🎫' },
+]
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-      gap: '16px',
-      marginBottom: '24px',
-    }}>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '16px',
+        marginBottom: '24px',
+      }}
+    >
       {cards.map((card, index) => (
         <div
           key={index}
@@ -29,34 +43,42 @@ const SummaryCards = () => {
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.borderColor = '#d4d4d4'
-            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)'
+            e.currentTarget.style.boxShadow =
+              '0 2px 8px rgba(0, 0, 0, 0.04)'
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.borderColor = '#e5e5e5'
             e.currentTarget.style.boxShadow = 'none'
           }}
         >
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            marginBottom: '12px',
-          }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '12px',
+            }}
+          >
             <span style={{ fontSize: '24px' }}>{card.icon}</span>
-            <div style={{
-              fontSize: '13px',
-              color: '#666666',
-              fontWeight: 500,
-            }}>
+            <div
+              style={{
+                fontSize: '13px',
+                color: '#666666',
+                fontWeight: 500,
+              }}
+            >
               {card.label}
             </div>
           </div>
-          <div style={{
-            fontSize: '32px',
-            fontWeight: 600,
-            color: '#1a1a1a',
-            letterSpacing: '-0.02em',
-          }}>
+
+          <div
+            style={{
+              fontSize: '32px',
+              fontWeight: 600,
+              color: '#1a1a1a',
+              letterSpacing: '-0.02em',
+            }}
+          >
             {card.value}
           </div>
         </div>

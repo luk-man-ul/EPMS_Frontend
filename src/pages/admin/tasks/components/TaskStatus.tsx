@@ -4,17 +4,40 @@ interface Props {
   status: TaskStatusType
 }
 
-const statusConfig = {
-  TODO: { bg: '#fafafa', color: '#666', label: 'To Do' },
-  IN_PROGRESS: { bg: '#f0f0f0', color: '#1a1a1a', label: 'In Progress' },
-  REVIEW: { bg: '#fafafa', color: '#666', label: 'Review' },
-  COMPLETED: { bg: '#1a1a1a', color: '#fff', label: 'Completed' },
-  BLOCKED: { bg: '#fafafa', color: '#666', label: 'Blocked' }
+const statusConfig: Record<
+  TaskStatusType,
+  { bg: string; color: string; label: string }
+> = {
+  TODO: {
+    bg: '#fafafa',
+    color: '#666',
+    label: 'To Do',
+  },
+  IN_PROGRESS: {
+    bg: '#f0f0f0',
+    color: '#1a1a1a',
+    label: 'In Progress',
+  },
+  REVIEW: {
+    bg: '#fafafa',
+    color: '#666',
+    label: 'Review',
+  },
+  COMPLETED: {
+    bg: '#1a1a1a',
+    color: '#fff',
+    label: 'Completed',
+  },
+  CANCELLED: {
+    bg: '#f5f5f5',
+    color: '#999',
+    label: 'Cancelled',
+  },
 }
 
 const TaskStatus = ({ status }: Props) => {
   const config = statusConfig[status]
-  
+
   return (
     <span
       style={{
