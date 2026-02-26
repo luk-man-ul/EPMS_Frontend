@@ -1,76 +1,94 @@
 import { useEffect, useState } from 'react'
 import api from '../../../utils/api'
+import TicketFilters from './components/TicketFilters'
+import TicketsTable from './components/TicketsTable'
 
-const TeamLeadTickets = () => {
+const TicketsPage = () => {
   const [tickets, setTickets] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchTickets()
-  }, [statusFilter])
+  const [projectFilter, setProjectFilter] = useState('all')
+  const [assignedToFilter, setAssignedToFilter] = useState('all')
+  const [priorityFilter, setPriorityFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [typeFilter, setTypeFilter] = useState('all')
 
   const fetchTickets = async () => {
     try {
-      const res = await api.get('/tickets', {
-        params: statusFilter !== 'all'
-          ? { status: statusFilter }
-          : {}
-      })
+      setLoading(true)
+      setError(null)
 
-      console.log('TICKETS RESPONSE:', res.data)
+      const params: any = {}
 
-      setTickets(res.data.data ?? res.data)
-    } catch (err) {
-      console.error('Failed to load tickets', err)
+      if (statusFilter !== 'all') params.status = statusFilter.toUpperCase()
+      if (priorityFilter !== 'all') params.priority = priorityFilter.toUpperCase()
+      if (projectFilter !== 'all') params.projectId = projectFilter
+      if (assignedToFilter !== 'all') params.assignedToId = assignedToFilter
+
+      const res = await api.get('/tickets', { params })
+
+      const mapped = res.data.data.map((ticket: any) => ({
+        id: ticket.id,
+        title: ticket.title,
+        description: ticket.description,
+        project: ticket.project?.name ?? 'N/A',
+        assignedTo: ticket.assignee
+          ? `${ticket.assignee.firstName} ${ticket.assignee.lastName}`
+          : 'Unassigned',
+        priority: ticket.priority.toLowerCase(),
+        status: ticket.status.toLowerCase().replace(/_/g, '-'),
+        type: ticket.type.toLowerCase(),
+        createdDate: ticket.createdAt,
+      }))
+
+      setTickets(mapped)
+    } catch (err: any) {
+      if (err.response?.status === 403) {
+        setError('restricted')
+      } else {
+        setError('failed')
+      }
     } finally {
       setLoading(false)
     }
   }
 
+  useEffect(() => {
+    fetchTickets()
+  }, [projectFilter, assignedToFilter, priorityFilter, statusFilter, typeFilter])
+
   if (loading) return <div>Loading tickets...</div>
+
+  if (error === 'restricted') {
+    return <div>🔒 Restricted Access</div>
+  }
+
+  if (error === 'failed') {
+    return <div>Failed to load tickets</div>
+  }
 
   return (
     <div>
-      <h1 style={{ marginBottom: 20 }}>Ticket Center</h1>
+      <TicketFilters
+        projectFilter={projectFilter}
+        assignedToFilter={assignedToFilter}
+        priorityFilter={priorityFilter}
+        statusFilter={statusFilter}
+        typeFilter={typeFilter}
+        projects={['all']}
+        employees={['all']}
+        onProjectChange={setProjectFilter}
+        onAssignedToChange={setAssignedToFilter}
+        onPriorityChange={setPriorityFilter}
+        onStatusChange={setStatusFilter}
+        onTypeChange={setTypeFilter}
+        onCreateTicket={() => {}}
+      />
 
-      {/* Filter */}
-      <select
-        value={statusFilter}
-        onChange={(e) => setStatusFilter(e.target.value)}
-        style={{ marginBottom: 20 }}
-      >
-        <option value="all">All</option>
-        <option value="OPEN">Open</option>
-        <option value="IN_PROGRESS">In Progress</option>
-        <option value="RESOLVED">Resolved</option>
-        <option value="CLOSED">Closed</option>
-      </select>
-
-      {/* Tickets */}
-      {tickets.map(ticket => (
-        <div
-          key={ticket.id}
-          style={{
-            padding: 16,
-            marginBottom: 12,
-            border: '1px solid #e5e5e5',
-            borderRadius: 10,
-            background: '#fff'
-          }}
-        >
-          <strong>{ticket.title}</strong>
-          <div>Status: {ticket.status}</div>
-          <div>Priority: {ticket.priority}</div>
-          <div>Project: {ticket.project?.name}</div>
-        </div>
-      ))}
-
-      {tickets.length === 0 && (
-        <div>No tickets found</div>
-      )}
+      <TicketsTable tickets={tickets} />
     </div>
   )
 }
 
-export default TeamLeadTickets
+export default TicketsPage

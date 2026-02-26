@@ -1,36 +1,16 @@
-import { useEffect, useState } from 'react'
-import api from '../../../../../utils/api'
-
 interface Props {
-  projectId: string
+  members: any[]
 }
 
-const TeamMembersTab = ({ projectId }: Props) => {
-  const [members, setMembers] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const res = await api.get(`/projects/${projectId}/members`)
-        setMembers(res.data)
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchMembers()
-  }, [projectId])
-
-  if (loading) return <div>Loading team...</div>
+const TeamMembersTab = ({ members }: Props) => {
+  if (!members || members.length === 0)
+    return <div>No team members assigned</div>
 
   return (
     <div>
-      {members.map((member) => (
-        <div key={member.id}>
-          {member.firstName} {member.lastName}
+      {members.map((m) => (
+        <div key={m.userId}>
+          {m.user.firstName} {m.user.lastName} — {m.user.email}
         </div>
       ))}
     </div>

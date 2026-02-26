@@ -1,121 +1,182 @@
-const ProjectSummary = () => {
+import { useEffect, useState } from 'react'
+import api from '../../../../../utils/api'
+
+interface Props {
+  project: any
+}
+
+const ProjectSummary = ({ project }: Props) => {
+  const [status, setStatus] = useState(project?.status)
+  const [updating, setUpdating] = useState(false)
+
+  useEffect(() => {
+    setStatus(project?.status)
+  }, [project])
+
+  if (!project) return null
+
+  ////////////////////////////////////////////////////////////
+  // 🔒 CHECK OPEN TASKS
+  ////////////////////////////////////////////////////////////
+
+  const hasOpenTasks =
+    project.tasks?.some(
+      (task: any) => task.status !== 'COMPLETED'
+    ) ?? false
+
+  ////////////////////////////////////////////////////////////
+  // STATUS UPDATE
+  ////////////////////////////////////////////////////////////
+
+  const handleStatusChange = async (newStatus: string) => {
+    try {
+      setUpdating(true)
+
+      const res = await api.patch(
+        `/projects/${project.id}/status`,
+        { status: newStatus }
+      )
+
+      setStatus(res.data.status)
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Update failed')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  ////////////////////////////////////////////////////////////
+  // RENDER
+  ////////////////////////////////////////////////////////////
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px' }}>
-      {/* Description Card */}
-      <div style={{
-        background: '#fff',
-        border: '1px solid #e5e5e5',
-        borderRadius: '12px',
-        padding: '24px'
-      }}>
-        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#1a1a1a' }}>
-          Description
-        </h3>
-        <p style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>
-          Building a modern e-commerce platform with advanced features including real-time inventory management, 
-          payment processing, and customer analytics dashboard.
-        </p>
-      </div>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+      gap: '20px'
+    }}>
 
-      {/* Timeline Card */}
-      <div style={{
-        background: '#fff',
-        border: '1px solid #e5e5e5',
-        borderRadius: '12px',
-        padding: '24px'
-      }}>
-        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#1a1a1a' }}>
-          Timeline
-        </h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '14px', color: '#666' }}>Start Date</span>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: '#1a1a1a' }}>2026-01-15</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '14px', color: '#666' }}>Deadline</span>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: '#1a1a1a' }}>2026-04-15</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '14px', color: '#666' }}>Duration</span>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: '#1a1a1a' }}>3 months</span>
-          </div>
-        </div>
-      </div>
+      {/* Description */}
+      <Card title="Description">
+        {project.description || 'No description available'}
+      </Card>
 
-      {/* Status Card */}
-      <div style={{
-        background: '#fff',
-        border: '1px solid #e5e5e5',
-        borderRadius: '12px',
-        padding: '24px'
-      }}>
-        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#1a1a1a' }}>
-          Status
-        </h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '14px', color: '#666' }}>Current Status</span>
-            <span style={{
-              padding: '6px 12px',
-              borderRadius: '8px',
-              fontSize: '12px',
-              fontWeight: 500,
-              backgroundColor: '#f0f0f0',
-              color: '#1a1a1a',
-              border: '1px solid #e5e5e5'
-            }}>
-              Active
-            </span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '14px', color: '#666' }}>Progress</span>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: '#1a1a1a' }}>67%</span>
-          </div>
-          <div style={{ 
-            height: '8px', 
-            background: '#f0f0f0', 
-            borderRadius: '4px',
-            overflow: 'hidden',
-            marginTop: '4px'
-          }}>
-            <div style={{ 
-              height: '100%', 
-              width: '67%', 
-              background: '#1a1a1a', 
-              borderRadius: '4px' 
-            }} />
-          </div>
-        </div>
-      </div>
+      {/* Timeline */}
+      <Card title="Timeline">
+        <Row label="Start Date" value={formatDate(project.startDate)} />
+        <Row label="Deadline" value={formatDate(project.endDate)} />
+      </Card>
 
-      {/* Budget Card */}
-      <div style={{
-        background: '#fff',
-        border: '1px solid #e5e5e5',
-        borderRadius: '12px',
-        padding: '24px'
-      }}>
-        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#1a1a1a' }}>
-          Budget
-        </h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '14px', color: '#666' }}>Total Budget</span>
-            <span style={{ fontSize: '18px', fontWeight: 600, color: '#1a1a1a' }}>$150,000</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '14px', color: '#666' }}>Spent</span>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: '#1a1a1a' }}>$98,000</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '14px', color: '#666' }}>Remaining</span>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: '#1a1a1a' }}>$52,000</span>
-          </div>
+      {/* Status */}
+      <Card title="Status">
+
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ fontSize: 13, color: '#666' }}>
+            Current Status
+          </label>
+
+          <select
+            value={status}
+            disabled={updating}
+            onChange={(e) =>
+              handleStatusChange(e.target.value)
+            }
+            style={{
+              marginTop: 6,
+              width: '100%',
+              padding: '8px 10px',
+              borderRadius: 8,
+              border: '1px solid #ddd',
+              fontSize: 13
+            }}
+          >
+            <option value="PLANNING">PLANNING</option>
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="ON_HOLD">ON_HOLD</option>
+
+            <option
+              value="COMPLETED"
+              disabled={hasOpenTasks}
+            >
+              COMPLETED
+              {hasOpenTasks
+                ? ' (Open tasks exist)'
+                : ''}
+            </option>
+
+            <option value="ARCHIVED">ARCHIVED</option>
+          </select>
+
+          {hasOpenTasks && status !== 'COMPLETED' && (
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 12,
+                color: '#b45309',
+              }}
+            >
+              {/* ⚠ Cannot complete project until all tasks are finished. */}
+            </div>
+          )}
         </div>
-      </div>
+
+        <Row label="Progress" value={`${project.progress}%`} />
+        <ProgressBar value={project.progress} />
+
+      </Card>
+
+      {/* Budget */}
+      <Card title="Budget">
+        <Row label="Total Budget" value={`$${project.budget ?? 0}`} />
+      </Card>
+
     </div>
   )
 }
+
+//////////////////////////////////////////////////////////////
+// Helpers
+//////////////////////////////////////////////////////////////
+
+const formatDate = (date: string | null) =>
+  date ? new Date(date).toLocaleDateString() : 'N/A'
+
+const Card = ({ title, children }: any) => (
+  <div style={{
+    background: '#fff',
+    border: '1px solid #e5e5e5',
+    borderRadius: 12,
+    padding: 24
+  }}>
+    <h3 style={{ marginBottom: 16 }}>{title}</h3>
+    {children}
+  </div>
+)
+
+const Row = ({ label, value }: any) => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: 12
+  }}>
+    <span style={{ color: '#666' }}>{label}</span>
+    <span style={{ fontWeight: 500 }}>{value}</span>
+  </div>
+)
+
+const ProgressBar = ({ value }: any) => (
+  <div style={{
+    height: 8,
+    background: '#f0f0f0',
+    borderRadius: 4,
+    overflow: 'hidden'
+  }}>
+    <div style={{
+      height: '100%',
+      width: `${value}%`,
+      background: '#1a1a1a'
+    }} />
+  </div>
+)
 
 export default ProjectSummary

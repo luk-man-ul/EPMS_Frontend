@@ -1,32 +1,10 @@
-import { useEffect, useState } from 'react'
-import api from '../../../../../utils/api'
-
 interface Props {
-  projectId: string
+  tickets: any[]
 }
 
-const TicketsTab = ({ projectId }: Props) => {
-  const [tickets, setTickets] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchTickets = async () => {
-      try {
-        const res = await api.get('/tickets', {
-          params: { projectId }
-        })
-        setTickets(res.data.data ?? res.data)
-      } catch (err) {
-        console.error('Failed to load tickets', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchTickets()
-  }, [projectId])
-
-  if (loading) return <div>Loading tickets...</div>
+const TicketsTab = ({ tickets }: Props) => {
+  if (!tickets || tickets.length === 0)
+    return <div>No tickets found</div>
 
   return (
     <div>
@@ -44,12 +22,10 @@ const TicketsTab = ({ projectId }: Props) => {
           <strong>{ticket.title}</strong>
           <div>Status: {ticket.status}</div>
           <div>Priority: {ticket.priority}</div>
+          <div>Reporter: {ticket.reporter}</div>
+          <div>Assignee: {ticket.assignee}</div>
         </div>
       ))}
-
-      {tickets.length === 0 && (
-        <div>No tickets found</div>
-      )}
     </div>
   )
 }

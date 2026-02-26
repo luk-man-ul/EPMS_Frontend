@@ -1,45 +1,25 @@
-const TeamMembersPanel = () => {
+interface Props {
+  project: any
+}
+
+const TeamMembersPanel = ({ project }: Props) => {
+  const members = project.members || []
+
   return (
     <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px',
-        }}
-      >
-        <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1a1a1a' }}>
-          Team Members
-        </h3>
+      <h3 style={{ marginBottom: '20px' }}>Team Members ({members.length})</h3>
 
-        <button
-          style={{
-            padding: '8px 16px',
-            borderRadius: '8px',
-            border: '1px solid #e5e5e5',
-            backgroundColor: '#fff',
-            color: '#1a1a1a',
-            fontWeight: 500,
-            cursor: 'pointer',
-            fontSize: '14px',
-          }}
-        >
-          + Add Member
-        </button>
-      </div>
+      {members.length === 0 && (
+        <div style={{ padding: '40px', background: '#fafafa', borderRadius: '12px' }}>
+          No members assigned.
+        </div>
+      )}
 
-      <div
-        style={{
-          padding: '40px',
-          background: '#fafafa',
-          borderRadius: '12px',
-          textAlign: 'center',
-          color: '#666',
-        }}
-      >
-        Members will be loaded from backend.
-      </div>
+      {members.map((m: any) => (
+        <div key={m.userId} style={{ padding: '12px 0', borderBottom: '1px solid #eee' }}>
+          {m.user?.firstName} {m.user?.lastName} — {m.user?.email}
+        </div>
+      ))}
     </div>
   )
 }

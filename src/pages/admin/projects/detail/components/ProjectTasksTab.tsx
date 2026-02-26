@@ -1,45 +1,27 @@
-const ProjectTasksTab = () => {
+interface Props {
+  project: any
+}
+
+const ProjectTasksTab = ({ project }: Props) => {
+  const tasks = project.tasks || []
+
   return (
     <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px',
-        }}
-      >
-        <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1a1a1a' }}>
-          Task Board
-        </h3>
+      <h3 style={{ marginBottom: '20px' }}>Tasks ({tasks.length})</h3>
 
-        <button
-          style={{
-            padding: '8px 16px',
-            borderRadius: '8px',
-            border: 'none',
-            backgroundColor: '#1a1a1a',
-            color: '#fff',
-            fontWeight: 500,
-            cursor: 'pointer',
-            fontSize: '14px',
-          }}
-        >
-          + Add Task
-        </button>
-      </div>
+      {tasks.length === 0 && (
+        <div style={{ padding: '40px', background: '#fafafa', borderRadius: '12px' }}>
+          No tasks yet.
+        </div>
+      )}
 
-      <div
-        style={{
-          padding: '40px',
-          background: '#fafafa',
-          borderRadius: '12px',
-          textAlign: 'center',
-          color: '#666',
-        }}
-      >
-        No tasks yet. Task module will power this board.
-      </div>
+      {tasks.map((task: any) => (
+        <div key={task.id} style={{ padding: '12px', borderBottom: '1px solid #eee' }}>
+          <strong>{task.title}</strong>
+          <div>Status: {task.status}</div>
+          <div>Priority: {task.priority}</div>
+        </div>
+      ))}
     </div>
   )
 }
