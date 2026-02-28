@@ -1,168 +1,187 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import api from '../../../utils/api'
-import StatsCards from './components/StatsCards'
-import TaskFilters from './components/TaskFilters'
-import TasksTable from './components/TasksTable'
+import TaskTable from '../../shared/tasks/components/TaskTable'
+import TaskFilters from '../../shared/tasks/components/TaskFilters'
 import { useAuth } from '../../../context/AuthContext'
 
 const TeamTasksPage = () => {
   const { user } = useAuth()
+  const navigate = useNavigate()
 
   const [tasks, setTasks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  const [projectFilter, setProjectFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [priorityFilter, setPriorityFilter] = useState('all')
+  // ✅ Universal filter object
+  const [filters, setFilters] = useState<any>({})
 
   ////////////////////////////////////////////////////////////////
   // FETCH TASKS
   ////////////////////////////////////////////////////////////////
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const res = await api.get('/tasks')
+  const fetchTasks = async () => {
+    try {
+      setLoading(true)
 
-        const mapped = res.data.data.map((t: any) => ({
-          id: t.id,
-          title: t.title,
-          description: t.description,
-          project: t.project?.name ?? 'Unknown',
-          projectId: t.project?.id,
-          status: normalizeStatus(t.status),
-          priority: t.priority?.toLowerCase(),
-          assignee: t.assignee
-            ? `${t.assignee.firstName} ${t.assignee.lastName}`
-            : 'Unassigned',
-          dueDate: t.dueDate,
-          progress: calculateProgress(t.status),
-        }))
-
-        setTasks(mapped)
-      } catch (err) {
-        console.error('Failed to fetch tasks', err)
-      } finally {
-        setLoading(false)
-      }
+      const res = await api.get('/tasks')
+      setTasks(res.data.data || [])
+    } catch (err) {
+      console.error('Failed to fetch tasks', err)
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchTasks()
   }, [])
 
   ////////////////////////////////////////////////////////////////
-  // HELPERS
+  // STATUS UPDATE
   ////////////////////////////////////////////////////////////////
 
-  const normalizeStatus = (status: string) => {
-    switch (status) {
-      case 'TODO':
-        return 'todo'
-      case 'IN_PROGRESS':
-        return 'in-progress'
-      case 'REVIEW':
-        return 'review'
-      case 'COMPLETED':
-        return 'completed'
-      default:
-        return status?.toLowerCase()
-    }
-  }
-
-  const calculateProgress = (status: string) => {
-    switch (status) {
-      case 'TODO':
-        return 10
-      case 'IN_PROGRESS':
-        return 50
-      case 'REVIEW':
-        return 80
-      case 'COMPLETED':
-        return 100
-      default:
-        return 0
+  const handleStatusChange = async (
+    taskId: string,
+    status: string
+  ) => {
+    try {
+      await api.patch(`/tasks/${taskId}`, { status })
+      fetchTasks()
+    } catch (err) {
+      console.error('Status update failed', err)
     }
   }
 
   ////////////////////////////////////////////////////////////////
-  // FILTERING
+  // FILTERING (BASED ON UNIVERSAL FILTER STRUCTURE)
   ////////////////////////////////////////////////////////////////
 
-  const filteredTasks = tasks.filter((task) => {
-    const matchesProject =
-      projectFilter === 'all' || task.project === projectFilter
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((task) => {
+      const matchesProject =
+        !filters.projectId ||
+        task.project?.id === filters.projectId
 
-    const matchesStatus =
-      statusFilter === 'all' || task.status === statusFilter
+      const matchesStatus =
+        !filters.status ||
+        task.status === filters.status
 
-    const matchesPriority =
-      priorityFilter === 'all' || task.priority === priorityFilter
+      const matchesPriority =
+        !filters.priority ||
+        task.priority === filters.priority
 
-    return matchesProject && matchesStatus && matchesPriority
-  })
+      const matchesDueDate =
+        !filters.dueDate ||
+        (task.dueDate &&
+          task.dueDate.startsWith(filters.dueDate))
 
-  ////////////////////////////////////////////////////////////////
-  // FILTER OPTIONS
-  ////////////////////////////////////////////////////////////////
-
-  const projects = [
-    'all',
-    ...Array.from(new Set(tasks.map((t) => t.project))),
-  ]
-
-  ////////////////////////////////////////////////////////////////
-  // STATS
-  ////////////////////////////////////////////////////////////////
-
-  const stats = {
-    total: tasks.length,
-    todo: tasks.filter((t) => t.status === 'todo').length,
-    inProgress: tasks.filter((t) => t.status === 'in-progress').length,
-    review: tasks.filter((t) => t.status === 'review').length,
-    completed: tasks.filter((t) => t.status === 'completed').length,
-  }
+      return (
+        matchesProject &&
+        matchesStatus &&
+        matchesPriority &&
+        matchesDueDate
+      )
+    })
+  }, [tasks, filters])
 
   ////////////////////////////////////////////////////////////////
+  // PROJECT OPTIONS (FORMAT FOR UNIVERSAL FILTER)
+  ////////////////////////////////////////////////////////////////
 
-  if (loading) return <div>Loading tasks...</div>
+  const projects = useMemo(() => {
+    const map = new Map()
 
+    tasks.forEach((task) => {
+      if (task.project?.id) {
+        map.set(task.project.id, {
+          id: task.project.id,
+          name: task.project.name,
+        })
+      }
+    })
+
+    return Array.from(map.values())
+  }, [tasks])
+
+  ////////////////////////////////////////////////////////////////
+  // NAVIGATION
   ////////////////////////////////////////////////////////////////
 
   const handleCreateTask = () => {
-    console.log('Open create modal')
+    navigate('/app/tasks/create')
   }
 
   ////////////////////////////////////////////////////////////////
 
   return (
-    <div>
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 700 }}>
-          Team Task Management
+    <div
+      style={{
+        padding: '32px',
+        background: '#f8fafc',
+        minHeight: '100vh',
+      }}
+    >
+      {/* HEADER */}
+      <div
+        style={{
+          marginBottom: '24px',
+        }}
+      >
+        <h1
+          style={{
+            fontSize: '28px',
+            fontWeight: 700,
+            marginBottom: '6px',
+          }}
+        >
+          Task Management
         </h1>
-        <p style={{ fontSize: '14px', color: '#666' }}>
-          Manage and track all team tasks across projects
+        <p
+          style={{
+            fontSize: '14px',
+            color: '#64748b',
+          }}
+        >
+          Manage, assign and track team tasks
         </p>
       </div>
 
-      <StatsCards stats={stats} />
-
+      {/* UNIVERSAL FILTER */}
       <TaskFilters
-        projectFilter={projectFilter}
-        statusFilter={statusFilter}
-        priorityFilter={priorityFilter}
         projects={projects}
-        onProjectChange={setProjectFilter}
-        onStatusChange={setStatusFilter}
-        onPriorityChange={setPriorityFilter}
+        filters={filters}
+        onFilterChange={(newFilters) => {
+          if (newFilters.__clear) {
+            setFilters({})
+          } else {
+            setFilters((prev: any) => ({
+              ...prev,
+              ...newFilters,
+            }))
+          }
+        }}
+        showCreateButton={user?.role === 'TEAM_LEAD'}
         onCreateTask={handleCreateTask}
-isTeamLead={user?.role === 'TEAM_LEAD'}
       />
 
-      <TasksTable
-        tasks={filteredTasks}
-        role={user?.role}
-      />
+      {/* TABLE */}
+      <div
+        style={{
+          background: '#ffffff',
+          borderRadius: '14px',
+          padding: '24px',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.04)',
+          border: '1px solid #f1f5f9',
+        }}
+      >
+        <TaskTable
+          tasks={filteredTasks}
+          loading={loading}
+          onStatusChange={handleStatusChange}
+          onEdit={(id) => navigate(`/app/tasks/${id}`)}
+          onDelete={() => {}}
+        />
+      </div>
     </div>
   )
 }

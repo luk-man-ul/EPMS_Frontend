@@ -39,7 +39,9 @@ const ProjectActions = ({ projectId, onEdit, onDelete }: Props) => {
   ////////////////////////////////////////////////////////////
 
   const isAdmin = location.pathname.startsWith('/admin')
-  const basePath = isAdmin ? '/admin/projects' : '/teamlead/projects'
+// ✅ CORRECT
+const basePath = isAdmin ? '/admin/projects' : '/app/projects'
+
 
   ////////////////////////////////////////////////////////////
   // HANDLERS

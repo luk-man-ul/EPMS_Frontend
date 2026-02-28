@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import api from '../../../utils/api'
 import TicketFilters from './components/TicketFilters'
 import TicketsTable from './components/TicketsTable'
 
 const TicketsPage = () => {
+  const navigate = useNavigate()
   const [tickets, setTickets] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -83,7 +85,7 @@ const TicketsPage = () => {
         onPriorityChange={setPriorityFilter}
         onStatusChange={setStatusFilter}
         onTypeChange={setTypeFilter}
-        onCreateTicket={() => {}}
+        onCreateTicket={() => navigate('/app/tickets/create')}
       />
 
       <TicketsTable tickets={tickets} />

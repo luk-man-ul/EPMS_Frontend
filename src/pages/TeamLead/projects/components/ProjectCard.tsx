@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Project } from '../types/project.types'
+import type { Project } from '../types/project.types'
 import ProjectStatus from './ProjectStatus'
 
 interface ProjectCardProps {

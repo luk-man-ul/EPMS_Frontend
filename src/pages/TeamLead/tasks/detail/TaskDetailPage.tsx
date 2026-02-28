@@ -25,16 +25,24 @@ const TaskDetailPage = () => {
     const fetchTask = async () => {
       try {
         const res = await api.get(`/tasks/${taskId}`)
-        setTask(res.data)
-      } catch (err) {
+        setTask(res.data.data || res.data)
+      } catch (err: any) {
         console.error('Failed to load task', err)
+        
+        // Handle specific error cases
+        if (err.response?.status === 403) {
+          navigate('/unauthorized')
+        } else if (err.response?.status === 404) {
+          setTask(null)
+        }
+        // 401 is handled by axios interceptor
       } finally {
         setLoading(false)
       }
     }
 
     if (taskId) fetchTask()
-  }, [taskId])
+  }, [taskId, navigate])
 
   ////////////////////////////////////////////////////////////
   // ROLE CHECK

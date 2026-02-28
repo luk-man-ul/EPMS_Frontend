@@ -33,11 +33,11 @@ const TaskActions = ({ taskId, onEdit, onDelete }: Props) => {
   }, [])
 
   ////////////////////////////////////////////////////////////
-  // DETECT WORKSPACE (ADMIN / TEAMLEAD)
+  // DETECT WORKSPACE (ADMIN / APP)
   ////////////////////////////////////////////////////////////
 
   const isAdmin = location.pathname.startsWith('/admin')
-  const basePath = isAdmin ? '/admin/tasks' : '/teamlead/tasks'
+  const basePath = isAdmin ? '/admin/tasks' : '/app/tasks'
 
   ////////////////////////////////////////////////////////////
   // HANDLERS

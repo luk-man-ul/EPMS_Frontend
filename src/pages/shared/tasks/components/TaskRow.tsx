@@ -24,7 +24,9 @@ const TaskRow = ({
     ? new Date(task.dueDate).toLocaleDateString()
     : '—'
 
-  const handleStatusToggle = () => {
+  const handleStatusToggle = (e: React.MouseEvent) => {
+    e.stopPropagation() // prevent row click
+
     const newStatus: TaskStatus =
       task.status === 'COMPLETED'
         ? 'IN_PROGRESS'
@@ -38,6 +40,7 @@ const TaskRow = ({
       style={{
         borderBottom: '1px solid #f5f5f5',
         transition: 'background 0.15s ease',
+        cursor: 'pointer', // show clickable
       }}
       onMouseEnter={(e) =>
         (e.currentTarget.style.backgroundColor = '#fafafa')
@@ -45,9 +48,10 @@ const TaskRow = ({
       onMouseLeave={(e) =>
         (e.currentTarget.style.backgroundColor = 'transparent')
       }
+      onClick={() => onEdit(task.id)} // ✅ THIS FIXES IT
     >
       <td style={{ padding: '16px 20px' }}>
-        <div style={{ fontWeight: 500, color: '#1a1a1a', fontSize: '14px' }}>
+        <div style={{ fontWeight: 500, fontSize: '14px' }}>
           {task.title}
         </div>
       </td>
@@ -56,7 +60,7 @@ const TaskRow = ({
         {task.project?.name}
       </td>
 
-      <td style={{ padding: '16px 20px', fontSize: '14px', color: '#1a1a1a' }}>
+      <td style={{ padding: '16px 20px', fontSize: '14px' }}>
         {assigneeName}
       </td>
 
@@ -64,7 +68,7 @@ const TaskRow = ({
         <TaskPriority priority={task.priority} />
       </td>
 
-      <td style={{ padding: '16px 20px', cursor: 'pointer' }}>
+      <td style={{ padding: '16px 20px' }}>
         <div onClick={handleStatusToggle}>
           <TaskStatusComponent status={task.status} />
         </div>
@@ -74,7 +78,10 @@ const TaskRow = ({
         {deadline}
       </td>
 
-      <td style={{ padding: '16px 20px', textAlign: 'right' }}>
+      <td
+        style={{ padding: '16px 20px', textAlign: 'right' }}
+        onClick={(e) => e.stopPropagation()} // prevent row click
+      >
         <TaskActions
           taskId={task.id}
           onEdit={onEdit}

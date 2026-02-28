@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import api from '../../../utils/api'
-import TaskFilters from './components/TaskFilters'
-import TaskTable from './components/TaskTable'
+import TaskFilters from '../../shared/tasks/components/TaskFilters'
+import TaskTable from '../../shared/tasks/components/TaskTable'
 import CreateTaskModal from './components/CreateTaskModal'
-import type { Task } from './types/task.types'
+import type { Task } from '../../shared/tasks/types/task.types'
 import { getProjectsForDropdown } from '../tickets/projects.api'
 import { getEmployeesForDropdown } from '../tickets/employees.api'
 
@@ -190,6 +190,11 @@ const TasksPage = () => {
   employees={employees}
   filters={filters}
   onFilterChange={handleFilterChange}
+  showCreateButton
+  onCreateTask={() => {
+    setEditingTask(null)
+    setIsModalOpen(true)
+  }}
 />
 
       <div

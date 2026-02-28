@@ -27,15 +27,24 @@ const ProjectDetailPage = () => {
       try {
         const res = await api.get(`/projects/${projectId}`)
         setProject(res.data)
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to load project', err)
+        
+        // Handle specific error cases
+        if (err.response?.status === 403) {
+          navigate('/unauthorized')
+        } else if (err.response?.status === 404) {
+          // Project not found - will be handled by the render check
+          setProject(null)
+        }
+        // 401 is handled by axios interceptor
       } finally {
         setLoading(false)
       }
     }
 
     if (projectId) fetchProject()
-  }, [projectId])
+  }, [projectId, navigate])
 
   if (loading) return <div>Loading project...</div>
   if (!project) return <div>Project not found</div>

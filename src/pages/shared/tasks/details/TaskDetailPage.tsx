@@ -19,8 +19,16 @@ const TaskDetailPage = () => {
     try {
       const res = await api.get(`/tasks/${taskId}`)
       setTask(res.data)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load task', err)
+      
+      // Handle specific error cases
+      if (err.response?.status === 403) {
+        navigate('/unauthorized')
+      } else if (err.response?.status === 404) {
+        setTask(null)
+      }
+      // 401 is handled by axios interceptor
     } finally {
       setLoading(false)
     }
@@ -28,7 +36,7 @@ const TaskDetailPage = () => {
 
   useEffect(() => {
     fetchTask()
-  }, [taskId])
+  }, [taskId, navigate])
 
   ////////////////////////////////////////////////////////////
   // STATUS UPDATE

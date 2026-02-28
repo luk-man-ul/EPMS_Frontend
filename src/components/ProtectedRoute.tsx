@@ -8,11 +8,17 @@ interface Props {
 }
 
 const ProtectedRoute = ({ role, permission, children }: Props) => {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
 
-  if (!user) {
-    return <Navigate to="/auth/login" replace />
-  }
+
+console.log("ProtectedRoute user:", user)
+if (loading) {
+  return null // or spinner
+}
+
+if (!user) {
+  return <Navigate to="/auth/login" replace />
+}
 
   // ROLE CHECK
   if (role) {

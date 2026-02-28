@@ -1,4 +1,4 @@
-import { Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import AdminLayout from '../layouts/AdminLayout'
 import ProtectedRoute from '../components/ProtectedRoute'
 
@@ -13,32 +13,35 @@ import Reports from '../pages/admin/Reports'
 import Notifications from '../pages/admin/Notifications'
 import Settings from '../pages/admin/Settings'
 import AdminProjectDetail from '../pages/admin/projects/detail/ProjectDetailPage'
-import TaskDetailPage from '../pages/admin/tasks/detail/TaskDetailPage'
+import TaskDetailPage from '../pages/shared/tasks/details/TaskDetailPage'
+import TicketDetailPage from '../pages/TeamLead/tickets/detail/TicketDetailPage'
 
 const AdminRoutes = () => (
-  <Route
-    path="/admin"
-    element={
-      <ProtectedRoute role="ADMIN">
-        <AdminLayout />
-      </ProtectedRoute>
-    }
-  >
-    <Route index element={<Navigate to="dashboard" replace />} />
+  <Routes>
+    <Route
+      element={
+        <ProtectedRoute role="ADMIN">
+          <AdminLayout />
+        </ProtectedRoute>
+      }
+    >
+      <Route index element={<Navigate to="dashboard" replace />} />
 
-    <Route path="dashboard" element={<AdminDashboard />} />
-    <Route path="employees" element={<EmployeesPage />} />
-    <Route path="projects" element={<Projects />} />
-    <Route path="projects/:projectId" element={<AdminProjectDetail />} />
-    <Route path="tasks" element={<Tasks />} />
-    <Route path="tasks/:taskId" element={<TaskDetailPage />} />
-    <Route path="tickets" element={<Tickets />} />
-    <Route path="attendance" element={<Attendance />} />
-    <Route path="finance" element={<Finance />} />
-    <Route path="reports" element={<Reports />} />
-    <Route path="notifications" element={<Notifications />} />
-    <Route path="settings" element={<Settings />} />
-  </Route>
+      <Route path="dashboard" element={<AdminDashboard />} />
+      <Route path="employees" element={<EmployeesPage />} />
+      <Route path="projects" element={<Projects />} />
+      <Route path="projects/:projectId" element={<AdminProjectDetail />} />
+      <Route path="tasks" element={<Tasks />} />
+      <Route path="tasks/:taskId" element={<TaskDetailPage />} />
+      <Route path="tickets" element={<Tickets />} />
+      <Route path="tickets/:ticketId" element={<TicketDetailPage />} />
+      <Route path="attendance" element={<Attendance />} />
+      <Route path="finance" element={<Finance />} />
+      <Route path="reports" element={<Reports />} />
+      <Route path="notifications" element={<Notifications />} />
+      <Route path="settings" element={<Settings />} />
+    </Route>
+  </Routes>
 )
 
 export default AdminRoutes

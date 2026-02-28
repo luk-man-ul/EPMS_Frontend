@@ -1,3 +1,9 @@
+import React from 'react'
+
+//////////////////////////////////////////////////////////////
+// TYPES
+//////////////////////////////////////////////////////////////
+
 interface ProjectOption {
   id: string
   name: string
@@ -8,25 +14,46 @@ interface EmployeeOption {
   name: string
 }
 
+interface TaskFilterValues {
+  projectId?: string
+  status?: string
+  priority?: string
+  assignedToId?: string
+  dueDate?: string
+}
+
 interface Props {
   projects: ProjectOption[]
-  employees: EmployeeOption[]
-  filters: any
+  employees?: EmployeeOption[] // optional (TeamLead won't pass this)
+  filters: TaskFilterValues
   onFilterChange: (filters: any) => void
+  showCreateButton?: boolean
+  onCreateTask?: () => void
 }
+
+//////////////////////////////////////////////////////////////
+// COMPONENT
+//////////////////////////////////////////////////////////////
 
 const TaskFilters = ({
   projects,
   employees,
   filters,
   onFilterChange,
+  showCreateButton,
+  onCreateTask,
 }: Props) => {
+  const handleChange = (key: keyof TaskFilterValues, value: string) => {
+    onFilterChange({ [key]: value })
+  }
+
   return (
     <div
       style={{
         display: 'flex',
         gap: '12px',
         flexWrap: 'wrap',
+        alignItems: 'center',
         marginBottom: '20px',
       }}
     >
@@ -35,7 +62,7 @@ const TaskFilters = ({
         style={selectStyle}
         value={filters.projectId || ''}
         onChange={(e) =>
-          onFilterChange({ projectId: e.target.value })
+          handleChange('projectId', e.target.value)
         }
       >
         <option value="">All Projects</option>
@@ -51,7 +78,7 @@ const TaskFilters = ({
         style={selectStyle}
         value={filters.status || ''}
         onChange={(e) =>
-          onFilterChange({ status: e.target.value })
+          handleChange('status', e.target.value)
         }
       >
         <option value="">All Status</option>
@@ -67,7 +94,7 @@ const TaskFilters = ({
         style={selectStyle}
         value={filters.priority || ''}
         onChange={(e) =>
-          onFilterChange({ priority: e.target.value })
+          handleChange('priority', e.target.value)
         }
       >
         <option value="">All Priority</option>
@@ -77,21 +104,23 @@ const TaskFilters = ({
         <option value="URGENT">Urgent</option>
       </select>
 
-      {/* User Filter */}
-      <select
-        style={selectStyle}
-        value={filters.assignedToId || ''}
-        onChange={(e) =>
-          onFilterChange({ assignedToId: e.target.value })
-        }
-      >
-        <option value="">All Users</option>
-        {employees.map((emp) => (
-          <option key={emp.id} value={emp.id}>
-            {emp.name}
-          </option>
-        ))}
-      </select>
+      {/* Employee Filter (only if provided) */}
+      {employees && employees.length > 0 && (
+        <select
+          style={selectStyle}
+          value={filters.assignedToId || ''}
+          onChange={(e) =>
+            handleChange('assignedToId', e.target.value)
+          }
+        >
+          <option value="">All Users</option>
+          {employees.map((emp) => (
+            <option key={emp.id} value={emp.id}>
+              {emp.name}
+            </option>
+          ))}
+        </select>
+      )}
 
       {/* Due Date */}
       <input
@@ -99,7 +128,7 @@ const TaskFilters = ({
         style={selectStyle}
         value={filters.dueDate || ''}
         onChange={(e) =>
-          onFilterChange({ dueDate: e.target.value })
+          handleChange('dueDate', e.target.value)
         }
       />
 
@@ -108,20 +137,32 @@ const TaskFilters = ({
         style={clearButtonStyle}
         onClick={() => onFilterChange({ __clear: true })}
       >
-        Clear Filters
+        Clear
       </button>
+
+      {/* Create Task Button (only for TeamLead) */}
+      {showCreateButton && onCreateTask && (
+        <button
+          style={createButtonStyle}
+          onClick={onCreateTask}
+        >
+          + Create Task
+        </button>
+      )}
     </div>
   )
 }
 
 export default TaskFilters
 
-//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+// STYLES
+//////////////////////////////////////////////////////////////
 
 const selectStyle: React.CSSProperties = {
-  padding: '8px 16px',
+  padding: '8px 14px',
   borderRadius: '8px',
-  border: '1px solid #e5e5e5',
+  border: '1px solid #e5e7eb',
   background: '#fff',
   fontSize: '14px',
   color: '#1a1a1a',
@@ -130,12 +171,23 @@ const selectStyle: React.CSSProperties = {
 }
 
 const clearButtonStyle: React.CSSProperties = {
-  padding: '8px 16px',
+  padding: '8px 14px',
   borderRadius: '8px',
-  border: '1px solid #e5e5e5',
+  border: '1px solid #e5e7eb',
   background: '#fff',
   fontSize: '14px',
   color: '#666',
   cursor: 'pointer',
   fontWeight: 500,
+}
+
+const createButtonStyle: React.CSSProperties = {
+  padding: '8px 16px',
+  borderRadius: '8px',
+  border: 'none',
+  backgroundColor: '#111827',
+  color: '#fff',
+  fontSize: '14px',
+  cursor: 'pointer',
+  fontWeight: 600,
 }

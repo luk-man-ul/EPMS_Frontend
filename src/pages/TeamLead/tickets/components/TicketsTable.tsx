@@ -92,7 +92,7 @@ const TicketsTable = ({ tickets }: TicketsTableProps) => {
               e.currentTarget.style.borderColor = '#e5e5e5'
               e.currentTarget.style.boxShadow = 'none'
             }}
-            onClick={() => navigate(`/teamlead/tickets/${ticket.id}`)}
+            onClick={() => navigate(`/app/tickets/${ticket.id}`)}
           >
             <div style={{
               display: 'flex',
@@ -203,7 +203,7 @@ const TicketsTable = ({ tickets }: TicketsTableProps) => {
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  navigate(`/teamlead/tickets/${ticket.id}`)
+                  navigate(`/app/tickets/${ticket.id}`)
                 }}
                 style={{
                   padding: '8px 16px',
