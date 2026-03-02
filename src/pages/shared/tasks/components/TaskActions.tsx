@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../../../../context/AuthContext'
 
 interface Props {
   taskId: string
@@ -10,6 +11,7 @@ interface Props {
 const TaskActions = ({ taskId, onEdit, onDelete }: Props) => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -38,6 +40,9 @@ const TaskActions = ({ taskId, onEdit, onDelete }: Props) => {
 
   const isAdmin = location.pathname.startsWith('/admin')
   const basePath = isAdmin ? '/admin/tasks' : '/app/tasks'
+  
+  // EMPLOYEE role should only see View button
+  const isEmployee = user?.role === 'EMPLOYEE'
 
   ////////////////////////////////////////////////////////////
   // HANDLERS
@@ -80,17 +85,19 @@ const TaskActions = ({ taskId, onEdit, onDelete }: Props) => {
         View
       </button>
 
-      {/* 3 Dot Button */}
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        style={threeDotButtonStyle}
-      >
-        ⋮
-      </button>
+      {/* 3 Dot Button - Hide for EMPLOYEE */}
+      {!isEmployee && (
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          style={threeDotButtonStyle}
+        >
+          ⋮
+        </button>
+      )}
 
-      {/* Dropdown */}
-      {open && (
+      {/* Dropdown - Hide for EMPLOYEE */}
+      {!isEmployee && open && (
         <div style={dropdownStyle}>
           <DropdownItem label="View Details" onClick={handleView} />
           <DropdownItem label="Edit" onClick={handleEdit} />

@@ -1,5 +1,6 @@
 import type { Employee } from '../types/employee.types'
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 interface Props {
   employees: Employee[]
@@ -20,6 +21,7 @@ const EmployeeTable = ({
 }: Props) => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement | null>(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {
@@ -97,7 +99,27 @@ const EmployeeTable = ({
           const role = getPrimaryRole(emp)
 
           return (
-            <tr key={emp.id} style={{ borderTop: '1px solid #eee' }}>
+            <tr 
+              key={emp.id} 
+              style={{ 
+                borderTop: '1px solid #eee',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f9fafb'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+              }}
+              onClick={(e) => {
+                // Don't navigate if clicking on the actions button or menu
+                const target = e.target as HTMLElement
+                if (!target.closest('button') && !target.closest('[data-menu]')) {
+                  navigate(`/admin/employees/${emp.id}`)
+                }
+              }}
+            >
               
               {/* Name + Avatar */}
               <td style={tdStyle}>
@@ -214,7 +236,7 @@ const EmployeeTable = ({
                 </button>
 
                 {openMenuId === emp.id && (
-  <div ref={menuRef} style={dropdownStyle}>
+  <div ref={menuRef} style={dropdownStyle} data-menu="true">
 
                     
                     {/* Edit */}

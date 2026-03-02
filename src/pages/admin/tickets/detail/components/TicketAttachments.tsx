@@ -1,6 +1,12 @@
-import { ticketAttachmentsData } from '../../data/ticketsData'
+import type { Attachment } from '../../../../../types/ticket'
 
-const TicketAttachments = () => {
+interface TicketAttachmentsProps {
+  attachments: Attachment[]
+  onUpload?: (file: File) => void
+  onDownload?: (attachmentId: string) => void
+}
+
+const TicketAttachments = ({ attachments, onUpload, onDownload }: TicketAttachmentsProps) => {
   const getFileIcon = (type: string) => {
     if (type.includes('image')) return '🖼️'
     if (type.includes('pdf')) return '📄'
@@ -22,29 +28,52 @@ const TicketAttachments = () => {
         marginBottom: '16px'
       }}>
         <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a' }}>
-          Attachments ({ticketAttachmentsData.length})
+          Attachments ({attachments.length})
         </h3>
-        <button
-          style={{
-            padding: '6px 12px',
-            borderRadius: '8px',
-            border: '1px solid #e5e5e5',
-            background: '#fff',
-            fontSize: '13px',
-            fontWeight: 500,
-            color: '#1a1a1a',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
-        >
-          + Upload
-        </button>
+        {onUpload && (
+          <button
+            onClick={() => {
+              const input = document.createElement('input')
+              input.type = 'file'
+              input.onchange = (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0]
+                if (file) onUpload(file)
+              }
+              input.click()
+            }}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '8px',
+              border: '1px solid #e5e5e5',
+              background: '#fff',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: '#1a1a1a',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+          >
+            + Upload
+          </button>
+        )}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {ticketAttachmentsData.map(attachment => (
+      {attachments.length === 0 ? (
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '32px', 
+          color: '#999',
+          fontSize: '14px',
+          background: '#fafafa',
+          borderRadius: '8px'
+        }}>
+          No attachments yet
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {attachments.map(attachment => (
           <div
             key={attachment.id}
             style={{
@@ -90,6 +119,7 @@ const TicketAttachments = () => {
               </div>
             </div>
             <button
+              onClick={() => onDownload && onDownload(attachment.id)}
               style={{
                 padding: '6px 10px',
                 borderRadius: '6px',
@@ -114,6 +144,7 @@ const TicketAttachments = () => {
           </div>
         ))}
       </div>
+      )}
     </div>
   )
 }

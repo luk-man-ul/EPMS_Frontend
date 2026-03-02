@@ -1,6 +1,24 @@
-import { ticketSolutionData } from '../../data/ticketsData'
+import type { Solution } from '../../../../../types/ticket'
 
-const TicketSolutionLogs = () => {
+interface TicketSolutionLogsProps {
+  solutions: Solution[]
+  onAddSolution?: (solution: string) => void
+  onVerifySolution?: (solutionId: string) => void
+}
+
+const TicketSolutionLogs = ({ solutions, onAddSolution, onVerifySolution }: TicketSolutionLogsProps) => {
+  const formatTimestamp = (date: string | Date) => {
+    const d = new Date(date)
+    return d.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    })
+  }
+
   return (
     <div style={{
       background: '#fff',
@@ -15,29 +33,47 @@ const TicketSolutionLogs = () => {
         marginBottom: '16px'
       }}>
         <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a' }}>
-          Solution Logs ({ticketSolutionData.length})
+          Solution Logs ({solutions.length})
         </h3>
-        <button
-          style={{
-            padding: '6px 12px',
-            borderRadius: '8px',
-            border: '1px solid #e5e5e5',
-            background: '#fff',
-            fontSize: '13px',
-            fontWeight: 500,
-            color: '#1a1a1a',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
-        >
-          + Add Solution
-        </button>
+        {onAddSolution && (
+          <button
+            onClick={() => {
+              const solution = prompt('Enter solution:')
+              if (solution) onAddSolution(solution)
+            }}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '8px',
+              border: '1px solid #e5e5e5',
+              background: '#fff',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: '#1a1a1a',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+          >
+            + Add Solution
+          </button>
+        )}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {ticketSolutionData.map(solution => (
+      {solutions.length === 0 ? (
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '32px', 
+          color: '#999',
+          fontSize: '14px',
+          background: '#fafafa',
+          borderRadius: '8px'
+        }}>
+          No solutions logged yet
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {solutions.map(solution => (
           <div
             key={solution.id}
             style={{
@@ -54,7 +90,7 @@ const TicketSolutionLogs = () => {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ fontSize: '14px', fontWeight: 500, color: '#1a1a1a' }}>
-                  {solution.author}
+                  {solution.author ? `${solution.author.firstName} ${solution.author.lastName}` : 'Unknown'}
                 </div>
                 {solution.verified && (
                   <span style={{
@@ -70,7 +106,7 @@ const TicketSolutionLogs = () => {
                 )}
               </div>
               <div style={{ fontSize: '12px', color: '#999' }}>
-                {solution.timestamp}
+                {formatTimestamp(solution.createdAt)}
               </div>
             </div>
             
@@ -83,8 +119,9 @@ const TicketSolutionLogs = () => {
               {solution.solution}
             </div>
 
-            {!solution.verified && (
+            {!solution.verified && onVerifySolution && (
               <button
+                onClick={() => onVerifySolution(solution.id)}
                 style={{
                   padding: '6px 12px',
                   borderRadius: '6px',
@@ -111,6 +148,7 @@ const TicketSolutionLogs = () => {
           </div>
         ))}
       </div>
+      )}
     </div>
   )
 }

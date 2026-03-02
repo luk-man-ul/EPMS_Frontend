@@ -1,3 +1,5 @@
+import { Priority, TicketStatus } from '../../../../types/enums'
+
 interface ProjectOption {
   id: string
   name: string
@@ -55,10 +57,10 @@ const TicketFilters = ({
         }
       >
         <option value="">All Priority</option>
-        <option value="LOW">Low</option>
-        <option value="MEDIUM">Medium</option>
-        <option value="HIGH">High</option>
-        <option value="CRITICAL">Critical</option>
+        <option value={Priority.LOW}>Low</option>
+        <option value={Priority.MEDIUM}>Medium</option>
+        <option value={Priority.HIGH}>High</option>
+        <option value={Priority.URGENT}>Urgent</option>
       </select>
 
       {/* Status Filter */}
@@ -70,10 +72,13 @@ const TicketFilters = ({
         }
       >
         <option value="">All Status</option>
-        <option value="OPEN">Open</option>
-        <option value="IN_PROGRESS">In Progress</option>
-        <option value="RESOLVED">Resolved</option>
-        <option value="CLOSED">Closed</option>
+        <option value={TicketStatus.OPEN}>Open</option>
+        <option value={TicketStatus.IN_PROGRESS}>In Progress</option>
+        <option value={TicketStatus.WAITING_FOR_USER}>Waiting For User</option>
+        <option value={TicketStatus.RESOLVED}>Resolved</option>
+        <option value={TicketStatus.CLOSED}>Closed</option>
+        <option value={TicketStatus.REJECTED}>Rejected</option>
+        <option value={TicketStatus.REOPENED}>Reopened</option>
       </select>
 
       {/* Employee Filter */}

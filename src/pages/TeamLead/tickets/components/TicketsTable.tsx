@@ -1,4 +1,8 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useToast } from '../../../../context/ToastContext'
+import ConfirmationModal from '../../../../components/shared/ConfirmationModal'
+import api from '../../../../utils/api'
 
 interface Ticket {
   id: string
@@ -10,14 +14,49 @@ interface Ticket {
   type: 'bug' | 'support' | 'dependency'
   createdDate: string
   description: string
+  reporterId: string
 }
 
 interface TicketsTableProps {
   tickets: Ticket[]
+  currentUserId?: string
 }
 
-const TicketsTable = ({ tickets }: TicketsTableProps) => {
+const TicketsTable = ({ tickets, currentUserId }: TicketsTableProps) => {
   const navigate = useNavigate()
+  const { showToast } = useToast()
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [ticketToDelete, setTicketToDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDeleteClick = (ticketId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setTicketToDelete(ticketId)
+    setShowDeleteConfirm(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!ticketToDelete) return
+
+    try {
+      setDeleting(true)
+      await api.patch(`/tickets/${ticketToDelete}`, { isDeleted: true })
+      showToast('success', 'Ticket deleted successfully')
+      setShowDeleteConfirm(false)
+      setTicketToDelete(null)
+      // Refresh the page to update the list
+      window.location.reload()
+    } catch (err: any) {
+      showToast('error', err.response?.data?.message || 'Failed to delete ticket')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleEditClick = (ticketId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigate(`/app/tickets/${ticketId}/edit`)
+  }
 
   const getPriorityConfig = (priority: string) => {
     switch (priority) {
@@ -199,35 +238,93 @@ const TicketsTable = ({ tickets }: TicketsTableProps) => {
                 </div>
               </div>
 
-              {/* Action Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  navigate(`/app/tickets/${ticket.id}`)
-                }}
-                style={{
-                  padding: '8px 16px',
-                  background: '#fafafa',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '8px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: '#1a1a1a',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  flexShrink: 0,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#f5f5f5'
-                  e.currentTarget.style.borderColor = '#d4d4d4'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#fafafa'
-                  e.currentTarget.style.borderColor = '#e5e5e5'
-                }}
-              >
-                View Details →
-              </button>
+              {/* Action Buttons */}
+              <div style={{
+                display: 'flex',
+                gap: '8px',
+                flexShrink: 0,
+              }}>
+                {currentUserId && ticket.reporterId === currentUserId ? (
+                  <>
+                    <button
+                      onClick={(e) => handleEditClick(ticket.id, e)}
+                      style={{
+                        padding: '8px 16px',
+                        background: '#fafafa',
+                        border: '1px solid #e5e5e5',
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: '#1a1a1a',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#f5f5f5'
+                        e.currentTarget.style.borderColor = '#d4d4d4'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#fafafa'
+                        e.currentTarget.style.borderColor = '#e5e5e5'
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteClick(ticket.id, e)}
+                      style={{
+                        padding: '8px 16px',
+                        background: '#fee2e2',
+                        border: '1px solid #fecaca',
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: '#dc2626',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#fecaca'
+                        e.currentTarget.style.borderColor = '#fca5a5'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#fee2e2'
+                        e.currentTarget.style.borderColor = '#fecaca'
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      navigate(`/app/tickets/${ticket.id}`)
+                    }}
+                    style={{
+                      padding: '8px 16px',
+                      background: '#fafafa',
+                      border: '1px solid #e5e5e5',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: '#1a1a1a',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#f5f5f5'
+                      e.currentTarget.style.borderColor = '#d4d4d4'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#fafafa'
+                      e.currentTarget.style.borderColor = '#e5e5e5'
+                    }}
+                  >
+                    View Details →
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )
@@ -247,6 +344,20 @@ const TicketsTable = ({ tickets }: TicketsTableProps) => {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        title="Delete Ticket"
+        message="Are you sure you want to delete this ticket? This action cannot be undone."
+        confirmText={deleting ? 'Deleting...' : 'Delete'}
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => {
+          setShowDeleteConfirm(false)
+          setTicketToDelete(null)
+        }}
+      />
     </div>
   )
 }

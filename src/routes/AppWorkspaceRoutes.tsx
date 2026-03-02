@@ -15,6 +15,7 @@ import TeamLeadSettings from '../pages/TeamLead/Settings'
 
 import TicketDetailPage from '../pages/TeamLead/tickets/detail/TicketDetailPage'
 import CreateTicketPage from '../pages/TeamLead/tickets/create/CreateTicketPage'
+import EditTicketPage from '../pages/TeamLead/tickets/edit/EditTicketPage'
 import CreateTaskPage from '../pages/TeamLead/tasks/create/CreateTaskPage'
 
 const AppWorkspaceRoutes = () => {
@@ -45,6 +46,7 @@ const AppWorkspaceRoutes = () => {
         {/* Tickets */}
         <Route path="tickets" element={<TeamLeadTickets />} />
         <Route path="tickets/create" element={<CreateTicketPage />} />
+        <Route path="tickets/:ticketId/edit" element={<EditTicketPage />} />
         <Route path="tickets/:ticketId" element={<TicketDetailPage />} />
 
         {/* Other Sections */}

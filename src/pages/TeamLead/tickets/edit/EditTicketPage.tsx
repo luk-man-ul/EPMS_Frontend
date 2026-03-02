@@ -1,45 +1,59 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import api from '../../../../utils/api'
 import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
 import { TicketType, Priority, getEnumOptions } from '../../../../types/enums'
 
-const CreateTicketPage = () => {
+const EditTicketPage = () => {
+  const { ticketId } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
   const { showToast } = useToast()
 
-  const [projects, setProjects] = useState<any[]>([])
-  const [loadingProjects, setLoadingProjects] = useState(true)
-  const [creating, setCreating] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [updating, setUpdating] = useState(false)
 
   const [form, setForm] = useState({
     title: '',
     description: '',
     type: TicketType.BUG,
     priority: Priority.MEDIUM,
-    projectId: '',
   })
 
   ////////////////////////////////////////////////////////////////
-  // FETCH MY PROJECTS
+  // FETCH TICKET
   ////////////////////////////////////////////////////////////////
 
   useEffect(() => {
-    const fetchProjects = async () => {
+    const fetchTicket = async () => {
       try {
-        const res = await api.get('/projects/my')
-        setProjects(res.data)
-      } catch (err) {
-        showToast('error', 'Failed to load projects')
+        const res = await api.get(`/tickets/${ticketId}`)
+        const ticket = res.data
+
+        // Check if user is the reporter
+        if (ticket.reporterId !== user?.id) {
+          showToast('error', 'You can only edit your own tickets')
+          navigate('/app/tickets')
+          return
+        }
+
+        setForm({
+          title: ticket.title,
+          description: ticket.description,
+          type: ticket.type,
+          priority: ticket.priority,
+        })
+      } catch (err: any) {
+        showToast('error', err.response?.data?.message || 'Failed to load ticket')
+        navigate('/app/tickets')
       } finally {
-        setLoadingProjects(false)
+        setLoading(false)
       }
     }
 
-    fetchProjects()
-  }, [])
+    if (ticketId) fetchTicket()
+  }, [ticketId, user?.id, navigate])
 
   ////////////////////////////////////////////////////////////////
   // HANDLE CHANGE
@@ -59,37 +73,46 @@ const CreateTicketPage = () => {
   const handleSubmit = async (e: any) => {
     e.preventDefault()
 
-    if (!form.title || !form.description || !form.projectId) {
-      showToast('error', 'All fields are required')
+    if (!form.title || !form.description) {
+      showToast('error', 'Title and description are required')
       return
     }
 
     try {
-      setCreating(true)
+      setUpdating(true)
 
-      const res = await api.post('/tickets', form)
+      await api.patch(`/tickets/${ticketId}`, form)
 
-      showToast('success', 'Ticket created successfully')
-      navigate(`/app/tickets/${res.data.id}`)
+      showToast('success', 'Ticket updated successfully')
+      navigate(`/app/tickets/${ticketId}`)
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to create ticket'
-      
-      // Check for type mismatch errors
-      if (errorMessage.includes('type') || errorMessage.includes('priority')) {
-        showToast('error', `Type mismatch error: ${errorMessage}`)
-      } else {
-        showToast('error', errorMessage)
-      }
+      const errorMessage = err.response?.data?.message || 'Failed to update ticket'
+      showToast('error', errorMessage)
     } finally {
-      setCreating(false)
+      setUpdating(false)
     }
   }
 
-  if (loadingProjects) return <div>Loading...</div>
+  if (loading) return <div>Loading...</div>
 
   return (
     <div style={{ maxWidth: 700 }}>
-      <h1 style={{ marginBottom: 20 }}>Create Ticket</h1>
+      <button
+        onClick={() => navigate('/app/tickets')}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: '#666666',
+          fontSize: '14px',
+          fontWeight: 600,
+          cursor: 'pointer',
+          marginBottom: '24px',
+        }}
+      >
+        ← Back to Tickets
+      </button>
+
+      <h1 style={{ marginBottom: 20 }}>Edit Ticket</h1>
 
       <form onSubmit={handleSubmit}>
         {/* Title */}
@@ -113,24 +136,6 @@ const CreateTicketPage = () => {
             rows={5}
             style={{ width: '100%', padding: 8 }}
           />
-        </div>
-
-        {/* Project */}
-        <div style={{ marginBottom: 16 }}>
-          <label>Project</label>
-          <select
-            name="projectId"
-            value={form.projectId}
-            onChange={handleChange}
-            style={{ width: '100%', padding: 8 }}
-          >
-            <option value="">Select Project</option>
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-          </select>
         </div>
 
         {/* Type */}
@@ -169,7 +174,7 @@ const CreateTicketPage = () => {
 
         <button
           type="submit"
-          disabled={creating}
+          disabled={updating}
           style={{
             padding: '10px 20px',
             background: '#1a1a1a',
@@ -179,11 +184,11 @@ const CreateTicketPage = () => {
             cursor: 'pointer',
           }}
         >
-          {creating ? 'Creating...' : 'Create Ticket'}
+          {updating ? 'Updating...' : 'Update Ticket'}
         </button>
       </form>
     </div>
   )
 }
 
-export default CreateTicketPage
+export default EditTicketPage

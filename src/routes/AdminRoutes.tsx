@@ -4,6 +4,7 @@ import ProtectedRoute from '../components/ProtectedRoute'
 
 import AdminDashboard from '../pages/admin/dashboard/AdminDashboard'
 import EmployeesPage from '../pages/admin/employees/EmployeesPage'
+import EmployeeDetail from '../pages/admin/employees/EmployeeDetail'
 import Projects from '../pages/admin/Projects'
 import Tasks from '../pages/admin/Tasks'
 import Tickets from '../pages/admin/Tickets'
@@ -14,7 +15,7 @@ import Notifications from '../pages/admin/Notifications'
 import Settings from '../pages/admin/Settings'
 import AdminProjectDetail from '../pages/admin/projects/detail/ProjectDetailPage'
 import TaskDetailPage from '../pages/shared/tasks/details/TaskDetailPage'
-import TicketDetailPage from '../pages/TeamLead/tickets/detail/TicketDetailPage'
+import AdminTicketDetailPage from '../pages/admin/tickets/detail/TicketDetailPage'
 
 const AdminRoutes = () => (
   <Routes>
@@ -29,12 +30,13 @@ const AdminRoutes = () => (
 
       <Route path="dashboard" element={<AdminDashboard />} />
       <Route path="employees" element={<EmployeesPage />} />
+      <Route path="employees/:id" element={<EmployeeDetail />} />
       <Route path="projects" element={<Projects />} />
       <Route path="projects/:projectId" element={<AdminProjectDetail />} />
       <Route path="tasks" element={<Tasks />} />
       <Route path="tasks/:taskId" element={<TaskDetailPage />} />
       <Route path="tickets" element={<Tickets />} />
-      <Route path="tickets/:ticketId" element={<TicketDetailPage />} />
+      <Route path="tickets/:ticketId" element={<AdminTicketDetailPage />} />
       <Route path="attendance" element={<Attendance />} />
       <Route path="finance" element={<Finance />} />
       <Route path="reports" element={<Reports />} />

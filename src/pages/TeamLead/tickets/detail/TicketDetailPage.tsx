@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../../../../utils/api'
 import { useAuth } from '../../../../context/AuthContext'
+import { useToast } from '../../../../context/ToastContext'
+import ConfirmationModal from '../../../../components/shared/ConfirmationModal'
 
 const TicketDetailPage = () => {
   const { ticketId } = useParams()
@@ -13,6 +15,10 @@ const TicketDetailPage = () => {
   const [error, setError] = useState<'restricted' | 'notfound' | 'failed' | null>(null)
   const [updatingStatus, setUpdatingStatus] = useState(false)
   const [assigning, setAssigning] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const { showToast } = useToast()
 
   ////////////////////////////////////////////////////////////
   // FETCH
@@ -54,9 +60,10 @@ const TicketDetailPage = () => {
         assignedToId: userId || null,
       })
 
+      showToast('success', 'Ticket assigned successfully')
       await fetchTicket()
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to assign ticket')
+      showToast('error', err.response?.data?.message || 'Failed to assign ticket')
     } finally {
       setAssigning(false)
     }
@@ -70,11 +77,30 @@ const TicketDetailPage = () => {
         status: newStatus,
       })
 
+      showToast('success', 'Status updated successfully')
       await fetchTicket()
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to update status')
+      showToast('error', err.response?.data?.message || 'Failed to update status')
     } finally {
       setUpdatingStatus(false)
+    }
+  }
+
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    try {
+      setDeleting(true)
+      await api.patch(`/tickets/${ticket.id}`, { isDeleted: true })
+      showToast('success', 'Ticket deleted successfully')
+      navigate('/app/tickets')
+    } catch (err: any) {
+      showToast('error', err.response?.data?.message || 'Failed to delete ticket')
+    } finally {
+      setDeleting(false)
+      setShowDeleteConfirm(false)
     }
   }
 
@@ -126,9 +152,11 @@ const TicketDetailPage = () => {
     ticket.project?.leadId === user?.id
 
   const isAssignee = ticket.assignedToId === user?.id
+  const isReporter = ticket.reporterId === user?.id
 
   const canUpdateStatus = isAdmin || isLead || isAssignee
   const canAssign = isAdmin || isLead
+  const canEditDelete = isReporter
 
   ////////////////////////////////////////////////////////////
   // FORMATTERS
@@ -177,15 +205,74 @@ const TicketDetailPage = () => {
           border: '1px solid #e5e5e5',
         }}
       >
-        <h1
-          style={{
-            fontSize: '24px',
-            fontWeight: 700,
-            marginBottom: '16px',
-          }}
-        >
-          {ticket.title}
-        </h1>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: '16px',
+        }}>
+          <h1
+            style={{
+              fontSize: '24px',
+              fontWeight: 700,
+            }}
+          >
+            {ticket.title}
+          </h1>
+
+          {canEditDelete && (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => navigate(`/app/tickets/${ticket.id}/edit`)}
+                style={{
+                  padding: '8px 16px',
+                  background: '#fafafa',
+                  border: '1px solid #e5e5e5',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: '#1a1a1a',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#f5f5f5'
+                  e.currentTarget.style.borderColor = '#d4d4d4'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#fafafa'
+                  e.currentTarget.style.borderColor = '#e5e5e5'
+                }}
+              >
+                Edit
+              </button>
+              <button
+                onClick={handleDeleteClick}
+                style={{
+                  padding: '8px 16px',
+                  background: '#fee2e2',
+                  border: '1px solid #fecaca',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: '#dc2626',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#fecaca'
+                  e.currentTarget.style.borderColor = '#fca5a5'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#fee2e2'
+                  e.currentTarget.style.borderColor = '#fecaca'
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Meta Grid */}
         <div
@@ -323,6 +410,17 @@ const TicketDetailPage = () => {
           </Section>
         )}
       </div>
+
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        title="Delete Ticket"
+        message="Are you sure you want to delete this ticket? This action cannot be undone."
+        confirmText={deleting ? 'Deleting...' : 'Delete'}
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   )
 }

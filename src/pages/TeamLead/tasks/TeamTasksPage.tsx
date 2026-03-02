@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import api from '../../../utils/api'
 import TaskTable from '../../shared/tasks/components/TaskTable'
 import TaskFilters from '../../shared/tasks/components/TaskFilters'
+import SearchBar from '../../../components/shared/SearchBar'
 import { useAuth } from '../../../context/AuthContext'
 
 const TeamTasksPage = () => {
@@ -14,6 +15,9 @@ const TeamTasksPage = () => {
 
   // ✅ Universal filter object
   const [filters, setFilters] = useState<any>({})
+  
+  // ✅ Search state
+  const [searchTerm, setSearchTerm] = useState('')
 
   ////////////////////////////////////////////////////////////////
   // FETCH TASKS
@@ -53,11 +57,17 @@ const TeamTasksPage = () => {
   }
 
   ////////////////////////////////////////////////////////////////
-  // FILTERING (BASED ON UNIVERSAL FILTER STRUCTURE)
+  // FILTERING (BASED ON UNIVERSAL FILTER STRUCTURE + SEARCH)
   ////////////////////////////////////////////////////////////////
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
+      // Search filter
+      const matchesSearch =
+        !searchTerm ||
+        task.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        task.description?.toLowerCase().includes(searchTerm.toLowerCase())
+
       const matchesProject =
         !filters.projectId ||
         task.project?.id === filters.projectId
@@ -76,13 +86,14 @@ const TeamTasksPage = () => {
           task.dueDate.startsWith(filters.dueDate))
 
       return (
+        matchesSearch &&
         matchesProject &&
         matchesStatus &&
         matchesPriority &&
         matchesDueDate
       )
     })
-  }, [tasks, filters])
+  }, [tasks, filters, searchTerm])
 
   ////////////////////////////////////////////////////////////////
   // PROJECT OPTIONS (FORMAT FOR UNIVERSAL FILTER)
@@ -144,6 +155,16 @@ const TeamTasksPage = () => {
         >
           Manage, assign and track team tasks
         </p>
+      </div>
+
+      {/* SEARCH BAR */}
+      <div style={{ marginBottom: '16px' }}>
+        <SearchBar
+          placeholder="Search tasks by title or description..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+          onClear={() => setSearchTerm('')}
+        />
       </div>
 
       {/* UNIVERSAL FILTER */}

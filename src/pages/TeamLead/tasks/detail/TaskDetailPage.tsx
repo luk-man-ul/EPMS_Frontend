@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../../../../utils/api'
+import { useToast } from '../../../../context/ToastContext'
 
 const statusOptions = [
   'TODO',
@@ -12,6 +13,7 @@ const statusOptions = [
 const TaskDetailPage = () => {
   const { taskId } = useParams()
   const navigate = useNavigate()
+  const { showToast } = useToast()
 
   const [task, setTask] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -57,11 +59,78 @@ const TaskDetailPage = () => {
     user?.id === task?.assignedToId
 
   ////////////////////////////////////////////////////////////
+  // STATUS TRANSITION VALIDATION FOR EMPLOYEE
+  ////////////////////////////////////////////////////////////
+
+  const validateEmployeeStatusTransition = (currentStatus: string, newStatus: string): { valid: boolean; message?: string } => {
+    // EMPLOYEE transition rules
+    const allowedTransitions: Record<string, string[]> = {
+      'TODO': ['IN_PROGRESS'],
+      'IN_PROGRESS': ['REVIEW', 'TODO'],
+      'REVIEW': ['IN_PROGRESS'],
+      'COMPLETED': [],
+      'CANCELLED': []
+    }
+
+    const allowed = allowedTransitions[currentStatus] || []
+    
+    if (!allowed.includes(newStatus)) {
+      let message = `Invalid transition: ${currentStatus} → ${newStatus}. `
+      
+      if (currentStatus === 'TODO') {
+        message += 'You can only change TODO tasks to IN_PROGRESS.'
+      } else if (currentStatus === 'IN_PROGRESS') {
+        message += 'You can only change IN_PROGRESS tasks to REVIEW or back to TODO.'
+      } else if (currentStatus === 'REVIEW') {
+        message += 'You can only change REVIEW tasks back to IN_PROGRESS.'
+      } else {
+        message += 'This status cannot be changed.'
+      }
+      
+      return { valid: false, message }
+    }
+    
+    return { valid: true }
+  }
+
+  ////////////////////////////////////////////////////////////
+  // GET ALLOWED STATUS OPTIONS FOR EMPLOYEE
+  ////////////////////////////////////////////////////////////
+
+  const getAllowedStatusOptions = () => {
+    if (user?.role !== 'EMPLOYEE') {
+      return statusOptions
+    }
+
+    // For EMPLOYEE, filter based on current status
+    const currentStatus = task?.status
+    const allowedTransitions: Record<string, string[]> = {
+      'TODO': ['TODO', 'IN_PROGRESS'],
+      'IN_PROGRESS': ['IN_PROGRESS', 'REVIEW', 'TODO'],
+      'REVIEW': ['REVIEW', 'IN_PROGRESS'],
+      'COMPLETED': ['COMPLETED'],
+      'CANCELLED': ['CANCELLED']
+    }
+
+    const allowed = allowedTransitions[currentStatus] || [currentStatus]
+    return statusOptions.filter(status => allowed.includes(status))
+  }
+
+  ////////////////////////////////////////////////////////////
   // STATUS UPDATE
   ////////////////////////////////////////////////////////////
 
   const handleStatusChange = async (newStatus: string) => {
     try {
+      // Validate transition for EMPLOYEE role
+      if (user?.role === 'EMPLOYEE') {
+        const validation = validateEmployeeStatusTransition(task.status, newStatus)
+        if (!validation.valid) {
+          showToast('error', validation.message || 'Invalid status transition')
+          return
+        }
+      }
+
       setUpdating(true)
 
       const res = await api.patch(`/tasks/${task.id}`, {
@@ -69,8 +138,10 @@ const TaskDetailPage = () => {
       })
 
       setTask(res.data)
+      showToast('success', 'Task status updated successfully')
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Status update failed')
+      const errorMessage = err.response?.data?.message || 'Status update failed'
+      showToast('error', errorMessage)
     } finally {
       setUpdating(false)
     }
@@ -176,7 +247,7 @@ const TaskDetailPage = () => {
                     border: '1px solid #ddd',
                   }}
                 >
-                  {statusOptions.map((s) => (
+                  {getAllowedStatusOptions().map((s) => (
                     <option key={s} value={s}>
                       {s}
                     </option>

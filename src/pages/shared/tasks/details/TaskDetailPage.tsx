@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../../../../utils/api'
+import { TaskStatus, formatEnumLabel } from '../../../../types/enums'
+import { useToast } from '../../../../context/ToastContext'
 
 const TaskDetailPage = () => {
   const { taskId } = useParams()
   const navigate = useNavigate()
+  const { showToast } = useToast()
 
   const [task, setTask] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -45,24 +48,13 @@ const TaskDetailPage = () => {
   const updateStatus = async (status: string) => {
     try {
       await api.patch(`/tasks/${taskId}`, { status })
-      fetchTask()
-    } catch (err) {
-      console.error('Status update failed')
+      await fetchTask()
+      showToast('success', 'Task status updated successfully')
+    } catch (err: any) {
+      console.error('Status update failed', err)
+      const errorMessage = err.response?.data?.message || 'Failed to update task status'
+      showToast('error', errorMessage)
     }
-  }
-
-  ////////////////////////////////////////////////////////////
-  // DELETE
-  ////////////////////////////////////////////////////////////
-
-  const deleteTask = async () => {
-    const confirmDelete = window.confirm(
-      'Are you sure you want to delete this task?'
-    )
-    if (!confirmDelete) return
-
-    await api.delete(`/tasks/${taskId}`)
-    navigate('/admin/tasks')
   }
 
   ////////////////////////////////////////////////////////////
@@ -87,9 +79,6 @@ const TaskDetailPage = () => {
         <div style={{ display: 'flex', gap: 12 }}>
           <button style={secondaryBtn} onClick={() => navigate(-1)}>
             Back
-          </button>
-          <button style={dangerBtn} onClick={deleteTask}>
-            Delete
           </button>
         </div>
       </div>
@@ -166,11 +155,11 @@ const TaskDetailPage = () => {
                 onChange={(e) => updateStatus(e.target.value)}
                 style={inputStyle}
               >
-                <option value="TODO">To Do</option>
-                <option value="IN_PROGRESS">In Progress</option>
-                <option value="REVIEW">Review</option>
-                <option value="COMPLETED">Completed</option>
-                <option value="BLOCKED">Blocked</option>
+                {Object.values(TaskStatus).map((status) => (
+                  <option key={status} value={status}>
+                    {formatEnumLabel(status)}
+                  </option>
+                ))}
               </select>
             </DetailRow>
             <DetailRow
@@ -306,15 +295,6 @@ const secondaryBtn: React.CSSProperties = {
   borderRadius: 8,
   border: '1px solid #ddd',
   background: '#fff',
-  cursor: 'pointer',
-}
-
-const dangerBtn: React.CSSProperties = {
-  padding: '8px 14px',
-  borderRadius: 8,
-  border: 'none',
-  background: '#c0392b',
-  color: '#fff',
   cursor: 'pointer',
 }
 

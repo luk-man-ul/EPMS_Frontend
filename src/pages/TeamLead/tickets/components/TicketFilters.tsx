@@ -1,3 +1,5 @@
+import { TicketStatus, Priority, TicketType, getEnumOptions } from '../../../../types/enums'
+
 interface TicketFiltersProps {
   projectFilter: string
   assignedToFilter: string
@@ -12,6 +14,7 @@ interface TicketFiltersProps {
   onStatusChange: (value: string) => void
   onTypeChange: (value: string) => void
   onCreateTicket: () => void
+  userRole?: string
 }
 
 const TicketFilters = ({
@@ -28,7 +31,12 @@ const TicketFilters = ({
   onStatusChange,
   onTypeChange,
   onCreateTicket,
+  userRole,
 }: TicketFiltersProps) => {
+  const priorityOptions = getEnumOptions(Priority)
+  const statusOptions = getEnumOptions(TicketStatus)
+  const typeOptions = getEnumOptions(TicketType)
+
   return (
     <div style={{
       background: '#ffffff',
@@ -129,10 +137,11 @@ const TicketFilters = ({
             }}
           >
             <option value="all">All Priority</option>
-            <option value="urgent">Urgent</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
+            {priorityOptions.map((option) => (
+              <option key={option.value} value={option.value.toLowerCase()}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -161,10 +170,11 @@ const TicketFilters = ({
             }}
           >
             <option value="all">All Status</option>
-            <option value="open">Open</option>
-            <option value="in-progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-            <option value="closed">Closed</option>
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value.toLowerCase().replace(/_/g, '-')}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -193,33 +203,37 @@ const TicketFilters = ({
             }}
           >
             <option value="all">All Types</option>
-            <option value="bug">Bug</option>
-            <option value="support">Support</option>
-            <option value="dependency">Dependency</option>
+            {typeOptions.map((option) => (
+              <option key={option.value} value={option.value.toLowerCase()}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-          <button
-            onClick={onCreateTicket}
-            style={{
-              width: '100%',
-              padding: '10px 20px',
-              background: '#1a1a1a',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#333333'}
-            onMouseLeave={(e) => e.currentTarget.style.background = '#1a1a1a'}
-          >
-            + Create Ticket
-          </button>
-        </div>
+        {userRole !== 'ADMIN' && (
+          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <button
+              onClick={onCreateTicket}
+              style={{
+                width: '100%',
+                padding: '10px 20px',
+                background: '#1a1a1a',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#333333'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#1a1a1a'}
+            >
+              + Create Ticket
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

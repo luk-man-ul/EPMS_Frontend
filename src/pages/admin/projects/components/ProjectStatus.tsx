@@ -10,10 +10,10 @@ const statusConfig: Record<string, { bg: string; color: string; label: string }>
     color: '#3730a3',
     label: 'Planning',
   },
-  IN_PROGRESS: {
+  ACTIVE: {
     bg: '#fef3c7',
     color: '#92400e',
-    label: 'In Progress',
+    label: 'Active',
   },
   ON_HOLD: {
     bg: '#f3f4f6',
@@ -25,10 +25,10 @@ const statusConfig: Record<string, { bg: string; color: string; label: string }>
     color: '#166534',
     label: 'Completed',
   },
-  CANCELLED: {
+  ARCHIVED: {
     bg: '#fee2e2',
     color: '#991b1b',
-    label: 'Cancelled',
+    label: 'Archived',
   },
 }
 

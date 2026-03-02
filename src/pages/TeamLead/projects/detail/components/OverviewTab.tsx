@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import api from '../../../../../utils/api'
+import ConfirmationModal from '../../../../../components/shared/ConfirmationModal'
+import { useToast } from '../../../../../context/ToastContext'
+import { formatEnumLabel } from '../../../../../types/enums'
+import { validateStatusTransition, getAllowedTransitions } from '../../../../../utils/projectWorkflow'
 
 interface Props {
   project: any
@@ -8,6 +12,9 @@ interface Props {
 const OverviewTab = ({ project }: Props) => {
   const [status, setStatus] = useState(project?.status)
   const [updating, setUpdating] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null)
+  const { showToast } = useToast()
 
   useEffect(() => {
     setStatus(project?.status)
@@ -24,7 +31,8 @@ const OverviewTab = ({ project }: Props) => {
 
   const canEdit =
     user?.role === 'TEAM_LEAD' &&
-    project.leadId === user?.id
+    (project.leadId === user?.id || 
+     project.members?.some((m: any) => m.userId === user?.id))
 
   ////////////////////////////////////////////////////////////
   // 🔒 CHECK IF OPEN TASKS EXIST
@@ -36,25 +44,59 @@ const OverviewTab = ({ project }: Props) => {
     ) ?? false
 
   ////////////////////////////////////////////////////////////
-  // STATUS UPDATE
+  // STATUS CHANGE HANDLER (with validation and confirmation)
   ////////////////////////////////////////////////////////////
 
-  const handleStatusChange = async (newStatus: string) => {
+  const handleStatusChangeRequest = (newStatus: string) => {
+    // Validate workflow transition
+    const validation = validateStatusTransition(status, newStatus)
+    
+    if (!validation.isValid) {
+      showToast('error', validation.error || 'Invalid status transition')
+      return
+    }
+
+    // Show confirmation modal
+    setPendingStatus(newStatus)
+    setShowConfirmModal(true)
+  }
+
+  const handleConfirmStatusChange = async () => {
+    if (!pendingStatus) return
+
     try {
       setUpdating(true)
+      setShowConfirmModal(false)
 
       const res = await api.patch(
         `/projects/${project.id}/status`,
-        { status: newStatus }
+        { status: pendingStatus }
       )
 
       setStatus(res.data.status)
+      showToast('success', `Project status updated to ${formatEnumLabel(pendingStatus)}`)
+      
+      // Refresh page to show updated data
+      window.location.reload()
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Update failed')
+      const errorMsg = err.response?.data?.message || 'Failed to update project status'
+      showToast('error', errorMsg)
     } finally {
       setUpdating(false)
+      setPendingStatus(null)
     }
   }
+
+  const handleCancelStatusChange = () => {
+    setShowConfirmModal(false)
+    setPendingStatus(null)
+  }
+
+  ////////////////////////////////////////////////////////////
+  // GET ALLOWED STATUS OPTIONS
+  ////////////////////////////////////////////////////////////
+
+  const allowedStatuses = getAllowedTransitions(status)
 
   ////////////////////////////////////////////////////////////
   // RENDER
@@ -86,7 +128,7 @@ const OverviewTab = ({ project }: Props) => {
             value={status}
             disabled={updating}
             onChange={(e) =>
-              handleStatusChange(e.target.value)
+              handleStatusChangeRequest(e.target.value)
             }
             style={{
               padding: '6px 10px',
@@ -95,26 +137,20 @@ const OverviewTab = ({ project }: Props) => {
               fontSize: 13,
             }}
           >
-            <option value="PLANNING">PLANNING</option>
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="ON_HOLD">ON_HOLD</option>
-
-            <option
-              value="COMPLETED"
-              disabled={hasOpenTasks}
-            >
-              COMPLETED
-              {hasOpenTasks
-                ? ' (Open tasks exist)'
-                : ''}
-            </option>
-
-            <option value="ARCHIVED">
-              ARCHIVED
-            </option>
+            <option value={status}>{formatEnumLabel(status)}</option>
+            {allowedStatuses.map((allowedStatus) => (
+              <option 
+                key={allowedStatus} 
+                value={allowedStatus}
+                disabled={allowedStatus === 'COMPLETED' && hasOpenTasks}
+              >
+                {formatEnumLabel(allowedStatus)}
+                {allowedStatus === 'COMPLETED' && hasOpenTasks ? ' (Open tasks exist)' : ''}
+              </option>
+            ))}
           </select>
         ) : (
-          <span>{status}</span>
+          <span>{formatEnumLabel(status)}</span>
         )}
 
         {hasOpenTasks && status !== 'COMPLETED' && (
@@ -125,7 +161,7 @@ const OverviewTab = ({ project }: Props) => {
               color: '#b45309',
             }}
           >
-            {/* ⚠ Project cannot be completed until all tasks are finished. */}
+            ⚠ Project cannot be completed until all tasks are finished.
           </div>
         )}
       </div>
@@ -154,6 +190,18 @@ const OverviewTab = ({ project }: Props) => {
           {project.description}
         </p>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        title="Confirm Status Change"
+        message={`Are you sure you want to change the project status from ${formatEnumLabel(status)} to ${pendingStatus ? formatEnumLabel(pendingStatus) : ''}?`}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant="info"
+        onConfirm={handleConfirmStatusChange}
+        onCancel={handleCancelStatusChange}
+      />
     </div>
   )
 }

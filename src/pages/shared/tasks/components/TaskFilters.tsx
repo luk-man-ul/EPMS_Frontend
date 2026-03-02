@@ -1,4 +1,5 @@
 import React from 'react'
+import { TaskStatus, formatEnumLabel } from '../../../../types/enums'
 
 //////////////////////////////////////////////////////////////
 // TYPES
@@ -82,11 +83,11 @@ const TaskFilters = ({
         }
       >
         <option value="">All Status</option>
-        <option value="TODO">To Do</option>
-        <option value="IN_PROGRESS">In Progress</option>
-        <option value="REVIEW">Review</option>
-        <option value="COMPLETED">Completed</option>
-        <option value="BLOCKED">Blocked</option>
+        {Object.values(TaskStatus).map((status) => (
+          <option key={status} value={status}>
+            {formatEnumLabel(status)}
+          </option>
+        ))}
       </select>
 
       {/* Priority Filter */}

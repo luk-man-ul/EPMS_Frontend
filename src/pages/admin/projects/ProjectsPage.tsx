@@ -6,6 +6,9 @@ import type {
   ProjectDetail,
 } from './types/project.types'
 import ProjectForm from './form/ProjectForm'
+import SearchBar from '../../../components/shared/SearchBar'
+import FilterComponent from '../../../components/shared/FilterComponent'
+import { ProjectStatus, getEnumOptions } from '../../../types/enums'
 
 const ProjectsPage = () => {
   const [projects, setProjects] = useState<ProjectListItem[]>([])
@@ -16,6 +19,12 @@ const ProjectsPage = () => {
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null)
   const [selectedProject, setSelectedProject] =
     useState<ProjectDetail | null>(null)
+
+  // Search state
+  const [searchTerm, setSearchTerm] = useState('')
+  
+  // Filter state
+  const [statusFilter, setStatusFilter] = useState<string | null>(null)
 
   ////////////////////////////////////////////////////////////
   // FETCH PROJECTS
@@ -93,6 +102,30 @@ const ProjectsPage = () => {
   }
 
   ////////////////////////////////////////////////////////////
+  // FILTER LOGIC
+  ////////////////////////////////////////////////////////////
+
+  const filteredProjects = projects.filter((project) => {
+    // Search filter: check if name or description contains search term
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase()
+      const nameMatch = project.name.toLowerCase().includes(searchLower)
+      const descriptionMatch = project.description?.toLowerCase().includes(searchLower)
+      
+      if (!nameMatch && !descriptionMatch) {
+        return false
+      }
+    }
+
+    // Status filter: check if project status matches selected filter
+    if (statusFilter && project.status !== statusFilter) {
+      return false
+    }
+
+    return true
+  })
+
+  ////////////////////////////////////////////////////////////
   // RENDER
   ////////////////////////////////////////////////////////////
 
@@ -141,6 +174,25 @@ const ProjectsPage = () => {
         </button>
       </div>
 
+      {/* Search Bar */}
+      <div style={{ marginBottom: '20px' }}>
+        <SearchBar
+          placeholder="Search projects by name or description..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
+      </div>
+
+      {/* Status Filter */}
+      <div style={{ marginBottom: '20px' }}>
+        <FilterComponent
+          label="Status"
+          options={getEnumOptions(ProjectStatus)}
+          value={statusFilter}
+          onChange={setStatusFilter}
+        />
+      </div>
+
       {/* Content */}
       <div
         style={{
@@ -157,7 +209,7 @@ const ProjectsPage = () => {
 
         {!loading && !error && (
           <ProjectTable
-            projects={projects}
+            projects={filteredProjects}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />

@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../../utils/api'
+import { useAuth } from '../../../context/AuthContext'
+import SearchBar from '../../../components/shared/SearchBar'
 import TicketFilters from './components/TicketFilters'
 import TicketsTable from './components/TicketsTable'
 
 const TicketsPage = () => {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [tickets, setTickets] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const [searchTerm, setSearchTerm] = useState('')
   const [projectFilter, setProjectFilter] = useState('all')
   const [assignedToFilter, setAssignedToFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
@@ -27,6 +31,8 @@ const TicketsPage = () => {
       if (priorityFilter !== 'all') params.priority = priorityFilter.toUpperCase()
       if (projectFilter !== 'all') params.projectId = projectFilter
       if (assignedToFilter !== 'all') params.assignedToId = assignedToFilter
+      if (typeFilter !== 'all') params.type = typeFilter.toUpperCase()
+      if (searchTerm) params.search = searchTerm
 
       const res = await api.get('/tickets', { params })
 
@@ -42,6 +48,7 @@ const TicketsPage = () => {
         status: ticket.status.toLowerCase().replace(/_/g, '-'),
         type: ticket.type.toLowerCase(),
         createdDate: ticket.createdAt,
+        reporterId: ticket.reporterId,
       }))
 
       setTickets(mapped)
@@ -58,7 +65,7 @@ const TicketsPage = () => {
 
   useEffect(() => {
     fetchTickets()
-  }, [projectFilter, assignedToFilter, priorityFilter, statusFilter, typeFilter])
+  }, [searchTerm, projectFilter, assignedToFilter, priorityFilter, statusFilter, typeFilter])
 
   if (loading) return <div>Loading tickets...</div>
 
@@ -72,6 +79,14 @@ const TicketsPage = () => {
 
   return (
     <div>
+      <div style={{ marginBottom: '16px' }}>
+        <SearchBar
+          placeholder="Search tickets by title or description..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
+      </div>
+
       <TicketFilters
         projectFilter={projectFilter}
         assignedToFilter={assignedToFilter}
@@ -86,9 +101,10 @@ const TicketsPage = () => {
         onStatusChange={setStatusFilter}
         onTypeChange={setTypeFilter}
         onCreateTicket={() => navigate('/app/tickets/create')}
+        userRole={user?.role}
       />
 
-      <TicketsTable tickets={tickets} />
+      <TicketsTable tickets={tickets} currentUserId={user?.id} />
     </div>
   )
 }

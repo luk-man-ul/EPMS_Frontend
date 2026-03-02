@@ -23,6 +23,9 @@ const AppSidebar = () => {
     hasPermission(user?.permissions, item.permission)
   )
 
+  // Determine workspace label based on role
+  const workspaceLabel = user?.role === 'EMPLOYEE' ? 'Employee' : 'Team Lead'
+
   return (
     <aside className="sidebar">
       <h2 
@@ -48,6 +51,22 @@ const AppSidebar = () => {
       >
         ISPM
       </h2>
+
+      {/* Workspace Label */}
+      <div style={{
+        padding: '12px 20px',
+        marginTop: '8px',
+        marginBottom: '16px',
+        background: '#f5f5f5',
+        borderRadius: '8px',
+        fontSize: '14px',
+        fontWeight: 600,
+        color: '#666666',
+        textAlign: 'center',
+        letterSpacing: '0.5px',
+      }}>
+        {workspaceLabel}
+      </div>
 
       <nav className="sidebar-nav">
         {filteredMenu.map(item => (

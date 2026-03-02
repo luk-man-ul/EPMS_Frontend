@@ -3,6 +3,8 @@ import EmployeeTable from './components/EmployeeTable'
 import { getAuthHeaders } from '../../../utils/auth'
 import type { Employee } from './types/employee.types'
 import EmployeeForm from './form/EmployeeForm'
+import FilterComponent from '../../../components/shared/FilterComponent'
+import { UserStatus, getEnumOptions } from '../../../types/enums'
 
 const API_URL = 'http://localhost:3000'
 
@@ -14,6 +16,8 @@ const EmployeesPage = () => {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
   const [search, setSearch] = useState('')
   const [skills, setSkills] = useState<any[]>([])
+  const [statusFilter, setStatusFilter] = useState<string | null>(null)
+  const [departmentFilter, setDepartmentFilter] = useState<string | null>(null)
 
 
 
@@ -144,12 +148,23 @@ const fetchSkills = async () => {
       s.skill.name.toLowerCase().includes(searchTerm)
     ) || false
 
-  return (
+  const matchesSearch = 
     fullName.includes(searchTerm) ||
     email.includes(searchTerm) ||
     skillMatch
-  )
+
+  // Status filter
+  const matchesStatus = !statusFilter || emp.status === statusFilter
+
+  // Department filter
+  const matchesDepartment = !departmentFilter || emp.department === departmentFilter
+
+  return matchesSearch && matchesStatus && matchesDepartment
 })
+
+  // Get unique departments for filter options
+  const departments = Array.from(new Set(employees.map(emp => emp.department).filter(Boolean)))
+  const departmentOptions = departments.map(dept => ({ value: dept!, label: dept! }))
 
 
   return (
@@ -198,19 +213,48 @@ const fetchSkills = async () => {
         </button>
       </div>
 
-      {/* Search */}
-      <input
-        placeholder="Search by name, skill or email..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{
-          marginBottom: 16,
-          padding: '8px 12px',
-          width: 300,
-          borderRadius: 8,
-          border: '1px solid #ddd',
-        }}
-      />
+      {/* Search and Filters */}
+      <div style={{ 
+        display: 'flex', 
+        gap: '16px', 
+        marginBottom: '16px',
+        alignItems: 'flex-end'
+      }}>
+        <div style={{ flex: 1 }}>
+          <input
+            placeholder="Search by name, skill or email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              padding: '10px 16px',
+              width: '100%',
+              borderRadius: '10px',
+              border: '1px solid #e5e5e5',
+              fontSize: '14px',
+            }}
+          />
+        </div>
+        
+        <div style={{ minWidth: '180px' }}>
+          <FilterComponent
+            label="Status"
+            options={getEnumOptions(UserStatus)}
+            value={statusFilter}
+            onChange={setStatusFilter}
+          />
+        </div>
+
+        {departmentOptions.length > 0 && (
+          <div style={{ minWidth: '180px' }}>
+            <FilterComponent
+              label="Department"
+              options={departmentOptions}
+              value={departmentFilter}
+              onChange={setDepartmentFilter}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Content */}
       <div

@@ -1,9 +1,9 @@
 export type ProjectStatus =
   | 'PLANNING'
-  | 'IN_PROGRESS'
+  | 'ACTIVE'
   | 'ON_HOLD'
   | 'COMPLETED'
-  | 'CANCELLED'
+  | 'ARCHIVED'
 
 /* =========================
    LIST RESPONSE TYPE

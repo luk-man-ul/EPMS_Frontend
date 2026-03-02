@@ -21,9 +21,11 @@ export interface Employee {
   email: string
   phone?: string
   department?: string
+  designation?: string
   skills: EmployeeSkill[]
   profilePhoto?: string
   joinedAt?: string
+  lastLoginAt?: string
   status: EmployeeStatus
   roles: EmployeeRole[]
 }

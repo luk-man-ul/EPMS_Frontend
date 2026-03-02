@@ -172,7 +172,7 @@ const dropdownStyle: React.CSSProperties = {
   borderRadius: '8px',
   boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
   minWidth: '150px',
-  zIndex: 9999,
+  zIndex: 1000,
 }
 
 export default TicketActions

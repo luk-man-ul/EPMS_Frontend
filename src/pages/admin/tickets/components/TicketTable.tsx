@@ -8,12 +8,13 @@ interface Props {
 
 const TicketTable = ({ tickets, loading }: Props) => {
   return (
-    <table
-      style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-      }}
-    >
+    <div style={{ overflow: 'visible' }}>
+      <table
+        style={{
+          width: '100%',
+          borderCollapse: 'collapse',
+        }}
+      >
       <thead>
         <tr
           style={{
@@ -63,6 +64,7 @@ const TicketTable = ({ tickets, loading }: Props) => {
         )}
       </tbody>
     </table>
+    </div>
   )
 }
 

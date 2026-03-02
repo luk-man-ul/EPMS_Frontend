@@ -2,6 +2,8 @@ import type { Task, TaskStatus } from '../types/task.types'
 import TaskStatusComponent from './TaskStatus'
 import TaskPriority from './TaskPriority'
 import TaskActions from './TaskActions'
+import TaskProgressBar from '../../../../components/shared/TaskProgressBar'
+import { useAuth } from '../../../../context/AuthContext'
 
 interface Props {
   task: Task
@@ -16,6 +18,7 @@ const TaskRow = ({
   onEdit,
   onDelete,
 }: Props) => {
+  const { user } = useAuth()
   const assigneeName = task.assignee
     ? `${task.assignee.firstName} ${task.assignee.lastName}`
     : '—'
@@ -23,6 +26,9 @@ const TaskRow = ({
   const deadline = task.dueDate
     ? new Date(task.dueDate).toLocaleDateString()
     : '—'
+  
+  // Show progress bar only for EMPLOYEE role
+  const showProgressBar = user?.role === 'EMPLOYEE'
 
   const handleStatusToggle = (e: React.MouseEvent) => {
     e.stopPropagation() // prevent row click
@@ -51,9 +57,12 @@ const TaskRow = ({
       onClick={() => onEdit(task.id)} // ✅ THIS FIXES IT
     >
       <td style={{ padding: '16px 20px' }}>
-        <div style={{ fontWeight: 500, fontSize: '14px' }}>
+        <div style={{ fontWeight: 500, fontSize: '14px', marginBottom: showProgressBar ? '8px' : '0' }}>
           {task.title}
         </div>
+        {showProgressBar && (
+          <TaskProgressBar status={task.status} />
+        )}
       </td>
 
       <td style={{ padding: '16px 20px', fontSize: '14px', color: '#666' }}>

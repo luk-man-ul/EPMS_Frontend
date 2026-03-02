@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../../utils/api'
+import SearchBar from '../../../components/shared/SearchBar'
+import FilterComponent from '../../../components/shared/FilterComponent'
+import { ProjectStatus, getEnumOptions } from '../../../types/enums'
 
 const MyProjectsPage = () => {
   const navigate = useNavigate()
@@ -8,6 +11,10 @@ const MyProjectsPage = () => {
   const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'at-risk'>('all')
+  
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string | null>(null)
 
   ////////////////////////////////////////////////////////////////
   // FETCH PROJECTS FROM BACKEND
@@ -26,6 +33,7 @@ const MyProjectsPage = () => {
           deadline: p.endDate,
           teamMembersCount: p.teamSize ?? 0,
           openTasks: p.progress < 100 ? 1 : 0, // temporary until tasks wired
+          backendStatus: p.status, // Store backend enum status
           status:
             p.status === 'COMPLETED'
               ? 'completed'
@@ -49,10 +57,21 @@ const MyProjectsPage = () => {
   // FILTER + STATS
   ////////////////////////////////////////////////////////////////
 
-  const filteredProjects =
-    filter === 'all'
-      ? projects
-      : projects.filter((p) => p.status === filter)
+  // Apply search and status filter
+  const filteredProjects = projects.filter((p) => {
+    // Search filter: check name or description
+    const matchesSearch = searchTerm === '' || 
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.description.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    // Status filter: check backend status enum
+    const matchesStatus = statusFilter === null || p.backendStatus === statusFilter
+    
+    // Tab filter: check computed status
+    const matchesTab = filter === 'all' || p.status === filter
+    
+    return matchesSearch && matchesStatus && matchesTab
+  })
 
   const stats = {
     total: projects.length,
@@ -113,6 +132,26 @@ const MyProjectsPage = () => {
         <StatCard label="Active Projects" value={stats.active} color="#10b981" />
         <StatCard label="Completed" value={stats.completed} color="#6366f1" />
         <StatCard label="At Risk" value={stats.atRisk} color="#ef4444" />
+      </div>
+
+      {/* Search and Filter */}
+      <div style={{
+        display: 'flex',
+        gap: '16px',
+        marginBottom: '24px',
+        alignItems: 'flex-end',
+      }}>
+        <SearchBar
+          placeholder="Search projects by name or description..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
+        <FilterComponent
+          label="Status"
+          options={getEnumOptions(ProjectStatus)}
+          value={statusFilter}
+          onChange={setStatusFilter}
+        />
       </div>
 
       {/* Filter Tabs */}

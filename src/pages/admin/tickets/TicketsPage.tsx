@@ -12,16 +12,22 @@ import {
   getEmployeesForDropdown,
   type EmployeeOption,
 } from './employees.api'
+import { useAuth } from '../../../context/AuthContext'
+import SearchBar from '../../../components/shared/SearchBar'
 
 const TicketsPage = () => {
+  const { user } = useAuth()
+  
   interface TicketFiltersState {
   status?: string
   priority?: string
   projectId?: string
   assignedToId?: string
+  search?: string
 }
 
   const [filters, setFilters] = useState<TicketFiltersState>({})
+  const [searchTerm, setSearchTerm] = useState('')
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
@@ -73,8 +79,12 @@ const TicketsPage = () => {
   }
 
   useEffect(() => {
-    fetchTickets(filters)
-  }, [filters])
+    const filtersWithSearch = { ...filters }
+    if (searchTerm) {
+      filtersWithSearch.search = searchTerm
+    }
+    fetchTickets(filtersWithSearch)
+  }, [filters, searchTerm])
 
   ////////////////////////////////////////////////////////////
   // FILTER HANDLER
@@ -84,14 +94,21 @@ const handleFilterChange = (newFilters: any) => {
   // CLEAR LOGIC
   if (newFilters.__clear) {
     setFilters({})
-    fetchTickets({})
+    setSearchTerm('')
     return
   }
 
   const updated = { ...filters, ...newFilters, page: 1 }
   setFilters(updated)
-  fetchTickets(updated)
 }
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value)
+  }
+
+  const handleSearchClear = () => {
+    setSearchTerm('')
+  }
   ////////////////////////////////////////////////////////////
 
   return (
@@ -122,21 +139,34 @@ const handleFilterChange = (newFilters: any) => {
           </p>
         </div>
 
-        <button
-          onClick={() => setShowModal(true)}
-          style={{
-            padding: '10px 18px',
-            borderRadius: '10px',
-            border: 'none',
-            backgroundColor: '#1a1a1a',
-            color: '#fff',
-            fontWeight: 500,
-            cursor: 'pointer',
-            fontSize: '14px',
-          }}
-        >
-          + Create Ticket
-        </button>
+        {/* Only show Create Ticket button if user is not ADMIN */}
+        {user?.role !== 'ADMIN' && (
+          <button
+            onClick={() => setShowModal(true)}
+            style={{
+              padding: '10px 18px',
+              borderRadius: '10px',
+              border: 'none',
+              backgroundColor: '#1a1a1a',
+              color: '#fff',
+              fontWeight: 500,
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            + Create Ticket
+          </button>
+        )}
+      </div>
+
+      {/* Search Bar */}
+      <div style={{ marginBottom: '20px' }}>
+        <SearchBar
+          placeholder="Search tickets by title or description..."
+          value={searchTerm}
+          onChange={handleSearchChange}
+          onClear={handleSearchClear}
+        />
       </div>
 
       {/* Filters */}
@@ -153,7 +183,8 @@ const handleFilterChange = (newFilters: any) => {
           backgroundColor: '#fff',
           borderRadius: '12px',
           border: '1px solid #e5e5e5',
-          overflow: 'hidden',
+          overflowX: 'auto',
+          overflowY: 'visible',
         }}
       >
         <TicketTable tickets={tickets} loading={loading} />
