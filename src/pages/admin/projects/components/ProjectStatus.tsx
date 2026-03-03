@@ -16,8 +16,8 @@ const statusConfig: Record<string, { bg: string; color: string; label: string }>
     label: 'Active',
   },
   ON_HOLD: {
-    bg: '#f3f4f6',
-    color: '#4b5563',
+    bg: '#c49b9f',
+    color: '#3a0303',
     label: 'On Hold',
   },
   COMPLETED: {
@@ -26,8 +26,8 @@ const statusConfig: Record<string, { bg: string; color: string; label: string }>
     label: 'Completed',
   },
   ARCHIVED: {
-    bg: '#fee2e2',
-    color: '#991b1b',
+    bg: '#e9ffea',
+    color: '#046023',
     label: 'Archived',
   },
 }

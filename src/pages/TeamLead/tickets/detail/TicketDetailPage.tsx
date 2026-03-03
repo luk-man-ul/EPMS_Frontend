@@ -4,6 +4,7 @@ import api from '../../../../utils/api'
 import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
 import ConfirmationModal from '../../../../components/shared/ConfirmationModal'
+import TicketStatusTimeline from '../../../admin/tickets/detail/components/TicketStatusTimeline'
 
 const TicketDetailPage = () => {
   const { ticketId } = useParams()
@@ -70,6 +71,12 @@ const TicketDetailPage = () => {
   }
 
   const handleStatusChange = async (newStatus: string) => {
+    // Safety check: prevent invalid transitions
+    if (!allowedTransitions.includes(newStatus)) {
+      showToast('error', 'Invalid status transition')
+      return
+    }
+
     try {
       setUpdatingStatus(true)
 
@@ -150,6 +157,7 @@ const TicketDetailPage = () => {
   const isLead =
     user?.role === 'TEAM_LEAD' &&
     ticket.project?.leadId === user?.id
+  const isEmployee = user?.role === 'EMPLOYEE'
 
   const isAssignee = ticket.assignedToId === user?.id
   const isReporter = ticket.reporterId === user?.id
@@ -157,6 +165,44 @@ const TicketDetailPage = () => {
   const canUpdateStatus = isAdmin || isLead || isAssignee
   const canAssign = isAdmin || isLead
   const canEditDelete = isReporter
+
+  ////////////////////////////////////////////////////////////
+  // STATUS TRANSITION LOGIC
+  ////////////////////////////////////////////////////////////
+
+  const getAllowedTransitions = (currentStatus: string, role: string): string[] => {
+    // Admin can transition to any status
+    if (role === 'ADMIN') {
+      return [
+        'OPEN',
+        'IN_PROGRESS',
+        'WAITING_FOR_USER',
+        'RESOLVED',
+        'CLOSED',
+        'REJECTED',
+        'REOPENED',
+      ]
+    }
+
+    // Replicate backend transition rules
+    const transitions: Record<string, string[]> = {
+      OPEN: ['IN_PROGRESS', 'REJECTED'],
+      IN_PROGRESS: ['WAITING_FOR_USER', 'RESOLVED'],
+      WAITING_FOR_USER: ['IN_PROGRESS', 'RESOLVED'],
+      RESOLVED: ['CLOSED', 'REOPENED'],
+      CLOSED: [],
+      REJECTED: [],
+      REOPENED: ['IN_PROGRESS'],
+    }
+
+    // Always allow staying in current status
+    return [currentStatus, ...(transitions[currentStatus] || [])]
+  }
+
+  const allowedTransitions = getAllowedTransitions(
+    ticket?.status || 'OPEN',
+    user?.role || 'EMPLOYEE'
+  )
 
   ////////////////////////////////////////////////////////////
   // FORMATTERS
@@ -326,7 +372,7 @@ const TicketDetailPage = () => {
               Status
             </div>
 
-            {canUpdateStatus ? (
+            {canUpdateStatus && !isEmployee ? (
               <select
                 value={ticket.status}
                 disabled={updatingStatus}
@@ -336,6 +382,7 @@ const TicketDetailPage = () => {
                   borderRadius: '6px',
                   border: '1px solid #e5e5e5',
                   fontSize: '14px',
+                  cursor: updatingStatus ? 'wait' : 'pointer',
                 }}
               >
                 {[
@@ -346,11 +393,23 @@ const TicketDetailPage = () => {
                   'CLOSED',
                   'REJECTED',
                   'REOPENED',
-                ].map((status) => (
-                  <option key={status} value={status}>
-                    {status.replace(/_/g, ' ')}
-                  </option>
-                ))}
+                ].map((status) => {
+                  const isAllowed = allowedTransitions.includes(status)
+                  return (
+                    <option
+                      key={status}
+                      value={status}
+                      disabled={!isAllowed}
+                      style={{
+                        color: !isAllowed ? '#999999' : '#1a1a1a',
+                        opacity: !isAllowed ? 0.6 : 1,
+                        cursor: !isAllowed ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      {status.replace(/_/g, ' ')}
+                    </option>
+                  )
+                })}
               </select>
             ) : (
               <div
@@ -399,15 +458,12 @@ const TicketDetailPage = () => {
         )}
 
         {/* Status History */}
-        {ticket.statusHistory?.length > 0 && (
-          <Section title="Status History">
-            {ticket.statusHistory.map((h: any) => (
-              <div key={h.id} style={{ marginBottom: '8px', fontSize: '14px' }}>
-                {h.oldStatus} → {h.newStatus}{' '}
-                ({new Date(h.changedAt).toLocaleString()})
-              </div>
-            ))}
-          </Section>
+        {ticket.statusHistory && ticket.statusHistory.length > 0 && (
+          <div style={{ marginBottom: '24px' }}>
+            <TicketStatusTimeline 
+              statusHistory={ticket.statusHistory || []}
+            />
+          </div>
         )}
       </div>
 

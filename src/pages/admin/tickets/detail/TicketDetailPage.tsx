@@ -224,7 +224,15 @@ const TicketDetailPage = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginTop: '24px' }}>
         {/* Left Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <TicketProblemDescription />
+          <TicketProblemDescription 
+            ticket={{
+              description: ticket.description,
+              type: ticket.type,
+              createdAt: ticket.createdAt,
+              reporter: ticket.reporter,
+              assignee: ticket.assignee
+            }}
+          />
           <TicketDiscussionThread 
             comments={ticket.comments || []}
           />

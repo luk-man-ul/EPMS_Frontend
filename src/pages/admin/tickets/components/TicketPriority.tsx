@@ -8,11 +8,23 @@ const priorityConfig = {
   LOW: { bg: '#fafafa', color: '#666', label: 'Low' },
   MEDIUM: { bg: '#f0f0f0', color: '#1a1a1a', label: 'Medium' },
   HIGH: { bg: '#1a1a1a', color: '#fff', label: 'High' },
-  CRITICAL: { bg: '#1a1a1a', color: '#fff', label: 'Critical' }
+  URGENT: { bg: '#1a1a1a', color: '#fff', label: 'Critical' }
+}
+
+const defaultConfig = {
+  bg: '#f5f5f5',
+  color: '#666666',
+  label: 'Unknown'
 }
 
 const TicketPriority = ({ priority }: Props) => {
-  const config = priorityConfig[priority]
+  // Defensive: handle undefined, null, or invalid priority
+  const config = priorityConfig[priority] || defaultConfig
+  
+  // Debug warning for unexpected priority values
+  if (!priorityConfig[priority] && priority) {
+    console.warn(`[TicketPriority] Unexpected priority value: "${priority}"`)
+  }
   
   return (
     <span

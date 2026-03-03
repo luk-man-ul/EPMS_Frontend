@@ -1,4 +1,39 @@
-const TicketProblemDescription = () => {
+interface TicketProblemDescriptionProps {
+  ticket: {
+    description: string
+    type: string
+    createdAt: string
+    reporter?: {
+      firstName: string
+      lastName: string
+    }
+    assignee?: {
+      firstName: string
+      lastName: string
+    } | null
+  }
+}
+
+const TicketProblemDescription = ({ ticket }: TicketProblemDescriptionProps) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    })
+  }
+
+  const formatEnumLabel = (value: string) => {
+    return value
+      .split('_')
+      .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+      .join(' ')
+  }
+
   return (
     <div style={{
       background: '#fff',
@@ -14,11 +49,10 @@ const TicketProblemDescription = () => {
         fontSize: '14px', 
         color: '#666', 
         lineHeight: '1.6',
-        marginBottom: '20px'
+        marginBottom: '20px',
+        whiteSpace: 'pre-wrap'
       }}>
-        The login page breaks on mobile screens below 768px width. Form elements overlap and the submit button 
-        is not visible. This issue affects all mobile users trying to access the platform. The problem appears 
-        to be related to CSS flexbox layout not adapting properly to smaller screen sizes.
+        {ticket.description || 'No description provided'}
       </p>
 
       <div style={{ 
@@ -33,7 +67,9 @@ const TicketProblemDescription = () => {
             Created By
           </div>
           <div style={{ fontSize: '14px', fontWeight: 500, color: '#1a1a1a' }}>
-            John Smith
+            {ticket.reporter 
+              ? `${ticket.reporter.firstName} ${ticket.reporter.lastName}`
+              : 'Unknown'}
           </div>
         </div>
         <div>
@@ -41,7 +77,9 @@ const TicketProblemDescription = () => {
             Assigned To
           </div>
           <div style={{ fontSize: '14px', fontWeight: 500, color: '#1a1a1a' }}>
-            Michael Chen
+            {ticket.assignee 
+              ? `${ticket.assignee.firstName} ${ticket.assignee.lastName}`
+              : 'Unassigned'}
           </div>
         </div>
         <div>
@@ -49,7 +87,7 @@ const TicketProblemDescription = () => {
             Created At
           </div>
           <div style={{ fontSize: '14px', fontWeight: 500, color: '#1a1a1a' }}>
-            2026-02-10 09:30 AM
+            {formatDate(ticket.createdAt)}
           </div>
         </div>
         <div>
@@ -57,23 +95,7 @@ const TicketProblemDescription = () => {
             Type
           </div>
           <div style={{ fontSize: '14px', fontWeight: 500, color: '#1a1a1a' }}>
-            Bug
-          </div>
-        </div>
-        <div>
-          <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-            Affected Users
-          </div>
-          <div style={{ fontSize: '14px', fontWeight: 500, color: '#1a1a1a' }}>
-            ~2,500 mobile users
-          </div>
-        </div>
-        <div>
-          <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-            Environment
-          </div>
-          <div style={{ fontSize: '14px', fontWeight: 500, color: '#1a1a1a' }}>
-            Production
+            {formatEnumLabel(ticket.type)}
           </div>
         </div>
       </div>

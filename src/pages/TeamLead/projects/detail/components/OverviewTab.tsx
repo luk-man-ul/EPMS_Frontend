@@ -161,7 +161,7 @@ const OverviewTab = ({ project }: Props) => {
               color: '#b45309',
             }}
           >
-            ⚠ Project cannot be completed until all tasks are finished.
+            {/* ⚠ Project cannot be completed until all tasks are finished. */}
           </div>
         )}
       </div>

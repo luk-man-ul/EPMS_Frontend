@@ -85,105 +85,222 @@ const CreateTicketPage = () => {
     }
   }
 
-  if (loadingProjects) return <div>Loading...</div>
+  if (loadingProjects) {
+    return (
+      <div style={{ 
+        padding: '32px', 
+        textAlign: 'center',
+        fontSize: '14px',
+        color: '#666'
+      }}>
+        Loading projects...
+      </div>
+    )
+  }
 
   return (
-    <div style={{ maxWidth: 700 }}>
-      <h1 style={{ marginBottom: 20 }}>Create Ticket</h1>
+    <div style={{ padding: '32px', maxWidth: '800px', margin: '0 auto' }}>
+      {/* Header */}
+      <div style={{ marginBottom: '32px' }}>
+        <h1 style={{ 
+          fontSize: '28px', 
+          fontWeight: 700,
+          color: '#1a1a1a',
+          marginBottom: '8px'
+        }}>
+          Create New Ticket
+        </h1>
+        <p style={{ fontSize: '14px', color: '#666' }}>
+          Report an issue or request support for your project
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit}>
-        {/* Title */}
-        <div style={{ marginBottom: 16 }}>
-          <label>Title</label>
-          <input
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            style={{ width: '100%', padding: 8 }}
-          />
-        </div>
+      {/* Form Card */}
+      <div style={{
+        background: '#fff',
+        border: '1px solid #e5e5e5',
+        borderRadius: '12px',
+        padding: '32px'
+      }}>
+        <form onSubmit={handleSubmit}>
+          {/* Project Selection */}
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Project *</label>
+            <select
+              name="projectId"
+              value={form.projectId}
+              onChange={handleChange}
+              style={inputStyle}
+              required
+            >
+              <option value="">Select a project</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+            <span style={hintStyle}>Choose the project this ticket relates to</span>
+          </div>
 
-        {/* Description */}
-        <div style={{ marginBottom: 16 }}>
-          <label>Description</label>
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            rows={5}
-            style={{ width: '100%', padding: 8 }}
-          />
-        </div>
+          {/* Title */}
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Title *</label>
+            <input
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              placeholder="Brief description of the issue"
+              style={inputStyle}
+              required
+            />
+            <span style={hintStyle}>Provide a clear, concise title</span>
+          </div>
 
-        {/* Project */}
-        <div style={{ marginBottom: 16 }}>
-          <label>Project</label>
-          <select
-            name="projectId"
-            value={form.projectId}
-            onChange={handleChange}
-            style={{ width: '100%', padding: 8 }}
-          >
-            <option value="">Select Project</option>
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-          </select>
-        </div>
+          {/* Description */}
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Description *</label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              placeholder="Provide detailed information about the ticket..."
+              rows={6}
+              style={{ ...inputStyle, resize: 'vertical' as const }}
+              required
+            />
+            <span style={hintStyle}>Include steps to reproduce, expected vs actual behavior, or any relevant details</span>
+          </div>
 
-        {/* Type */}
-        <div style={{ marginBottom: 16 }}>
-          <label>Type</label>
-          <select
-            name="type"
-            value={form.type}
-            onChange={handleChange}
-            style={{ width: '100%', padding: 8 }}
-          >
-            {getEnumOptions(TicketType).map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+          {/* Type and Priority Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            {/* Type */}
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Type *</label>
+              <select
+                name="type"
+                value={form.type}
+                onChange={handleChange}
+                style={inputStyle}
+                required
+              >
+                {getEnumOptions(TicketType).map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        {/* Priority */}
-        <div style={{ marginBottom: 16 }}>
-          <label>Priority</label>
-          <select
-            name="priority"
-            value={form.priority}
-            onChange={handleChange}
-            style={{ width: '100%', padding: 8 }}
-          >
-            {getEnumOptions(Priority).map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+            {/* Priority */}
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Priority *</label>
+              <select
+                name="priority"
+                value={form.priority}
+                onChange={handleChange}
+                style={inputStyle}
+                required
+              >
+                {getEnumOptions(Priority).map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-        <button
-          type="submit"
-          disabled={creating}
-          style={{
-            padding: '10px 20px',
-            background: '#1a1a1a',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 6,
-            cursor: 'pointer',
-          }}
-        >
-          {creating ? 'Creating...' : 'Create Ticket'}
-        </button>
-      </form>
+          {/* Action Buttons */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '12px', 
+            justifyContent: 'flex-end',
+            marginTop: '32px',
+            paddingTop: '24px',
+            borderTop: '1px solid #f5f5f5'
+          }}>
+            <button
+              type="button"
+              onClick={() => navigate('/app/tickets')}
+              style={secondaryButtonStyle}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={creating}
+              style={{
+                ...primaryButtonStyle,
+                opacity: creating ? 0.6 : 1,
+                cursor: creating ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {creating ? 'Creating...' : 'Create Ticket'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   )
+}
+
+//////////////////////////////////////////////////////////
+// STYLES
+//////////////////////////////////////////////////////////
+
+const fieldStyle: React.CSSProperties = {
+  marginBottom: '24px',
+}
+
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '14px',
+  fontWeight: 500,
+  color: '#1a1a1a',
+  marginBottom: '8px',
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 12px',
+  fontSize: '14px',
+  border: '1px solid #e5e5e5',
+  borderRadius: '8px',
+  fontFamily: 'inherit',
+  outline: 'none',
+  transition: 'border-color 0.15s ease',
+}
+
+const hintStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '12px',
+  color: '#999',
+  marginTop: '6px',
+}
+
+const primaryButtonStyle: React.CSSProperties = {
+  padding: '10px 24px',
+  fontSize: '14px',
+  fontWeight: 500,
+  color: '#fff',
+  background: '#1a1a1a',
+  border: 'none',
+  borderRadius: '8px',
+  cursor: 'pointer',
+  transition: 'all 0.15s ease',
+}
+
+const secondaryButtonStyle: React.CSSProperties = {
+  padding: '10px 24px',
+  fontSize: '14px',
+  fontWeight: 500,
+  color: '#1a1a1a',
+  background: '#fff',
+  border: '1px solid #e5e5e5',
+  borderRadius: '8px',
+  cursor: 'pointer',
+  transition: 'all 0.15s ease',
 }
 
 export default CreateTicketPage

@@ -34,12 +34,24 @@ const MyProjectsPage = () => {
           teamMembersCount: p.teamSize ?? 0,
           openTasks: p.progress < 100 ? 1 : 0, // temporary until tasks wired
           backendStatus: p.status, // Store backend enum status
-          status:
-            p.status === 'COMPLETED'
-              ? 'completed'
-              : p.progress < 40
-              ? 'at-risk'
-              : 'active',
+          status: (() => {
+  switch (p.status) {
+    case 'COMPLETED':
+      return 'completed'
+    case 'PLANNING':
+      return 'active'
+    case 'ACTIVE':
+      return 'active'
+    case 'ON_HOLD':
+      return 'ON-HOLD'
+    case 'CANCELLED':
+      return 'CANCELLED'
+    case 'ARCHIVED':
+      return 'completed'
+    default:
+      return 'active'
+  }
+})(),
         }))
 
         setProjects(mapped)

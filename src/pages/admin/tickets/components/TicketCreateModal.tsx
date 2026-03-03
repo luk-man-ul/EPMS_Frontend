@@ -76,17 +76,32 @@ const TicketCreateModal = ({ onClose, onSuccess }: Props) => {
   return (
     <div style={overlayStyle}>
       <div style={modalStyle}>
-        <h2 style={{ marginBottom: 20 }}>Create Ticket</h2>
+        <h2 style={{ 
+          fontSize: '20px', 
+          fontWeight: 600, 
+          marginBottom: '24px',
+          color: '#1a1a1a'
+        }}>
+          Create New Ticket
+        </h2>
 
         {error && (
-          <div style={{ color: 'red', marginBottom: 12 }}>
+          <div style={{ 
+            color: '#dc2626', 
+            backgroundColor: '#fee2e2',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            marginBottom: '20px',
+            fontSize: '14px',
+            border: '1px solid #fecaca'
+          }}>
             {error}
           </div>
         )}
 
         {/* Project Selection */}
         <div style={fieldStyle}>
-          <label>Project *</label>
+          <label style={labelStyle}>Project *</label>
           <select
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}
@@ -103,64 +118,80 @@ const TicketCreateModal = ({ onClose, onSuccess }: Props) => {
 
         {/* Title */}
         <div style={fieldStyle}>
-          <label>Title *</label>
+          <label style={labelStyle}>Title *</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            placeholder="Brief description of the issue"
             style={inputStyle}
           />
         </div>
 
         {/* Description */}
         <div style={fieldStyle}>
-          <label>Description *</label>
+          <label style={labelStyle}>Description *</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            style={{ ...inputStyle, height: 100 }}
+            placeholder="Provide detailed information about the ticket..."
+            style={{ ...inputStyle, height: 120, resize: 'vertical' as const }}
           />
         </div>
 
-        {/* Type */}
-        <div style={fieldStyle}>
-          <label>Type</label>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            style={inputStyle}
-          >
-            <option value="SUPPORT">Support</option>
-            <option value="BUG">Bug</option>
-            <option value="FEATURE">Feature</option>
-            <option value="IMPROVEMENT">Improvement</option>
-          </select>
+        {/* Type and Priority Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          {/* Type */}
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Type</label>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="SUPPORT">Support</option>
+              <option value="BUG">Bug</option>
+              <option value="FEATURE">Feature</option>
+              <option value="IMPROVEMENT">Improvement</option>
+            </select>
+          </div>
+
+          {/* Priority */}
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Priority</label>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+              <option value="URGENT">Urgent</option>
+            </select>
+          </div>
         </div>
 
-        {/* Priority */}
-        <div style={fieldStyle}>
-          <label>Priority</label>
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-            style={inputStyle}
-          >
-            <option value="LOW">Low</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="HIGH">High</option>
-            <option value="URGENT">Urgent</option>
-          </select>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'flex-end', 
+          gap: '12px',
+          marginTop: '24px',
+          paddingTop: '20px',
+          borderTop: '1px solid #f5f5f5'
+        }}>
           <button onClick={onClose} style={secondaryButton}>
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={loading}
-            style={primaryButton}
+            style={{
+              ...primaryButton,
+              opacity: loading ? 0.6 : 1,
+              cursor: loading ? 'not-allowed' : 'pointer'
+            }}
           >
-            {loading ? 'Creating...' : 'Create'}
+            {loading ? 'Creating...' : 'Create Ticket'}
           </button>
         </div>
       </div>
@@ -189,37 +220,57 @@ const overlayStyle: React.CSSProperties = {
 
 const modalStyle: React.CSSProperties = {
   backgroundColor: '#fff',
-  padding: 24,
-  borderRadius: 12,
-  width: 420,
+  padding: '32px',
+  borderRadius: '12px',
+  width: '520px',
+  maxHeight: '90vh',
+  overflowY: 'auto',
+  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
 }
 
 const fieldStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  marginBottom: 14,
+  marginBottom: '20px',
+}
+
+const labelStyle: React.CSSProperties = {
+  fontSize: '14px',
+  fontWeight: 500,
+  color: '#1a1a1a',
+  marginBottom: '8px',
 }
 
 const inputStyle: React.CSSProperties = {
-  padding: 8,
-  borderRadius: 6,
-  border: '1px solid #ddd',
-  marginTop: 4,
+  padding: '10px 12px',
+  borderRadius: '8px',
+  border: '1px solid #e5e5e5',
+  fontSize: '14px',
+  fontFamily: 'inherit',
+  transition: 'border-color 0.15s ease',
+  outline: 'none',
 }
 
 const primaryButton: React.CSSProperties = {
-  padding: '8px 14px',
+  padding: '10px 20px',
   backgroundColor: '#1a1a1a',
   color: '#fff',
   border: 'none',
-  borderRadius: 6,
+  borderRadius: '8px',
   cursor: 'pointer',
+  fontSize: '14px',
+  fontWeight: 500,
+  transition: 'all 0.15s ease',
 }
 
 const secondaryButton: React.CSSProperties = {
-  padding: '8px 14px',
-  backgroundColor: '#eee',
-  border: 'none',
-  borderRadius: 6,
+  padding: '10px 20px',
+  backgroundColor: '#fff',
+  color: '#1a1a1a',
+  border: '1px solid #e5e5e5',
+  borderRadius: '8px',
   cursor: 'pointer',
+  fontSize: '14px',
+  fontWeight: 500,
+  transition: 'all 0.15s ease',
 }
