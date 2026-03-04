@@ -47,58 +47,82 @@ const TicketStatusTimeline = ({ statusHistory, onUpdateStatus }: TicketStatusTim
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {statusHistory.map((timeline, index) => (
-          <div key={timeline.id} style={{ position: 'relative', paddingLeft: '28px' }}>
-            {/* Timeline dot */}
-            <div style={{
-              position: 'absolute',
-              left: '0',
-              top: '4px',
-              width: '10px',
-              height: '10px',
-              borderRadius: '50%',
-              backgroundColor: index === statusHistory.length - 1 ? '#1a1a1a' : '#e5e5e5',
-              border: index === statusHistory.length - 1 ? '2px solid #1a1a1a' : '2px solid #e5e5e5'
-            }} />
+          {statusHistory.map((timeline, index) => {
+            const isCurrentStatus = index === 0 // Most recent status is at index 0
             
-            {/* Timeline line */}
-            {index < statusHistory.length - 1 && (
-              <div style={{
-                position: 'absolute',
-                left: '4.5px',
-                top: '14px',
-                width: '1px',
-                height: 'calc(100% + 6px)',
-                backgroundColor: '#f5f5f5'
-              }} />
-            )}
+            return (
+              <div key={timeline.id} style={{ position: 'relative', paddingLeft: '32px' }}>
+                {/* Timeline dot */}
+                <div style={{
+                  position: 'absolute',
+                  left: '0',
+                  top: '4px',
+                  width: isCurrentStatus ? '12px' : '10px',
+                  height: isCurrentStatus ? '12px' : '10px',
+                  borderRadius: '50%',
+                  backgroundColor: isCurrentStatus ? '#1a1a1a' : '#fff',
+                  border: isCurrentStatus ? '3px solid #1a1a1a' : '2px solid #d1d5db',
+                  boxShadow: isCurrentStatus ? '0 0 0 4px rgba(26, 26, 26, 0.1)' : 'none',
+                  transition: 'all 0.2s ease'
+                }} />
+                
+                {/* Timeline line */}
+                {index < statusHistory.length - 1 && (
+                  <div style={{
+                    position: 'absolute',
+                    left: '5px',
+                    top: isCurrentStatus ? '16px' : '14px',
+                    width: '2px',
+                    height: 'calc(100% + 6px)',
+                    backgroundColor: '#e5e7eb'
+                  }} />
+                )}
 
-            <div>
-              <div style={{ 
-                fontSize: '14px', 
-                fontWeight: 600, 
-                color: '#1a1a1a', 
-                marginBottom: '4px' 
-              }}>
-                {formatEnumLabel(timeline.status)}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-                {timeline.changedBy ? `${timeline.changedBy.firstName} ${timeline.changedBy.lastName}` : 'System'} • {formatTimestamp(timeline.createdAt)}
-              </div>
-              {timeline.note && (
-                <div style={{ 
-                  fontSize: '13px', 
-                  color: '#999',
-                  fontStyle: 'italic',
-                  marginTop: '4px'
-                }}>
-                  {timeline.note}
+                <div>
+                  <div style={{ 
+                    fontSize: '14px', 
+                    fontWeight: isCurrentStatus ? 700 : 600, 
+                    color: isCurrentStatus ? '#1a1a1a' : '#6b7280', 
+                    marginBottom: '4px' 
+                  }}>
+                    {formatEnumLabel(timeline.status)}
+                    {isCurrentStatus && (
+                      <span style={{
+                        marginLeft: '8px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        color: '#10b981',
+                        backgroundColor: '#d1fae5',
+                        padding: '2px 8px',
+                        borderRadius: '12px'
+                      }}>
+                        Current
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ 
+                    fontSize: '12px', 
+                    color: isCurrentStatus ? '#374151' : '#9ca3af', 
+                    marginBottom: '4px',
+                    fontWeight: isCurrentStatus ? 500 : 400
+                  }}>
+                    {timeline.changedBy ? `${timeline.changedBy.firstName} ${timeline.changedBy.lastName}` : 'System'} • {formatTimestamp(timeline.createdAt)}
+                  </div>
+                  {timeline.note && (
+                    <div style={{ 
+                      fontSize: '13px', 
+                      color: '#9ca3af',
+                      fontStyle: 'italic',
+                      marginTop: '4px'
+                    }}>
+                      {timeline.note}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+              </div>
+            )
+          })}
+        </div>
       )}
 
       {onUpdateStatus && (

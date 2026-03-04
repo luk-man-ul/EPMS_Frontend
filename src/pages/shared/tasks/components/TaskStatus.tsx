@@ -48,6 +48,8 @@ const TaskStatus = ({ status }: Props) => {
         backgroundColor: config.bg,
         color: config.color,
         border: '1px solid #e5e5e5',
+        whiteSpace: 'nowrap',
+        display: 'inline-block',
       }}
     >
       {config.label}

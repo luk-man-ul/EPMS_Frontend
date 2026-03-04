@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../../../../utils/api'
 import { useToast } from '../../../../context/ToastContext'
+import EditTaskModal from '../components/EditTaskModal'
+import TaskStatus from '../../../shared/tasks/components/TaskStatus'
 
 const statusOptions = [
-  'TODO',
-  'IN_PROGRESS',
-  'REVIEW',
-  'COMPLETED',
+  { value: 'TODO', label: 'To Do' },
+  { value: 'IN_PROGRESS', label: 'In Progress' },
+  { value: 'REVIEW', label: 'Review' },
+  { value: 'COMPLETED', label: 'Completed' },
 ]
 
 const TaskDetailPage = () => {
@@ -18,22 +20,36 @@ const TaskDetailPage = () => {
   const [task, setTask] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
+  const [accessDenied, setAccessDenied] = useState(false)
+  const [toastShown, setToastShown] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
 
+  ////////////////////////////////////////////////////////////
+  // FETCH TASK
   ////////////////////////////////////////////////////////////
   // FETCH TASK
   ////////////////////////////////////////////////////////////
 
   useEffect(() => {
+    // Prevent fetch if already denied access
+    if (accessDenied) return
+
     const fetchTask = async () => {
       try {
         const res = await api.get(`/tasks/${taskId}`)
-        setTask(res.data.data || res.data)
+        const taskData = res.data.data || res.data
+        setTask(taskData)
       } catch (err: any) {
         console.error('Failed to load task', err)
         
         // Handle specific error cases
         if (err.response?.status === 403) {
-          navigate('/unauthorized')
+          setAccessDenied(true)
+          // Only show toast once
+          if (!toastShown) {
+            showToast('error', 'You are not authorized to view this task')
+            setToastShown(true)
+          }
         } else if (err.response?.status === 404) {
           setTask(null)
         }
@@ -43,8 +59,9 @@ const TaskDetailPage = () => {
       }
     }
 
-    if (taskId) fetchTask()
-  }, [taskId, navigate])
+    if (taskId && !accessDenied) fetchTask()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskId, accessDenied])
 
   ////////////////////////////////////////////////////////////
   // ROLE CHECK
@@ -57,6 +74,28 @@ const TaskDetailPage = () => {
     user?.role === 'ADMIN' ||
     user?.role === 'TEAM_LEAD' ||
     user?.id === task?.assignedToId
+
+  const canEditTask =
+    user?.role === 'ADMIN' ||
+    user?.role === 'TEAM_LEAD'
+
+  ////////////////////////////////////////////////////////////
+  // EDIT HANDLER
+  ////////////////////////////////////////////////////////////
+
+  const handleEditClick = () => {
+    setEditModalOpen(true)
+  }
+
+  const handleEditSuccess = async () => {
+    // Refresh task data after edit
+    try {
+      const res = await api.get(`/tasks/${taskId}`)
+      setTask(res.data.data || res.data)
+    } catch (err) {
+      console.error('Failed to refresh task')
+    }
+  }
 
   ////////////////////////////////////////////////////////////
   // STATUS TRANSITION VALIDATION FOR EMPLOYEE
@@ -113,7 +152,7 @@ const TaskDetailPage = () => {
     }
 
     const allowed = allowedTransitions[currentStatus] || [currentStatus]
-    return statusOptions.filter(status => allowed.includes(status))
+    return statusOptions.filter(status => allowed.includes(status.value))
   }
 
   ////////////////////////////////////////////////////////////
@@ -153,6 +192,43 @@ const TaskDetailPage = () => {
 
   if (loading) return <div style={{ padding: 40 }}>Loading...</div>
 
+  if (accessDenied) {
+    return (
+      <div style={{ 
+        padding: 60, 
+        textAlign: 'center',
+        maxWidth: 600,
+        margin: '0 auto'
+      }}>
+        <div style={{ fontSize: 64, marginBottom: 20 }}>🔒</div>
+        <h2 style={{ fontSize: 24, fontWeight: 600, marginBottom: 12 }}>
+          Access Denied
+        </h2>
+        <p style={{ color: '#666', marginBottom: 32, lineHeight: 1.6 }}>
+          You are not authorized to view this task. This task may not be assigned to you or you may not have the required permissions.
+        </p>
+        <button 
+          onClick={() => navigate(-1)}
+          style={{
+            padding: '12px 24px',
+            background: '#1a1a1a',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 8,
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = '#333'}
+          onMouseLeave={(e) => e.currentTarget.style.background = '#1a1a1a'}
+        >
+          ← Go Back
+        </button>
+      </div>
+    )
+  }
+
   if (!task)
     return (
       <div style={{ padding: 60, textAlign: 'center' }}>
@@ -168,29 +244,53 @@ const TaskDetailPage = () => {
   return (
     <div style={{ padding: 32, maxWidth: 1400, margin: '0 auto' }}>
       {/* HEADER */}
-      <div style={{ marginBottom: 24 }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            marginBottom: 12,
-            fontWeight: 500,
-          }}
-        >
-          ← Back
-        </button>
+      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              marginBottom: 12,
+              fontWeight: 500,
+            }}
+          >
+            ← Back
+          </button>
 
-        <h1 style={{ fontSize: 26, fontWeight: 700 }}>
-          {task.title}
-        </h1>
+          <h1 style={{ fontSize: 26, fontWeight: 700 }}>
+            {task.title}
+          </h1>
 
-        <div style={{ color: '#666', marginTop: 6 }}>
-          Project: {task.project?.name}
+          <div style={{ color: '#666', marginTop: 6 }}>
+            Project: {task.project?.name}
+          </div>
         </div>
+
+        {canEditTask && (
+          <button
+            onClick={handleEditClick}
+            style={{
+              padding: '10px 20px',
+              background: '#1a1a1a',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            ✏️ Edit Task
+          </button>
+        )}
       </div>
 
+      {/* MAIN CONTENT - VIEW MODE */}
       {/* MAIN GRID */}
       <div
         style={{
@@ -225,6 +325,7 @@ const TaskDetailPage = () => {
         >
           <h3 style={{ marginBottom: 16 }}>Details</h3>
 
+          {/* Priority */}
           <DetailRow
             label="Priority"
             value={task.priority}
@@ -248,20 +349,20 @@ const TaskDetailPage = () => {
                   }}
                 >
                   {getAllowedStatusOptions().map((s) => (
-                    <option key={s} value={s}>
-                      {s}
+                    <option key={s.value} value={s.value}>
+                      {s.label}
                     </option>
                   ))}
                 </select>
               ) : (
-                <div>{task.status}</div>
+                <TaskStatus status={task.status} />
               )}
             </div>
           </div>
 
           <DetailRow
             label="Assignee"
-            value={`${task.assignee?.firstName} ${task.assignee?.lastName}`}
+            value={task.assignee ? `${task.assignee?.firstName} ${task.assignee?.lastName}` : 'Unassigned'}
           />
 
           <DetailRow
@@ -352,6 +453,14 @@ const TaskDetailPage = () => {
           ))
         )}
       </div>
+
+      {/* EDIT MODAL */}
+      <EditTaskModal
+        isOpen={editModalOpen}
+        task={task}
+        onClose={() => setEditModalOpen(false)}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   )
 }

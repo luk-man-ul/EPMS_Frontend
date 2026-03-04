@@ -4,9 +4,11 @@ import TicketRow from './TicketRow'
 interface Props {
   tickets: Ticket[]
   loading: boolean
+  onEdit: (ticketId: string) => void
+  onDelete: (ticketId: string) => void
 }
 
-const TicketTable = ({ tickets, loading }: Props) => {
+const TicketTable = ({ tickets, loading, onEdit, onDelete }: Props) => {
   return (
     <div style={{ overflow: 'visible' }}>
       <table
@@ -59,7 +61,12 @@ const TicketTable = ({ tickets, loading }: Props) => {
           </tr>
         ) : (
           tickets.map((ticket) => (
-            <TicketRow key={ticket.id} ticket={ticket} />
+            <TicketRow 
+              key={ticket.id} 
+              ticket={ticket}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
           ))
         )}
       </tbody>

@@ -76,36 +76,27 @@ const TaskActions = ({ taskId, onEdit, onDelete }: Props) => {
       }}
       ref={menuRef}
     >
-      {/* View Button */}
+      {/* 3 Dot Button */}
       <button
         type="button"
-        onClick={handleView}
-        style={viewButtonStyle}
+        onClick={() => setOpen((prev) => !prev)}
+        style={threeDotButtonStyle}
       >
-        View
+        ⋮
       </button>
 
-      {/* 3 Dot Button - Hide for EMPLOYEE */}
-      {!isEmployee && (
-        <button
-          type="button"
-          onClick={() => setOpen((prev) => !prev)}
-          style={threeDotButtonStyle}
-        >
-          ⋮
-        </button>
-      )}
-
-      {/* Dropdown - Hide for EMPLOYEE */}
-      {!isEmployee && open && (
+      {/* Dropdown */}
+      {open && (
         <div style={dropdownStyle}>
           <DropdownItem label="View Details" onClick={handleView} />
-          <DropdownItem label="Edit" onClick={handleEdit} />
-          <DropdownItem
-            label="Delete"
-            danger
-            onClick={handleDelete}
-          />
+          {!isEmployee && <DropdownItem label="Edit" onClick={handleEdit} />}
+          {!isEmployee && (
+            <DropdownItem
+              label="Delete"
+              danger
+              onClick={handleDelete}
+            />
+          )}
         </div>
       )}
     </div>
@@ -149,18 +140,6 @@ const DropdownItem = ({ label, onClick, danger }: ItemProps) => {
 // STYLES
 ////////////////////////////////////////////////////////////
 
-const viewButtonStyle: React.CSSProperties = {
-  border: '1px solid #e5e5e5',
-  background: '#fff',
-  cursor: 'pointer',
-  fontSize: '13px',
-  padding: '6px 12px',
-  borderRadius: '8px',
-  color: '#1a1a1a',
-  fontWeight: 500,
-  marginRight: 8,
-}
-
 const threeDotButtonStyle: React.CSSProperties = {
   border: '1px solid #e5e5e5',
   background: '#fff',
@@ -169,6 +148,7 @@ const threeDotButtonStyle: React.CSSProperties = {
   padding: '6px 10px',
   borderRadius: '8px',
   color: '#666',
+  transition: 'all 0.15s ease',
 }
 
 const dropdownStyle: React.CSSProperties = {

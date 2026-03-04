@@ -6,8 +6,8 @@ interface TicketFiltersProps {
   priorityFilter: string
   statusFilter: string
   typeFilter: string
-  projects: string[]
-  employees: string[]
+  projects: (string | { id: string; name: string })[]
+  employees: (string | { id: string; name: string })[]
   onProjectChange: (value: string) => void
   onAssignedToChange: (value: string) => void
   onPriorityChange: (value: string) => void
@@ -75,9 +75,14 @@ const TicketFilters = ({
             }}
           >
             <option value="all">All Projects</option>
-            {projects.filter(p => p !== 'all').map(project => (
-              <option key={project} value={project}>{project}</option>
-            ))}
+            {projects.filter(p => p !== 'all').map(project => {
+              if (typeof project === 'string') return null
+              return (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              )
+            })}
           </select>
         </div>
 
@@ -106,9 +111,14 @@ const TicketFilters = ({
             }}
           >
             <option value="all">All Employees</option>
-            {employees.filter(e => e !== 'all').map(employee => (
-              <option key={employee} value={employee}>{employee}</option>
-            ))}
+            {employees.filter(e => e !== 'all').map(employee => {
+              if (typeof employee === 'string') return null
+              return (
+                <option key={employee.id} value={employee.id}>
+                  {employee.name}
+                </option>
+              )
+            })}
           </select>
         </div>
 

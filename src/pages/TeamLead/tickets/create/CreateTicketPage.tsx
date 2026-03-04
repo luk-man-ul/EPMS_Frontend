@@ -11,7 +11,10 @@ const CreateTicketPage = () => {
   const { showToast } = useToast()
 
   const [projects, setProjects] = useState<any[]>([])
+  const [tasks, setTasks] = useState<any[]>([])
+  const [projectMembers, setProjectMembers] = useState<any[]>([])
   const [loadingProjects, setLoadingProjects] = useState(true)
+  const [loadingTasks, setLoadingTasks] = useState(false)
   const [creating, setCreating] = useState(false)
 
   const [form, setForm] = useState({
@@ -20,6 +23,8 @@ const CreateTicketPage = () => {
     type: TicketType.BUG,
     priority: Priority.MEDIUM,
     projectId: '',
+    taskId: '',
+    assignedToId: '',
   })
 
   ////////////////////////////////////////////////////////////////
@@ -42,13 +47,57 @@ const CreateTicketPage = () => {
   }, [])
 
   ////////////////////////////////////////////////////////////////
+  // FETCH TASKS AND MEMBERS WHEN PROJECT CHANGES
+  ////////////////////////////////////////////////////////////////
+
+  useEffect(() => {
+    if (!form.projectId) {
+      setTasks([])
+      setProjectMembers([])
+      return
+    }
+
+    const fetchProjectData = async () => {
+      try {
+        setLoadingTasks(true)
+
+        // Fetch tasks for the selected project
+        const tasksRes = await api.get('/tasks', {
+          params: { projectId: form.projectId }
+        })
+        setTasks(tasksRes.data.data || [])
+
+        // Find selected project to get members
+        const selectedProject = projects.find(p => p.id === form.projectId)
+        if (selectedProject?.members) {
+          setProjectMembers(selectedProject.members)
+        } else {
+          // Fallback: fetch project details if members not included
+          const projectRes = await api.get(`/projects/${form.projectId}`)
+          setProjectMembers(projectRes.data.members || [])
+        }
+      } catch (err) {
+        showToast('error', 'Failed to load project data')
+      } finally {
+        setLoadingTasks(false)
+      }
+    }
+
+    fetchProjectData()
+  }, [form.projectId, projects])
+
+  ////////////////////////////////////////////////////////////////
   // HANDLE CHANGE
   ////////////////////////////////////////////////////////////////
 
   const handleChange = (e: any) => {
+    const { name, value } = e.target
+
     setForm({
       ...form,
-      [e.target.name]: e.target.value,
+      [name]: value,
+      // Clear task and assignee when project changes
+      ...(name === 'projectId' && { taskId: '', assignedToId: '' })
     })
   }
 
@@ -60,14 +109,31 @@ const CreateTicketPage = () => {
     e.preventDefault()
 
     if (!form.title || !form.description || !form.projectId) {
-      showToast('error', 'All fields are required')
+      showToast('error', 'Title, description, and project are required')
       return
     }
 
     try {
       setCreating(true)
 
-      const res = await api.post('/tickets', form)
+      // Prepare payload - only include optional fields if they have values
+      const payload: any = {
+        title: form.title,
+        description: form.description,
+        type: form.type,
+        priority: form.priority,
+        projectId: form.projectId,
+      }
+
+      if (form.taskId) {
+        payload.taskId = form.taskId
+      }
+
+      if (form.assignedToId) {
+        payload.assignedToId = form.assignedToId
+      }
+
+      const res = await api.post('/tickets', payload)
 
       showToast('success', 'Ticket created successfully')
       navigate(`/app/tickets/${res.data.id}`)
@@ -142,6 +208,57 @@ const CreateTicketPage = () => {
             </select>
             <span style={hintStyle}>Choose the project this ticket relates to</span>
           </div>
+
+          {/* Task Selection (Optional) */}
+          {form.projectId && (
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Task (Optional)</label>
+              <select
+                name="taskId"
+                value={form.taskId}
+                onChange={handleChange}
+                style={inputStyle}
+                disabled={loadingTasks}
+              >
+                <option value="">No task</option>
+                {tasks.map((task) => (
+                  <option key={task.id} value={task.id}>
+                    {task.title}
+                  </option>
+                ))}
+              </select>
+              <span style={hintStyle}>
+                {loadingTasks ? 'Loading tasks...' : 'Link this ticket to a specific task'}
+              </span>
+            </div>
+          )}
+
+          {/* Assigned User (Optional) */}
+          {form.projectId && (
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Assign To (Optional)</label>
+              <select
+                name="assignedToId"
+                value={form.assignedToId}
+                onChange={handleChange}
+                style={inputStyle}
+                disabled={loadingTasks}
+              >
+                <option value="">Unassigned</option>
+                <option value={user?.id}>Assign to me</option>
+                {projectMembers
+                  .filter((member: any) => member.userId !== user?.id)
+                  .map((member: any) => (
+                    <option key={member.userId} value={member.userId}>
+                      {member.user?.firstName} {member.user?.lastName}
+                    </option>
+                  ))}
+              </select>
+              <span style={hintStyle}>
+                {loadingTasks ? 'Loading members...' : 'Assign this ticket to a team member'}
+              </span>
+            </div>
+          )}
 
           {/* Title */}
           <div style={fieldStyle}>

@@ -40,7 +40,7 @@ const TicketsTable = ({ tickets, currentUserId }: TicketsTableProps) => {
 
     try {
       setDeleting(true)
-      await api.patch(`/tickets/${ticketToDelete}`, { isDeleted: true })
+      await api.delete(`/tickets/${ticketToDelete}`)
       showToast('success', 'Ticket deleted successfully')
       setShowDeleteConfirm(false)
       setTicketToDelete(null)
@@ -198,6 +198,19 @@ const TicketsTable = ({ tickets, currentUserId }: TicketsTableProps) => {
                   }}>
                     {typeConfig.icon} {typeConfig.label}
                   </span>
+
+                  {ticket.assignedTo === 'Unassigned' && (
+                    <span style={{
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      fontSize: '10px',
+                      fontWeight: 600,
+                      color: '#f59e0b',
+                      background: '#fef3c7',
+                    }}>
+                      🔓 Unassigned
+                    </span>
+                  )}
                 </div>
 
                 {/* Title */}

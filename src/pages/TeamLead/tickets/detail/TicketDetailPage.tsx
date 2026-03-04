@@ -5,6 +5,7 @@ import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
 import ConfirmationModal from '../../../../components/shared/ConfirmationModal'
 import TicketStatusTimeline from '../../../admin/tickets/detail/components/TicketStatusTimeline'
+import { getAllowedTransitions, formatStatus as formatStatusEnum, type TicketStatus } from '../../../../types/ticketWorkflow'
 
 const TicketDetailPage = () => {
   const { ticketId } = useParams()
@@ -16,8 +17,11 @@ const TicketDetailPage = () => {
   const [error, setError] = useState<'restricted' | 'notfound' | 'failed' | null>(null)
   const [updatingStatus, setUpdatingStatus] = useState(false)
   const [assigning, setAssigning] = useState(false)
+  const [selfAssigning, setSelfAssigning] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [resolution, setResolution] = useState('')
+  const [selectedStatus, setSelectedStatus] = useState('')
 
   const { showToast } = useToast()
 
@@ -53,6 +57,21 @@ const TicketDetailPage = () => {
   // ACTIONS
   ////////////////////////////////////////////////////////////
 
+  const handleSelfAssign = async () => {
+    try {
+      setSelfAssigning(true)
+
+      await api.patch(`/tickets/${ticket.id}/self-assign`)
+
+      showToast('success', 'Ticket assigned to you successfully')
+      await fetchTicket()
+    } catch (err: any) {
+      showToast('error', err.response?.data?.message || 'Failed to self-assign ticket')
+    } finally {
+      setSelfAssigning(false)
+    }
+  }
+
   const handleAssign = async (userId: string) => {
     try {
       setAssigning(true)
@@ -71,20 +90,32 @@ const TicketDetailPage = () => {
   }
 
   const handleStatusChange = async (newStatus: string) => {
-    // Safety check: prevent invalid transitions
-    if (!allowedTransitions.includes(newStatus)) {
-      showToast('error', 'Invalid status transition')
+    // Validate resolution is provided when transitioning to RESOLVED
+    if (newStatus === 'RESOLVED' && !resolution.trim()) {
+      showToast('error', 'Resolution is required when marking ticket as resolved')
       return
     }
 
     try {
       setUpdatingStatus(true)
 
-      await api.patch(`/tickets/${ticket.id}/status`, {
+      const payload: any = {
         status: newStatus,
-      })
+      }
+
+      // Include resolution only when transitioning to RESOLVED
+      if (newStatus === 'RESOLVED') {
+        payload.resolution = resolution.trim()
+      }
+
+      await api.patch(`/tickets/${ticket.id}/status`, payload)
 
       showToast('success', 'Status updated successfully')
+      
+      // Clear resolution input after successful update
+      setResolution('')
+      setSelectedStatus('')
+      
       await fetchTicket()
     } catch (err: any) {
       showToast('error', err.response?.data?.message || 'Failed to update status')
@@ -100,7 +131,7 @@ const TicketDetailPage = () => {
   const handleDeleteConfirm = async () => {
     try {
       setDeleting(true)
-      await api.patch(`/tickets/${ticket.id}`, { isDeleted: true })
+      await api.delete(`/tickets/${ticket.id}`)
       showToast('success', 'Ticket deleted successfully')
       navigate('/app/tickets')
     } catch (err: any) {
@@ -161,47 +192,31 @@ const TicketDetailPage = () => {
 
   const isAssignee = ticket.assignedToId === user?.id
   const isReporter = ticket.reporterId === user?.id
+  const isUnassigned = !ticket.assignedToId
 
-  const canUpdateStatus = isAdmin || isLead || isAssignee
+  // Check if employee is project member
+  const isProjectMember = ticket.project?.members?.some(
+    (member: any) => member.userId === user?.id
+  )
+
+  // Assignment permissions
   const canAssign = isAdmin || isLead
+  const canSelfAssign = isEmployee && isUnassigned && isProjectMember
+
+  // Status change permissions
+  const canUpdateStatus = isAdmin || isLead || (isEmployee && isAssignee)
+
+  // Edit/Delete permissions
   const canEditDelete = isReporter
 
   ////////////////////////////////////////////////////////////
-  // STATUS TRANSITION LOGIC
+  // STATUS TRANSITION LOGIC (Using Shared Workflow)
   ////////////////////////////////////////////////////////////
 
-  const getAllowedTransitions = (currentStatus: string, role: string): string[] => {
-    // Admin can transition to any status
-    if (role === 'ADMIN') {
-      return [
-        'OPEN',
-        'IN_PROGRESS',
-        'WAITING_FOR_USER',
-        'RESOLVED',
-        'CLOSED',
-        'REJECTED',
-        'REOPENED',
-      ]
-    }
-
-    // Replicate backend transition rules
-    const transitions: Record<string, string[]> = {
-      OPEN: ['IN_PROGRESS', 'REJECTED'],
-      IN_PROGRESS: ['WAITING_FOR_USER', 'RESOLVED'],
-      WAITING_FOR_USER: ['IN_PROGRESS', 'RESOLVED'],
-      RESOLVED: ['CLOSED', 'REOPENED'],
-      CLOSED: [],
-      REJECTED: [],
-      REOPENED: ['IN_PROGRESS'],
-    }
-
-    // Always allow staying in current status
-    return [currentStatus, ...(transitions[currentStatus] || [])]
-  }
-
   const allowedTransitions = getAllowedTransitions(
-    ticket?.status || 'OPEN',
-    user?.role || 'EMPLOYEE'
+    ticket?.status as TicketStatus || 'OPEN',
+    user?.role as 'ADMIN' | 'TEAM_LEAD' | 'EMPLOYEE' || 'EMPLOYEE',
+    isLead // Pass whether user is project lead for privileged transitions
   )
 
   ////////////////////////////////////////////////////////////
@@ -209,7 +224,7 @@ const TicketDetailPage = () => {
   ////////////////////////////////////////////////////////////
 
   const formatStatus = (status: string) =>
-    status.replace(/_/g, ' ').toLowerCase()
+    formatStatusEnum(status as TicketStatus).toLowerCase()
 
   const formatPriority = (priority: string) =>
     priority.toLowerCase()
@@ -360,9 +375,39 @@ const TicketDetailPage = () => {
                 ))}
               </select>
             ) : (
-              <div style={{ fontSize: '16px', fontWeight: 600 }}>
-                {assignedTo}
-              </div>
+              <>
+                <div style={{ fontSize: '16px', fontWeight: 600 }}>
+                  {assignedTo}
+                </div>
+                
+                {canSelfAssign && (
+                  <button
+                    onClick={handleSelfAssign}
+                    disabled={selfAssigning}
+                    style={{
+                      marginTop: '8px',
+                      padding: '8px 16px',
+                      background: '#1a1a1a',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: selfAssigning ? 'wait' : 'pointer',
+                      opacity: selfAssigning ? 0.6 : 1,
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!selfAssigning) e.currentTarget.style.background = '#333333'
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!selfAssigning) e.currentTarget.style.background = '#1a1a1a'
+                    }}
+                  >
+                    {selfAssigning ? 'Assigning...' : '✋ Assign to Me'}
+                  </button>
+                )}
+              </>
             )}
           </div>
 
@@ -372,45 +417,108 @@ const TicketDetailPage = () => {
               Status
             </div>
 
-            {canUpdateStatus && !isEmployee ? (
-              <select
-                value={ticket.status}
-                disabled={updatingStatus}
-                onChange={(e) => handleStatusChange(e.target.value)}
-                style={{
-                  padding: '6px 10px',
-                  borderRadius: '6px',
-                  border: '1px solid #e5e5e5',
-                  fontSize: '14px',
-                  cursor: updatingStatus ? 'wait' : 'pointer',
-                }}
-              >
-                {[
-                  'OPEN',
-                  'IN_PROGRESS',
-                  'WAITING_FOR_USER',
-                  'RESOLVED',
-                  'CLOSED',
-                  'REJECTED',
-                  'REOPENED',
-                ].map((status) => {
-                  const isAllowed = allowedTransitions.includes(status)
-                  return (
-                    <option
-                      key={status}
-                      value={status}
-                      disabled={!isAllowed}
+            {canUpdateStatus ? (
+              <>
+                <select
+                  value={selectedStatus || ticket.status}
+                  disabled={updatingStatus}
+                  onChange={(e) => {
+                    const newStatus = e.target.value
+                    setSelectedStatus(newStatus)
+                    
+                    // If not RESOLVED, submit immediately
+                    if (newStatus !== 'RESOLVED') {
+                      setResolution('')
+                      setSelectedStatus('') // Clear before API call
+                      handleStatusChange(newStatus)
+                    }
+                  }}
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: '6px',
+                    border: '1px solid #e5e5e5',
+                    fontSize: '14px',
+                    cursor: updatingStatus ? 'wait' : 'pointer',
+                  }}
+                >
+                  {[
+                    'OPEN',
+                    'IN_PROGRESS',
+                    'WAITING_FOR_USER',
+                    'RESOLVED',
+                    'CLOSED',
+                    'REJECTED',
+                    'REOPENED',
+                  ].map((status) => {
+                    const isAllowed = allowedTransitions.includes(status as TicketStatus)
+                    return (
+                      <option
+                        key={status}
+                        value={status}
+                        disabled={!isAllowed}
+                        style={{
+                          color: !isAllowed ? '#999999' : '#1a1a1a',
+                          opacity: !isAllowed ? 0.6 : 1,
+                          cursor: !isAllowed ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        {status.replace(/_/g, ' ')}
+                      </option>
+                    )
+                  })}
+                </select>
+
+                {/* Resolution Input - Shows when RESOLVED is selected */}
+                {selectedStatus === 'RESOLVED' && (
+                  <div style={{ marginTop: '12px' }}>
+                    <textarea
+                      value={resolution}
+                      onChange={(e) => setResolution(e.target.value)}
+                      placeholder="Describe how this ticket was resolved..."
+                      disabled={updatingStatus}
                       style={{
-                        color: !isAllowed ? '#999999' : '#1a1a1a',
-                        opacity: !isAllowed ? 0.6 : 1,
-                        cursor: !isAllowed ? 'not-allowed' : 'pointer',
+                        width: '100%',
+                        minHeight: '80px',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid #e5e5e5',
+                        fontSize: '14px',
+                        fontFamily: 'inherit',
+                        resize: 'vertical',
+                        cursor: updatingStatus ? 'wait' : 'text',
+                      }}
+                    />
+                    <button
+                      onClick={() => handleStatusChange('RESOLVED')}
+                      disabled={updatingStatus || !resolution.trim()}
+                      style={{
+                        marginTop: '8px',
+                        padding: '8px 16px',
+                        background: updatingStatus || !resolution.trim() ? '#e5e5e5' : '#1a1a1a',
+                        color: updatingStatus || !resolution.trim() ? '#999999' : '#ffffff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        cursor: updatingStatus || !resolution.trim() ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!updatingStatus && resolution.trim()) {
+                          e.currentTarget.style.background = '#333333'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!updatingStatus && resolution.trim()) {
+                          e.currentTarget.style.background = '#1a1a1a'
+                        }
                       }}
                     >
-                      {status.replace(/_/g, ' ')}
-                    </option>
-                  )
-                })}
-              </select>
+                      {updatingStatus ? 'Updating...' : 'Mark as Resolved'}
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <div
                 style={{

@@ -54,7 +54,12 @@ const TaskRow = ({
       onMouseLeave={(e) =>
         (e.currentTarget.style.backgroundColor = 'transparent')
       }
-      onClick={() => onEdit(task.id)} // ✅ THIS FIXES IT
+      onClick={() => {
+        // Navigate to task details
+        const isAdmin = window.location.pathname.startsWith('/admin')
+        const basePath = isAdmin ? '/admin/tasks' : '/app/tasks'
+        window.location.href = `${basePath}/${task.id}`
+      }}
     >
       <td style={{ padding: '16px 20px' }}>
         <div style={{ fontWeight: 500, fontSize: '14px', marginBottom: showProgressBar ? '8px' : '0' }}>

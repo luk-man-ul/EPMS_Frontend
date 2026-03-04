@@ -13,12 +13,19 @@ const TaskDetailPage = () => {
   const [loading, setLoading] = useState(true)
   const [newComment, setNewComment] = useState('')
   const [newHours, setNewHours] = useState('')
+  const [accessDenied, setAccessDenied] = useState(false)
+  const [toastShown, setToastShown] = useState(false)
 
+  ////////////////////////////////////////////////////////////
+  // FETCH TASK
   ////////////////////////////////////////////////////////////
   // FETCH TASK
   ////////////////////////////////////////////////////////////
 
   const fetchTask = async () => {
+    // Prevent fetch if already denied access
+    if (accessDenied) return
+
     try {
       const res = await api.get(`/tasks/${taskId}`)
       setTask(res.data)
@@ -27,7 +34,12 @@ const TaskDetailPage = () => {
       
       // Handle specific error cases
       if (err.response?.status === 403) {
-        navigate('/unauthorized')
+        setAccessDenied(true)
+        // Only show toast once
+        if (!toastShown) {
+          showToast('error', 'You are not authorized to view this task')
+          setToastShown(true)
+        }
       } else if (err.response?.status === 404) {
         setTask(null)
       }
@@ -38,8 +50,11 @@ const TaskDetailPage = () => {
   }
 
   useEffect(() => {
-    fetchTask()
-  }, [taskId, navigate])
+    if (taskId && !accessDenied) {
+      fetchTask()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskId])
 
   ////////////////////////////////////////////////////////////
   // STATUS UPDATE
@@ -60,6 +75,44 @@ const TaskDetailPage = () => {
   ////////////////////////////////////////////////////////////
 
   if (loading) return <div style={{ padding: 40 }}>Loading...</div>
+  
+  if (accessDenied) {
+    return (
+      <div style={{ 
+        padding: 60, 
+        textAlign: 'center',
+        maxWidth: 600,
+        margin: '0 auto'
+      }}>
+        <div style={{ fontSize: 64, marginBottom: 20 }}>🔒</div>
+        <h2 style={{ fontSize: 24, fontWeight: 600, marginBottom: 12 }}>
+          Access Denied
+        </h2>
+        <p style={{ color: '#666', marginBottom: 32, lineHeight: 1.6 }}>
+          You are not authorized to view this task. This task may not be assigned to you or you may not have the required permissions.
+        </p>
+        <button 
+          onClick={() => navigate(-1)}
+          style={{
+            padding: '12px 24px',
+            background: '#1a1a1a',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 8,
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = '#333'}
+          onMouseLeave={(e) => e.currentTarget.style.background = '#1a1a1a'}
+        >
+          ← Go Back
+        </button>
+      </div>
+    )
+  }
+  
   if (!task) return <div style={{ padding: 40 }}>Task not found</div>
 
   const totalHours =

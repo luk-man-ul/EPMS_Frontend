@@ -5,6 +5,7 @@ import TaskTable from '../../shared/tasks/components/TaskTable'
 import TaskFilters from '../../shared/tasks/components/TaskFilters'
 import SearchBar from '../../../components/shared/SearchBar'
 import { useAuth } from '../../../context/AuthContext'
+import EditTaskModal from './components/EditTaskModal'
 
 const TeamTasksPage = () => {
   const { user } = useAuth()
@@ -18,6 +19,10 @@ const TeamTasksPage = () => {
   
   // ✅ Search state
   const [searchTerm, setSearchTerm] = useState('')
+
+  // ✅ Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<any>(null)
 
   ////////////////////////////////////////////////////////////////
   // FETCH TASKS
@@ -53,6 +58,36 @@ const TeamTasksPage = () => {
       fetchTasks()
     } catch (err) {
       console.error('Status update failed', err)
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////
+  // DELETE TASK
+  ////////////////////////////////////////////////////////////////
+
+  const handleDelete = async (taskId: string) => {
+    if (!window.confirm('Are you sure you want to delete this task?')) {
+      return
+    }
+
+    try {
+      await api.delete(`/tasks/${taskId}`)
+      fetchTasks()
+    } catch (err: any) {
+      console.error('Delete failed', err)
+      alert(err.response?.data?.message || 'Failed to delete task')
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////
+  // EDIT TASK
+  ////////////////////////////////////////////////////////////////
+
+  const handleEdit = (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId)
+    if (task) {
+      setSelectedTask(task)
+      setEditModalOpen(true)
     }
   }
 
@@ -199,10 +234,23 @@ const TeamTasksPage = () => {
           tasks={filteredTasks}
           loading={loading}
           onStatusChange={handleStatusChange}
-          onEdit={(id) => navigate(`/app/tasks/${id}`)}
-          onDelete={() => {}}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
         />
       </div>
+
+      {/* Edit Modal */}
+      <EditTaskModal
+        isOpen={editModalOpen}
+        task={selectedTask}
+        onClose={() => {
+          setEditModalOpen(false)
+          setSelectedTask(null)
+        }}
+        onSuccess={() => {
+          fetchTasks()
+        }}
+      />
     </div>
   )
 }

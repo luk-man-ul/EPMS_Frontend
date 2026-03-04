@@ -14,6 +14,7 @@ import {
 } from './employees.api'
 import { useAuth } from '../../../context/AuthContext'
 import SearchBar from '../../../components/shared/SearchBar'
+import api from '../../../utils/api'
 
 const TicketsPage = () => {
   const { user } = useAuth()
@@ -31,6 +32,7 @@ const TicketsPage = () => {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null)
 
   const [projects, setProjects] = useState<ProjectOption[]>([])
   const [employees, setEmployees] = useState<EmployeeOption[]>([])
@@ -109,6 +111,46 @@ const handleFilterChange = (newFilters: any) => {
   const handleSearchClear = () => {
     setSearchTerm('')
   }
+
+  ////////////////////////////////////////////////////////////
+  // EDIT HANDLER
+  ////////////////////////////////////////////////////////////
+
+  const handleEdit = (ticketId: string) => {
+    const ticket = tickets.find(t => t.id === ticketId)
+    if (ticket) {
+      setEditingTicket(ticket)
+      setShowModal(true)
+    }
+  }
+
+  ////////////////////////////////////////////////////////////
+  // DELETE HANDLER
+  ////////////////////////////////////////////////////////////
+
+  const handleDelete = async (ticketId: string) => {
+    if (!window.confirm('Are you sure you want to delete this ticket?')) {
+      return
+    }
+
+    try {
+      await api.delete(`/tickets/${ticketId}`)
+      fetchTickets(filters)
+    } catch (err: any) {
+      console.error('Delete failed', err)
+      alert(err.response?.data?.message || 'Failed to delete ticket')
+    }
+  }
+
+  ////////////////////////////////////////////////////////////
+  // MODAL CLOSE HANDLER
+  ////////////////////////////////////////////////////////////
+
+  const handleModalClose = () => {
+    setShowModal(false)
+    setEditingTicket(null)
+  }
+
   ////////////////////////////////////////////////////////////
 
   return (
@@ -187,13 +229,19 @@ const handleFilterChange = (newFilters: any) => {
           overflowY: 'visible',
         }}
       >
-        <TicketTable tickets={tickets} loading={loading} />
+        <TicketTable 
+          tickets={tickets} 
+          loading={loading}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       </div>
 
       {/* Modal */}
       {showModal && (
         <TicketCreateModal
-          onClose={() => setShowModal(false)}
+          ticket={editingTicket}
+          onClose={handleModalClose}
           onSuccess={() => fetchTickets(filters)}
         />
       )}

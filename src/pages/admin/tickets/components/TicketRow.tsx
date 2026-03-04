@@ -5,9 +5,11 @@ import TicketActions from './TicketActions'
 
 interface Props {
   ticket: Ticket
+  onEdit: (ticketId: string) => void
+  onDelete: (ticketId: string) => void
 }
 
-const TicketRow = ({ ticket }: Props) => {
+const TicketRow = ({ ticket, onEdit, onDelete }: Props) => {
   const isCritical = ticket.priority === 'URGENT'
 
   const createdBy = `${ticket.reporter.firstName} ${ticket.reporter.lastName}`
@@ -93,7 +95,11 @@ const TicketRow = ({ ticket }: Props) => {
       </td>
 
       <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-        <TicketActions ticketId={ticket.id} />
+        <TicketActions 
+          ticketId={ticket.id}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       </td>
     </tr>
   )

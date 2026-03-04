@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { createTicket } from '../tickets.api'
 import { getProjectsForDropdown } from '../projects.api'
+import api from '../../../../utils/api'
+import type { Ticket } from '../types/ticket.types'
 
 interface Props {
+  ticket?: Ticket | null
   onClose: () => void
   onSuccess: () => void
 }
@@ -12,7 +15,7 @@ interface ProjectOption {
   name: string
 }
 
-const TicketCreateModal = ({ onClose, onSuccess }: Props) => {
+const TicketCreateModal = ({ ticket, onClose, onSuccess }: Props) => {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [type, setType] = useState('SUPPORT')
@@ -41,6 +44,20 @@ const TicketCreateModal = ({ onClose, onSuccess }: Props) => {
   }, [])
 
   ////////////////////////////////////////////////////////////
+  // Prefill form when editing
+  ////////////////////////////////////////////////////////////
+
+  useEffect(() => {
+    if (ticket) {
+      setTitle(ticket.title || '')
+      setDescription(ticket.description || '')
+      setType(ticket.type || 'SUPPORT')
+      setPriority(ticket.priority || 'MEDIUM')
+      setProjectId(ticket.project?.id || '')
+    }
+  }, [ticket])
+
+  ////////////////////////////////////////////////////////////
   // Submit Handler
   ////////////////////////////////////////////////////////////
 
@@ -54,19 +71,31 @@ const TicketCreateModal = ({ onClose, onSuccess }: Props) => {
       setLoading(true)
       setError(null)
 
-      await createTicket({
-        projectId,
-        title,
-        description,
-        type,
-        priority,
-      })
+      if (ticket) {
+        // Update existing ticket
+        await api.patch(`/tickets/${ticket.id}`, {
+          projectId,
+          title,
+          description,
+          type,
+          priority,
+        })
+      } else {
+        // Create new ticket
+        await createTicket({
+          projectId,
+          title,
+          description,
+          type,
+          priority,
+        })
+      }
 
       onSuccess()
       onClose()
     } catch (err: any) {
       setError(
-        err?.response?.data?.message || 'Failed to create ticket'
+        err?.response?.data?.message || `Failed to ${ticket ? 'update' : 'create'} ticket`
       )
     } finally {
       setLoading(false)
@@ -82,7 +111,7 @@ const TicketCreateModal = ({ onClose, onSuccess }: Props) => {
           marginBottom: '24px',
           color: '#1a1a1a'
         }}>
-          Create New Ticket
+          {ticket ? 'Edit Ticket' : 'Create New Ticket'}
         </h2>
 
         {error && (
@@ -191,7 +220,7 @@ const TicketCreateModal = ({ onClose, onSuccess }: Props) => {
               cursor: loading ? 'not-allowed' : 'pointer'
             }}
           >
-            {loading ? 'Creating...' : 'Create Ticket'}
+            {loading ? (ticket ? 'Updating...' : 'Creating...') : (ticket ? 'Update Ticket' : 'Create Ticket')}
           </button>
         </div>
       </div>

@@ -12,7 +12,7 @@ const TicketsTab = ({ tickets }: Props) => {
     return <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>No tickets found</div>
 
   const handleTicketClick = (ticketId: string) => {
-    navigate(`/teamlead/tickets/${ticketId}`)
+    navigate(`/app/tickets/${ticketId}`)
   }
 
   return (
