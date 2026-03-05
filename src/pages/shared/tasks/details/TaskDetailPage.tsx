@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import api from '../../../../utils/api'
 import { TaskStatus, formatEnumLabel } from '../../../../types/enums'
 import { useToast } from '../../../../context/ToastContext'
+import TaskTypeBadge from '../../../../components/shared/TaskTypeBadge'
 
 const TaskDetailPage = () => {
   const { taskId } = useParams()
@@ -73,6 +74,19 @@ const TaskDetailPage = () => {
   }
 
   ////////////////////////////////////////////////////////////
+  // NAVIGATE BACK WITH REFRESH
+  ////////////////////////////////////////////////////////////
+
+  const handleBack = () => {
+    // Determine the correct tasks list path
+    const isAdmin = window.location.pathname.startsWith('/admin')
+    const tasksPath = isAdmin ? '/admin/tasks' : '/app/tasks'
+    
+    // Navigate to tasks list with refresh state
+    navigate(tasksPath, { state: { refresh: true } })
+  }
+
+  ////////////////////////////////////////////////////////////
 
   if (loading) return <div style={{ padding: 40 }}>Loading...</div>
   
@@ -92,7 +106,7 @@ const TaskDetailPage = () => {
           You are not authorized to view this task. This task may not be assigned to you or you may not have the required permissions.
         </p>
         <button 
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           style={{
             padding: '12px 24px',
             background: '#1a1a1a',
@@ -123,14 +137,53 @@ const TaskDetailPage = () => {
       {/* HEADER */}
       <div style={headerStyle}>
         <div>
-          <h2 style={{ margin: 0 }}>{task.title}</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <h2 style={{ margin: 0 }}>{task.title}</h2>
+            <TaskTypeBadge type={task.type} status={task.status} />
+          </div>
           <p style={{ color: '#666', marginTop: 4 }}>
             Project: {task.project.name}
           </p>
+          
+          {/* Show approval metadata if present */}
+          {task.approvedBy && (
+            <div style={{ 
+              marginTop: '12px', 
+              padding: '12px', 
+              background: '#f0fdf4', 
+              borderRadius: '8px',
+              border: '1px solid #86efac'
+            }}>
+              <p style={{ margin: 0, fontSize: '14px', color: '#166534' }}>
+                ✓ Approved by: {task.approvedBy.firstName} {task.approvedBy.lastName}
+              </p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#166534' }}>
+                Approved at: {new Date(task.approvedAt).toLocaleString()}
+              </p>
+            </div>
+          )}
+          
+          {/* Show rejection reason if rejected */}
+          {task.status === 'REJECTED' && task.rejectionReason && (
+            <div style={{ 
+              marginTop: '12px', 
+              padding: '12px', 
+              background: '#fef2f2', 
+              borderRadius: '8px',
+              border: '1px solid #fca5a5'
+            }}>
+              <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#991b1b' }}>
+                Rejection Reason:
+              </p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#991b1b' }}>
+                {task.rejectionReason}
+              </p>
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: 12 }}>
-          <button style={secondaryBtn} onClick={() => navigate(-1)}>
+          <button style={secondaryBtn} onClick={handleBack}>
             Back
           </button>
         </div>

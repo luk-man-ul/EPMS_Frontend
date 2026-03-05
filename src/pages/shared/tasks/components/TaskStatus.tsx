@@ -33,10 +33,21 @@ const statusConfig: Record<
     color: '#999',
     label: 'Cancelled',
   },
+  PROPOSED: {
+    bg: '#fef3c7',
+    color: '#92400e',
+    label: 'Pending Approval',
+  },
+  REJECTED: {
+    bg: '#fee2e2',
+    color: '#991b1b',
+    label: 'Rejected',
+  },
 }
 
 const TaskStatus = ({ status }: Props) => {
-  const config = statusConfig[status]
+  // Defensive fallback: if status is not in config, use TODO as default
+  const config = statusConfig[status] || statusConfig.TODO
 
   return (
     <span

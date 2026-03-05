@@ -3,6 +3,7 @@ import TaskStatusComponent from './TaskStatus'
 import TaskPriority from './TaskPriority'
 import TaskActions from './TaskActions'
 import TaskProgressBar from '../../../../components/shared/TaskProgressBar'
+import TaskTypeBadge from '../../../../components/shared/TaskTypeBadge'
 import { useAuth } from '../../../../context/AuthContext'
 
 interface Props {
@@ -76,6 +77,10 @@ const TaskRow = ({
 
       <td style={{ padding: '16px 20px', fontSize: '14px' }}>
         {assigneeName}
+      </td>
+
+      <td style={{ padding: '16px 20px' }}>
+        <TaskTypeBadge type={task.type} status={task.status} />
       </td>
 
       <td style={{ padding: '16px 20px' }}>

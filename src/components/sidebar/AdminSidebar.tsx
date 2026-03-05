@@ -8,6 +8,7 @@ const menuItems = [
   { label: 'Projects', path: '/admin/projects', permission: 'projects.view' },
   { label: 'Tasks', path: '/admin/tasks', permission: 'tasks.view' },
   { label: 'Tickets', path: '/admin/tickets', permission: 'tasks.view' },
+  { label: 'Work Approval', path: '/admin/work-approval', permission: 'tasks.approve' },
   { label: 'Attendance', path: '/admin/attendance', permission: 'dashboard.view' },
   { label: 'Finance', path: '/admin/finance', permission: 'finance.view' },
   { label: 'Reports', path: '/admin/reports', permission: 'reports.view' },

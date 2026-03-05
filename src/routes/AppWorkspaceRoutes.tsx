@@ -50,7 +50,14 @@ const AppWorkspaceRoutes = () => {
         <Route path="tickets/:ticketId" element={<TicketDetailPage />} />
 
         {/* Other Sections */}
-        <Route path="work-approval" element={<TeamLeadWorkApproval />} />
+        <Route 
+          path="work-approval" 
+          element={
+            <ProtectedRoute role={['TEAM_LEAD', 'ADMIN']}>
+              <TeamLeadWorkApproval />
+            </ProtectedRoute>
+          } 
+        />
         <Route path="finance" element={<TeamLeadFinance />} />
         <Route path="reports" element={<TeamLeadReports />} />
         <Route path="settings" element={<TeamLeadSettings />} />

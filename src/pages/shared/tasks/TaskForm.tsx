@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
 import api from '../../../utils/api'
+import { createSelfWork } from '../../../utils/api'
+import TaskTypeSelector from '../../../components/shared/TaskTypeSelector'
+import { TaskType } from '../../../types/enums'
+import { useAuth } from '../../../context/AuthContext'
+import { useToast } from '../../../context/ToastContext'
 
 interface Props {
   task?: any
@@ -14,9 +19,17 @@ const TaskForm = ({
   onCancel,
   loadAllProjects = false,
 }: Props) => {
+  const { user } = useAuth()
+  const { showToast } = useToast()
+  
   const [projects, setProjects] = useState<any[]>([])
   const [members, setMembers] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  
+  // Task type state - default based on user role
+  const [taskType, setTaskType] = useState<TaskType>(
+    user?.role === 'EMPLOYEE' ? TaskType.SELF_WORK : TaskType.ASSIGNED
+  )
 
   const [form, setForm] = useState({
     projectId: '',
@@ -46,6 +59,16 @@ const TaskForm = ({
 
     fetchProjects()
   }, [loadAllProjects])
+
+  ////////////////////////////////////////////////////////////////
+  // AUTO-SET ASSIGNEE FOR SELF-WORK
+  ////////////////////////////////////////////////////////////////
+
+  useEffect(() => {
+    if (taskType === TaskType.SELF_WORK && user?.id) {
+      setForm((prev) => ({ ...prev, assignedToId: user.id }))
+    }
+  }, [taskType, user?.id])
 
   ////////////////////////////////////////////////////////////////
   // LOAD MEMBERS WHEN PROJECT CHANGES
@@ -102,7 +125,7 @@ const TaskForm = ({
     e?.preventDefault()
 
     if (!form.projectId || !form.title.trim()) {
-      alert('Project and Title are required')
+      showToast('error', 'Project and Title are required')
       return
     }
 
@@ -116,14 +139,30 @@ const TaskForm = ({
       }
 
       if (task) {
+        // Edit existing task
         await api.patch(`/tasks/${task.id}`, payload)
+        showToast('success', 'Task updated successfully')
       } else {
-        await api.post('/tasks', payload)
+        // Create new task - use appropriate endpoint based on type
+        if (taskType === TaskType.SELF_WORK) {
+          await createSelfWork({
+            projectId: payload.projectId,
+            title: payload.title,
+            description: payload.description,
+            priority: payload.priority,
+            dueDate: payload.dueDate || undefined,
+          })
+          showToast('success', 'Self-work proposal submitted for approval')
+        } else {
+          await api.post('/tasks', payload)
+          showToast('success', 'Task created successfully')
+        }
       }
 
       onSuccess()
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Task save failed')
+      const errorMessage = err.response?.data?.message || 'Task save failed'
+      showToast('error', errorMessage)
     } finally {
       setLoading(false)
     }
@@ -136,6 +175,15 @@ const TaskForm = ({
       onSubmit={handleSubmit}
       style={{ display: 'flex', flexDirection: 'column', gap: 20 }}
     >
+      {/* Task Type Selector - only show for new tasks, not edits */}
+      {!task && user && (
+        <TaskTypeSelector
+          value={taskType}
+          onChange={setTaskType}
+          userRole={user.role}
+        />
+      )}
+
       <FormField label="Project *">
         <select
           value={form.projectId}
@@ -208,6 +256,7 @@ const TaskForm = ({
             handleChange('assignedToId', e.target.value)
           }
           style={inputStyle}
+          disabled={taskType === TaskType.SELF_WORK}
         >
           <option value="">Select Member</option>
           {members.map((m: any) => (
@@ -217,6 +266,23 @@ const TaskForm = ({
           ))}
         </select>
       </FormField>
+
+      {/* Info message for self-work */}
+      {taskType === TaskType.SELF_WORK && (
+        <div
+          style={{
+            padding: '12px 16px',
+            background: '#eff6ff',
+            border: '1px solid #bfdbfe',
+            borderRadius: 8,
+            fontSize: 13,
+            color: '#1e40af',
+            marginTop: -10,
+          }}
+        >
+          ℹ️ This task will be assigned to you after approval
+        </div>
+      )}
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
         <button type="button" onClick={onCancel} style={secondaryBtn}>

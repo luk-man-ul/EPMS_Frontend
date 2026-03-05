@@ -6,6 +6,7 @@ type ActionButtonsProps = {
   onReject: () => void
   onConvertToTask: () => void
   onSendFeedback: () => void
+  loading?: boolean
 }
 
 const ActionButtons = ({
@@ -14,6 +15,7 @@ const ActionButtons = ({
   onReject,
   onConvertToTask,
   onSendFeedback,
+  loading = false,
 }: ActionButtonsProps) => {
   const isPending = status === 'pending'
 
@@ -43,17 +45,17 @@ const ActionButtons = ({
         {/* Approve Button */}
         <button
           onClick={onApprove}
-          disabled={!isPending}
+          disabled={!isPending || loading}
           style={{
             width: '100%',
             padding: '14px 20px',
-            background: isPending ? '#10b981' : '#e5e5e5',
-            color: isPending ? '#ffffff' : '#999999',
+            background: isPending && !loading ? '#10b981' : '#e5e5e5',
+            color: isPending && !loading ? '#ffffff' : '#999999',
             border: 'none',
             borderRadius: '8px',
             fontSize: '14px',
             fontWeight: 600,
-            cursor: isPending ? 'pointer' : 'not-allowed',
+            cursor: isPending && !loading ? 'pointer' : 'not-allowed',
             transition: 'all 0.2s ease',
             display: 'flex',
             alignItems: 'center',
@@ -61,30 +63,30 @@ const ActionButtons = ({
             gap: '8px',
           }}
           onMouseEnter={(e) => {
-            if (isPending) e.currentTarget.style.background = '#059669'
+            if (isPending && !loading) e.currentTarget.style.background = '#059669'
           }}
           onMouseLeave={(e) => {
-            if (isPending) e.currentTarget.style.background = '#10b981'
+            if (isPending && !loading) e.currentTarget.style.background = '#10b981'
           }}
         >
           <span>✓</span>
-          <span>Approve</span>
+          <span>{loading ? 'Processing...' : 'Approve'}</span>
         </button>
 
         {/* Reject Button */}
         <button
           onClick={onReject}
-          disabled={!isPending}
+          disabled={!isPending || loading}
           style={{
             width: '100%',
             padding: '14px 20px',
-            background: isPending ? '#ef4444' : '#e5e5e5',
-            color: isPending ? '#ffffff' : '#999999',
+            background: isPending && !loading ? '#ef4444' : '#e5e5e5',
+            color: isPending && !loading ? '#ffffff' : '#999999',
             border: 'none',
             borderRadius: '8px',
             fontSize: '14px',
             fontWeight: 600,
-            cursor: isPending ? 'pointer' : 'not-allowed',
+            cursor: isPending && !loading ? 'pointer' : 'not-allowed',
             transition: 'all 0.2s ease',
             display: 'flex',
             alignItems: 'center',
@@ -92,14 +94,14 @@ const ActionButtons = ({
             gap: '8px',
           }}
           onMouseEnter={(e) => {
-            if (isPending) e.currentTarget.style.background = '#dc2626'
+            if (isPending && !loading) e.currentTarget.style.background = '#dc2626'
           }}
           onMouseLeave={(e) => {
-            if (isPending) e.currentTarget.style.background = '#ef4444'
+            if (isPending && !loading) e.currentTarget.style.background = '#ef4444'
           }}
         >
           <span>✕</span>
-          <span>Reject</span>
+          <span>{loading ? 'Processing...' : 'Reject'}</span>
         </button>
 
         {/* Divider */}

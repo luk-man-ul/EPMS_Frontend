@@ -19,9 +19,20 @@ const menuItems = [
 const AppSidebar = () => {
   const { user } = useAuth()
 
-  const filteredMenu = menuItems.filter(item =>
-    hasPermission(user?.permissions, item.permission)
-  )
+  const filteredMenu = menuItems.filter(item => {
+    // Filter by permission
+    if (!hasPermission(user?.permissions, item.permission)) {
+      return false
+    }
+    
+    // Additional role-based filtering for Work Approval
+    if (item.path === '/App/work-approval') {
+      // Only TEAM_LEAD and ADMIN can see Work Approval
+      return user?.role === 'TEAM_LEAD' || user?.role === 'ADMIN'
+    }
+    
+    return true
+  })
 
   // Determine workspace label based on role
   const workspaceLabel = user?.role === 'EMPLOYEE' ? 'Employee' : 'Team Lead'

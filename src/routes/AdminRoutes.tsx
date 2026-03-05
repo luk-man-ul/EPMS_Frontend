@@ -16,6 +16,8 @@ import Settings from '../pages/admin/Settings'
 import AdminProjectDetail from '../pages/admin/projects/detail/ProjectDetailPage'
 import TaskDetailPage from '../pages/shared/tasks/details/TaskDetailPage'
 import AdminTicketDetailPage from '../pages/admin/tickets/detail/TicketDetailPage'
+import WorkApprovalPage from '../pages/TeamLead/workApproval/WorkApprovalPage'
+import WorkApprovalDetailPage from '../pages/TeamLead/workApproval/detail/WorkApprovalDetailPage'
 
 const AdminRoutes = () => (
   <Routes>
@@ -37,6 +39,8 @@ const AdminRoutes = () => (
       <Route path="tasks/:taskId" element={<TaskDetailPage />} />
       <Route path="tickets" element={<Tickets />} />
       <Route path="tickets/:ticketId" element={<AdminTicketDetailPage />} />
+      <Route path="work-approval" element={<WorkApprovalPage />} />
+      <Route path="work-approval/:id" element={<WorkApprovalDetailPage />} />
       <Route path="attendance" element={<Attendance />} />
       <Route path="finance" element={<Finance />} />
       <Route path="reports" element={<Reports />} />

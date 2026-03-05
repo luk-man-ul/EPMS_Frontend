@@ -1,3 +1,12 @@
 export { default as SearchBar } from './SearchBar';
 export { default as FilterComponent } from './FilterComponent';
 export { default as ConfirmationModal } from './ConfirmationModal';
+export { default as TaskTypeSelector } from './TaskTypeSelector';
+export { default as TaskTypeBadge } from './TaskTypeBadge';
+export { default as TaskProgressBar } from './TaskProgressBar';
+export { default as ApprovalActions } from './ApprovalActions';
+export { default as RejectModal } from './RejectModal';
+export { default as TaskListFilters } from './TaskListFilters';
+export { default as SelfWorkMetricsDashboard } from './SelfWorkMetricsDashboard';
+export { default as PendingApprovalsDashboard } from './PendingApprovalsDashboard';
+export { default as PendingTaskCard } from './PendingTaskCard';

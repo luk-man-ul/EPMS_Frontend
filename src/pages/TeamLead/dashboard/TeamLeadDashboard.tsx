@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '../../../context/AuthContext'
 import api from '../../../utils/api'
 import SummaryCards from './components/SummaryCards'
+import { PendingApprovalsDashboard, SelfWorkMetricsDashboard } from '../../../components/shared'
 
 const TeamLeadDashboard = () => {
+  const { user } = useAuth()
   const [summary, setSummary] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
@@ -33,6 +36,19 @@ const TeamLeadDashboard = () => {
   return (
     <div>
       <SummaryCards summary={summary} />
+      
+      {/* Only show approval dashboards for TEAM_LEAD and ADMIN */}
+      {user && (user.role === 'TEAM_LEAD' || user.role === 'ADMIN') && (
+        <>
+          <div style={{ marginTop: '24px' }}>
+            <PendingApprovalsDashboard />
+          </div>
+          
+          <div style={{ marginTop: '24px' }}>
+            <SelfWorkMetricsDashboard />
+          </div>
+        </>
+      )}
     </div>
   )
 }

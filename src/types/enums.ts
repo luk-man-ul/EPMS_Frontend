@@ -26,12 +26,21 @@ export type ProjectStatus = typeof ProjectStatus[keyof typeof ProjectStatus];
 // TASK ENUMS
 // ======================================================
 
+export const TaskType = {
+  ASSIGNED: 'ASSIGNED',
+  SELF_WORK: 'SELF_WORK',
+} as const;
+
+export type TaskType = typeof TaskType[keyof typeof TaskType];
+
 export const TaskStatus = {
+  PROPOSED: 'PROPOSED',
   TODO: 'TODO',
   IN_PROGRESS: 'IN_PROGRESS',
   REVIEW: 'REVIEW',
   COMPLETED: 'COMPLETED',
   CANCELLED: 'CANCELLED',
+  REJECTED: 'REJECTED',
 } as const;
 
 export type TaskStatus = typeof TaskStatus[keyof typeof TaskStatus];
@@ -145,6 +154,7 @@ export function formatEnumLabel(enumValue: string): string {
     'TODO': 'To Do',
     'WFH': 'WFH',
     'ON_HOLD': 'On Hold',
+    'SELF_WORK': 'Self-Work',
   };
   
   if (specialCases[enumValue]) {

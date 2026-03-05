@@ -1,5 +1,5 @@
 import React from 'react'
-import { TaskStatus, formatEnumLabel } from '../../../../types/enums'
+import { TaskStatus, TaskType, formatEnumLabel } from '../../../../types/enums'
 
 //////////////////////////////////////////////////////////////
 // TYPES
@@ -17,6 +17,7 @@ interface EmployeeOption {
 
 interface TaskFilterValues {
   projectId?: string
+  type?: string
   status?: string
   priority?: string
   assignedToId?: string
@@ -72,6 +73,19 @@ const TaskFilters = ({
             {project.name}
           </option>
         ))}
+      </select>
+
+      {/* Type Filter */}
+      <select
+        style={selectStyle}
+        value={filters.type || ''}
+        onChange={(e) =>
+          handleChange('type', e.target.value)
+        }
+      >
+        <option value="">All Types</option>
+        <option value={TaskType.ASSIGNED}>Assigned Tasks</option>
+        <option value={TaskType.SELF_WORK}>Self-Work Tasks</option>
       </select>
 
       {/* Status Filter */}

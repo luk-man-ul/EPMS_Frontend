@@ -52,6 +52,7 @@ const TaskTable = ({
           <th style={{ padding: '16px 20px' }}>Task Title</th>
           <th style={{ padding: '16px 20px' }}>Project</th>
           <th style={{ padding: '16px 20px' }}>Assigned To</th>
+          <th style={{ padding: '16px 20px' }}>Type</th>
           <th style={{ padding: '16px 20px' }}>Priority</th>
           <th style={{ padding: '16px 20px' }}>Status</th>
           <th style={{ padding: '16px 20px' }}>Deadline</th>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import api from '../../../utils/api'
 import TaskTable from '../../shared/tasks/components/TaskTable'
 import TaskFilters from '../../shared/tasks/components/TaskFilters'
@@ -10,6 +10,7 @@ import EditTaskModal from './components/EditTaskModal'
 const TeamTasksPage = () => {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [tasks, setTasks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -44,6 +45,21 @@ const TeamTasksPage = () => {
   useEffect(() => {
     fetchTasks()
   }, [])
+
+  // Refetch tasks when returning to this page
+  useEffect(() => {
+    // Check if we're returning from a detail page or if state indicates refresh
+    const shouldRefresh = location.state?.refresh || location.key !== 'default'
+    
+    if (shouldRefresh && !loading) {
+      fetchTasks()
+      
+      // Clear the refresh state to prevent repeated fetches
+      if (location.state?.refresh) {
+        window.history.replaceState({}, document.title)
+      }
+    }
+  }, [location])
 
   ////////////////////////////////////////////////////////////////
   // STATUS UPDATE
@@ -107,6 +123,10 @@ const TeamTasksPage = () => {
         !filters.projectId ||
         task.project?.id === filters.projectId
 
+      const matchesType =
+        !filters.type ||
+        task.type === filters.type
+
       const matchesStatus =
         !filters.status ||
         task.status === filters.status
@@ -123,6 +143,7 @@ const TeamTasksPage = () => {
       return (
         matchesSearch &&
         matchesProject &&
+        matchesType &&
         matchesStatus &&
         matchesPriority &&
         matchesDueDate
@@ -216,7 +237,7 @@ const TeamTasksPage = () => {
             }))
           }
         }}
-        showCreateButton={user?.role === 'TEAM_LEAD'}
+        showCreateButton={user?.role === 'TEAM_LEAD' || user?.role === 'EMPLOYEE'}
         onCreateTask={handleCreateTask}
       />
 
