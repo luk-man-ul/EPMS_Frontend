@@ -2,7 +2,11 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getCurrentUser, logout } from '../../utils/auth'
 
-const AdminHeader = () => {
+interface AdminHeaderProps {
+  onMenuClick?: () => void
+}
+
+const AdminHeader = ({ onMenuClick }: AdminHeaderProps) => {
   const navigate = useNavigate()
   const user = getCurrentUser()
   const [showDropdown, setShowDropdown] = useState(false)
@@ -14,11 +18,30 @@ const AdminHeader = () => {
 
   return (
     <header className="header">
-      <input
-        type="text"
-        placeholder="Search..."
-        className="header-search"
-      />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        {/* Mobile menu button */}
+        <button
+          onClick={onMenuClick}
+          className="mobile-menu-btn"
+          style={{
+            display: 'none',
+            background: 'none',
+            border: 'none',
+            fontSize: '24px',
+            cursor: 'pointer',
+            padding: '4px',
+            color: '#1a1a1a',
+          }}
+        >
+          ☰
+        </button>
+
+        <input
+          type="text"
+          placeholder="Search..."
+          className="header-search"
+        />
+      </div>
 
       <div className="header-actions">
         🔔

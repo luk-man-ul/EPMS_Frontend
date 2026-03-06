@@ -87,7 +87,9 @@ const TaskBoardTab = ({ tasks }: Props) => {
               {columnTasks.map((task) => (
                 <div
                   key={task.id}
-                 onClick={() => navigate(`/app/tasks/${task.id}`)}
+                  onClick={() => navigate(`/app/tasks/${task.id}`, {
+                    state: { fromProject: task.projectId, fromProjectName: task.project?.name }
+                  })}
                   style={{
                     background: '#ffffff',
                     borderRadius: 12,

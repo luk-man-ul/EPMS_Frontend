@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import api from '../../../../utils/api'
 import { TaskStatus, formatEnumLabel } from '../../../../types/enums'
 import { useToast } from '../../../../context/ToastContext'
@@ -8,6 +8,7 @@ import TaskTypeBadge from '../../../../components/shared/TaskTypeBadge'
 const TaskDetailPage = () => {
   const { taskId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { showToast } = useToast()
 
   const [task, setTask] = useState<any>(null)
@@ -16,6 +17,10 @@ const TaskDetailPage = () => {
   const [newHours, setNewHours] = useState('')
   const [accessDenied, setAccessDenied] = useState(false)
   const [toastShown, setToastShown] = useState(false)
+
+  // Get navigation state
+  const fromProject = location.state?.fromProject
+  const fromProjectName = location.state?.fromProjectName
 
   ////////////////////////////////////////////////////////////
   // FETCH TASK
@@ -78,7 +83,17 @@ const TaskDetailPage = () => {
   ////////////////////////////////////////////////////////////
 
   const handleBack = () => {
-    // Determine the correct tasks list path
+    // If came from a project, return to that project's tasks tab
+    if (fromProject) {
+      const isAdmin = window.location.pathname.startsWith('/admin')
+      const projectPath = isAdmin 
+        ? `/admin/projects/${fromProject}?tab=tasks`
+        : `/app/projects/${fromProject}?tab=tasks`
+      navigate(projectPath)
+      return
+    }
+
+    // Otherwise, go to general tasks list
     const isAdmin = window.location.pathname.startsWith('/admin')
     const tasksPath = isAdmin ? '/admin/tasks' : '/app/tasks'
     

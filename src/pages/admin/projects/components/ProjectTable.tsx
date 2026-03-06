@@ -3,11 +3,9 @@ import type { ProjectListItem } from '../types/project.types'
 
 interface Props {
   projects: ProjectListItem[]
-  onEdit: (id: string) => void
-  onDelete: (id: string) => void
 }
 
-const ProjectTable = ({ projects, onEdit, onDelete }: Props) => {
+const ProjectTable = ({ projects }: Props) => {
   return (
     <table
       style={{
@@ -43,15 +41,6 @@ const ProjectTable = ({ projects, onEdit, onDelete }: Props) => {
           <th style={{ padding: '16px 20px', fontWeight: 500 }}>
             Deadline
           </th>
-          <th
-            style={{
-              padding: '16px 20px',
-              textAlign: 'right',
-              fontWeight: 500,
-            }}
-          >
-            Actions
-          </th>
         </tr>
       </thead>
 
@@ -60,8 +49,6 @@ const ProjectTable = ({ projects, onEdit, onDelete }: Props) => {
           <ProjectRow
             key={project.id}
             project={project}
-            onEdit={onEdit}
-            onDelete={onDelete}
           />
         ))}
       </tbody>

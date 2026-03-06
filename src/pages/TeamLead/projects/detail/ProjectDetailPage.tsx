@@ -1,21 +1,29 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../../../../utils/api'
 
 import OverviewTab from './components/OverviewTab'
-import TeamMembersTab from './components/TeamMembersTab'
 import TaskBoardTab from './components/TaskBoardTab'
 import TicketsTab from './components/TicketsTab'
 
 const ProjectDetailPage = () => {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const [project, setProject] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] =
-    useState<'overview' | 'members' | 'tasks' | 'tickets'>('overview')
+    useState<'overview' | 'tasks' | 'tickets'>('overview')
+
+  // Handle tab from URL query parameter
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')
+    if (tabParam && ['overview', 'tasks', 'tickets'].includes(tabParam)) {
+      setActiveTab(tabParam as 'overview' | 'tasks' | 'tickets')
+    }
+  }, [searchParams])
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -237,7 +245,6 @@ const ProjectDetailPage = () => {
       }}>
         {[
           { key: 'overview', label: 'Overview' },
-          { key: 'members', label: 'Team Members' },
           { key: 'tasks', label: 'Tasks' },
           { key: 'tickets', label: 'Tickets' }
         ].map((tab) => (
@@ -275,10 +282,6 @@ const ProjectDetailPage = () => {
       <div style={{ minHeight: '400px' }}>
         {activeTab === 'overview' && (
           <OverviewTab project={project} />
-        )}
-
-        {activeTab === 'members' && (
-          <TeamMembersTab members={project.members} />
         )}
 
         {activeTab === 'tasks' && (

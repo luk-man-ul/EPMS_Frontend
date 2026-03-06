@@ -1,14 +1,13 @@
+import { useNavigate } from 'react-router-dom'
 import ProjectStatus from './ProjectStatus'
-import ProjectActions from './ProjectActions'
 import type { ProjectListItem } from '../types/project.types'
 
 interface Props {
   project: ProjectListItem
-  onEdit: (id: string) => void
-  onDelete: (id: string) => void
 }
 
-const ProjectRow = ({ project, onEdit, onDelete }: Props) => {
+const ProjectRow = ({ project }: Props) => {
+  const navigate = useNavigate()
   const teamSize = project.teamSize ?? 0
 
   const leadName = project.lead
@@ -21,11 +20,17 @@ const ProjectRow = ({ project, onEdit, onDelete }: Props) => {
     ? new Date(project.endDate).toLocaleDateString()
     : '—'
 
+  const handleClick = () => {
+    navigate(`/admin/projects/${project.id}`)
+  }
+
   return (
     <tr
+      onClick={handleClick}
       style={{
         borderBottom: '1px solid #f5f5f5',
         transition: 'background 0.15s ease',
+        cursor: 'pointer'
       }}
       onMouseEnter={(e) =>
         (e.currentTarget.style.backgroundColor = '#fafafa')
@@ -106,15 +111,6 @@ const ProjectRow = ({ project, onEdit, onDelete }: Props) => {
       {/* Deadline */}
       <td style={{ padding: '16px 20px', fontSize: '14px', color: '#666' }}>
         {deadline}
-      </td>
-
-      {/* Actions */}
-      <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-        <ProjectActions
-          projectId={project.id}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
       </td>
     </tr>
   )

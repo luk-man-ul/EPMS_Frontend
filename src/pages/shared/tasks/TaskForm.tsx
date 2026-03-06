@@ -11,6 +11,7 @@ interface Props {
   onSuccess: () => void
   onCancel: () => void
   loadAllProjects?: boolean // admin = true
+  defaultProjectId?: string // pre-select project and hide dropdown
 }
 
 const TaskForm = ({
@@ -18,6 +19,7 @@ const TaskForm = ({
   onSuccess,
   onCancel,
   loadAllProjects = false,
+  defaultProjectId,
 }: Props) => {
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -32,7 +34,7 @@ const TaskForm = ({
   )
 
   const [form, setForm] = useState({
-    projectId: '',
+    projectId: defaultProjectId || '',
     title: '',
     description: '',
     priority: 'MEDIUM',
@@ -185,20 +187,33 @@ const TaskForm = ({
       )}
 
       <FormField label="Project *">
-        <select
-          value={form.projectId}
-          onChange={(e) =>
-            handleChange('projectId', e.target.value)
-          }
-          style={inputStyle}
-        >
-          <option value="">Select Project</option>
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+        {defaultProjectId ? (
+          <input
+            value={projects.find(p => p.id === defaultProjectId)?.name || 'Loading...'}
+            disabled
+            style={{
+              ...inputStyle,
+              background: '#f5f5f5',
+              color: '#666',
+              cursor: 'not-allowed'
+            }}
+          />
+        ) : (
+          <select
+            value={form.projectId}
+            onChange={(e) =>
+              handleChange('projectId', e.target.value)
+            }
+            style={inputStyle}
+          >
+            <option value="">Select Project</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        )}
       </FormField>
 
       <FormField label="Title *">

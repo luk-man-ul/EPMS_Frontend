@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import ProjectTable from './components/ProjectTable'
+import ProjectFilters from './components/ProjectFilters'
 import api from '../../../utils/api'
 import type {
   ProjectListItem,
@@ -7,8 +8,19 @@ import type {
 } from './types/project.types'
 import ProjectForm from './form/ProjectForm'
 import SearchBar from '../../../components/shared/SearchBar'
-import FilterComponent from '../../../components/shared/FilterComponent'
-import { ProjectStatus, getEnumOptions } from '../../../types/enums'
+
+interface EmployeeOption {
+  id: string
+  name: string
+}
+
+interface ProjectFilterValues {
+  status?: string
+  ownerId?: string
+  memberId?: string
+  startDate?: string
+  endDate?: string
+}
 
 const ProjectsPage = () => {
   const [projects, setProjects] = useState<ProjectListItem[]>([])
@@ -24,7 +36,10 @@ const ProjectsPage = () => {
   const [searchTerm, setSearchTerm] = useState('')
   
   // Filter state
-  const [statusFilter, setStatusFilter] = useState<string | null>(null)
+  const [filters, setFilters] = useState<ProjectFilterValues>({})
+  
+  // Employees for filters
+  const [employees, setEmployees] = useState<EmployeeOption[]>([])
 
   ////////////////////////////////////////////////////////////
   // FETCH PROJECTS
@@ -32,6 +47,7 @@ const ProjectsPage = () => {
 
   useEffect(() => {
     fetchProjects()
+    loadEmployees()
   }, [])
 
   const fetchProjects = async () => {
@@ -44,6 +60,38 @@ const ProjectsPage = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  ////////////////////////////////////////////////////////////
+  // LOAD EMPLOYEES FOR FILTERS
+  ////////////////////////////////////////////////////////////
+
+  const loadEmployees = async () => {
+    try {
+      const response = await api.get('/users')
+      const employeeData = response.data.data || response.data || []
+      setEmployees(
+        employeeData.map((emp: any) => ({
+          id: emp.id,
+          name: `${emp.firstName} ${emp.lastName}`,
+        }))
+      )
+    } catch (err) {
+      console.error('Failed to load employees:', err)
+    }
+  }
+
+  ////////////////////////////////////////////////////////////
+  // FILTER HANDLER
+  ////////////////////////////////////////////////////////////
+
+  const handleFilterChange = (newFilters: any) => {
+    if (newFilters.__clear) {
+      setFilters({})
+      return
+    }
+
+    setFilters({ ...filters, ...newFilters })
   }
 
   ////////////////////////////////////////////////////////////
@@ -106,7 +154,7 @@ const ProjectsPage = () => {
   ////////////////////////////////////////////////////////////
 
   const filteredProjects = projects.filter((project) => {
-    // Search filter: check if name or description contains search term
+    // Search filter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase()
       const nameMatch = project.name.toLowerCase().includes(searchLower)
@@ -117,9 +165,42 @@ const ProjectsPage = () => {
       }
     }
 
-    // Status filter: check if project status matches selected filter
-    if (statusFilter && project.status !== statusFilter) {
+    // Status filter
+    if (filters.status && project.status !== filters.status) {
       return false
+    }
+
+    // Owner/Team Lead filter
+    if (filters.ownerId && project.owner?.id !== filters.ownerId) {
+      return false
+    }
+
+    // Member filter
+    if (filters.memberId) {
+      const hasMember = project.members?.some(
+        (member: any) => member.user?.id === filters.memberId
+      )
+      if (!hasMember) {
+        return false
+      }
+    }
+
+    // Start date filter
+    if (filters.startDate && project.startDate) {
+      const projectStart = new Date(project.startDate)
+      const filterStart = new Date(filters.startDate)
+      if (projectStart < filterStart) {
+        return false
+      }
+    }
+
+    // End date filter
+    if (filters.endDate && project.endDate) {
+      const projectEnd = new Date(project.endDate)
+      const filterEnd = new Date(filters.endDate)
+      if (projectEnd > filterEnd) {
+        return false
+      }
     }
 
     return true
@@ -183,15 +264,12 @@ const ProjectsPage = () => {
         />
       </div>
 
-      {/* Status Filter */}
-      <div style={{ marginBottom: '20px' }}>
-        <FilterComponent
-          label="Status"
-          options={getEnumOptions(ProjectStatus)}
-          value={statusFilter}
-          onChange={setStatusFilter}
-        />
-      </div>
+      {/* Comprehensive Filters */}
+      <ProjectFilters
+        employees={employees}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+      />
 
       {/* Content */}
       <div
@@ -210,8 +288,6 @@ const ProjectsPage = () => {
         {!loading && !error && (
           <ProjectTable
             projects={filteredProjects}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
           />
         )}
       </div>

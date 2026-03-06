@@ -6,6 +6,7 @@ interface Props {
   task?: Task | null
   onClose: () => void
   onCreated: () => void
+  defaultProjectId?: string
 }
 
 const CreateTaskModal = ({
@@ -13,6 +14,7 @@ const CreateTaskModal = ({
   task,
   onClose,
   onCreated,
+  defaultProjectId,
 }: Props) => {
   if (!isOpen) return null
 
@@ -31,6 +33,7 @@ const CreateTaskModal = ({
           <TaskForm
             task={task}
             loadAllProjects={true}   // ✅ Admin loads all projects
+            defaultProjectId={defaultProjectId}
             onSuccess={() => {
               onCreated()
               onClose()
