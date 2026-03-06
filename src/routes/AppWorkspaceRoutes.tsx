@@ -18,6 +18,16 @@ import CreateTicketPage from '../pages/TeamLead/tickets/create/CreateTicketPage'
 import EditTicketPage from '../pages/TeamLead/tickets/edit/EditTicketPage'
 import CreateTaskPage from '../pages/TeamLead/tasks/create/CreateTaskPage'
 
+// Attendance & Leave - Shared Pages
+import CheckInPage from '../pages/shared/attendance/CheckInPage'
+import MyAttendancePage from '../pages/shared/attendance/MyAttendancePage'
+import LeaveRequestPage from '../pages/shared/leave/LeaveRequestPage'
+import MyLeavePage from '../pages/shared/leave/MyLeavePage'
+import LeaveApprovalManagementPage from '../pages/shared/leave/LeaveApprovalManagementPage'
+
+// Attendance & Leave - Team Lead Pages
+import TeamAttendancePage from '../pages/TeamLead/attendance/TeamAttendancePage'
+
 const AppWorkspaceRoutes = () => {
   return (
     <Routes>
@@ -48,6 +58,30 @@ const AppWorkspaceRoutes = () => {
         <Route path="tickets/create" element={<CreateTicketPage />} />
         <Route path="tickets/:ticketId/edit" element={<EditTicketPage />} />
         <Route path="tickets/:ticketId" element={<TicketDetailPage />} />
+
+        {/* Attendance & Leave - Employee Pages */}
+        <Route path="attendance/check-in" element={<CheckInPage />} />
+        <Route path="attendance/my" element={<MyAttendancePage />} />
+        <Route path="leave/request" element={<LeaveRequestPage />} />
+        <Route path="leave/my" element={<MyLeavePage />} />
+
+        {/* Attendance & Leave - Team Lead Pages */}
+        <Route 
+          path="team/attendance" 
+          element={
+            <ProtectedRoute role={['TEAM_LEAD', 'ADMIN']}>
+              <TeamAttendancePage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="team/leave-approvals" 
+          element={
+            <ProtectedRoute role={['TEAM_LEAD', 'ADMIN']}>
+              <LeaveApprovalManagementPage />
+            </ProtectedRoute>
+          } 
+        />
 
         {/* Other Sections */}
         <Route 

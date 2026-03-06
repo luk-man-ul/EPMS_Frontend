@@ -19,6 +19,10 @@ import AdminTicketDetailPage from '../pages/admin/tickets/detail/TicketDetailPag
 import WorkApprovalPage from '../pages/TeamLead/workApproval/WorkApprovalPage'
 import WorkApprovalDetailPage from '../pages/TeamLead/workApproval/detail/WorkApprovalDetailPage'
 
+// Attendance & Leave - Admin Pages
+import AttendanceDashboardPage from '../pages/admin/attendance/AttendanceDashboardPage'
+import LeaveApprovalManagementPage from '../pages/shared/leave/LeaveApprovalManagementPage'
+
 const AdminRoutes = () => (
   <Routes>
     <Route
@@ -41,6 +45,8 @@ const AdminRoutes = () => (
       <Route path="tickets/:ticketId" element={<AdminTicketDetailPage />} />
       <Route path="work-approval" element={<WorkApprovalPage />} />
       <Route path="work-approval/:id" element={<WorkApprovalDetailPage />} />
+      <Route path="attendance-dashboard" element={<AttendanceDashboardPage />} />
+      <Route path="leave-approvals" element={<LeaveApprovalManagementPage />} />
       <Route path="attendance" element={<Attendance />} />
       <Route path="finance" element={<Finance />} />
       <Route path="reports" element={<Reports />} />
