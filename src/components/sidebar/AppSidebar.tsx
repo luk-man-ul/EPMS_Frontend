@@ -7,8 +7,13 @@ const menuItems = [
   { label: 'My Projects', path: '/App/projects', permission: 'projects.view' },
   { label: 'Team Tasks', path: '/App/tasks', permission: 'tasks.view' },
   { label: 'Ticket Center', path: '/App/tickets', permission: 'tasks.view' }, // adjust later
+  { label: 'Check In / Out', path: '/App/attendance/check-in', permission: 'attendance.create' },
+  { label: 'My Attendance', path: '/App/attendance/my', permission: 'attendance.view' },
+  { label: 'Request Leave', path: '/App/leave/request', permission: 'leave.create' },
+  { label: 'My Leave', path: '/App/leave/my', permission: 'leave.view' },
   { label: 'Work Approval', path: '/App/work-approval', permission: 'tasks.update' },
-  { label: 'Team Attendance', path: '/App/attendance', permission: 'dashboard.view' }, // temp
+  { label: 'Team Attendance', path: '/App/team/attendance', permission: 'attendance.viewAll', roleRequired: ['TEAM_LEAD', 'ADMIN'] },
+  { label: 'Leave Approvals', path: '/App/team/leave-approvals', permission: 'leave.approve', roleRequired: ['TEAM_LEAD', 'ADMIN'] },
   { label: 'Time Logs', path: '/App/time-logs', permission: 'tasks.view' }, // temp
   { label: 'Project Finance', path: '/App/finance', permission: 'finance.view' },
   { label: 'Reports', path: '/App/reports', permission: 'reports.view' },
@@ -23,6 +28,11 @@ const AppSidebar = () => {
     // Filter by permission
     if (!hasPermission(user?.permissions, item.permission)) {
       return false
+    }
+    
+    // Additional role-based filtering for items with roleRequired
+    if (item.roleRequired && user?.role) {
+      return item.roleRequired.includes(user.role)
     }
     
     // Additional role-based filtering for Work Approval
