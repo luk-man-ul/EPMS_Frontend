@@ -28,7 +28,7 @@ const AppHeader = () => {
             onClick={() => setShowDropdown(!showDropdown)}
             style={{ cursor: 'pointer' }}
           >
-            {user?.fullName || 'Team Lead'}
+            {user?.email || 'Team Lead'}
           </div>
 
           {showDropdown && (
@@ -50,7 +50,7 @@ const AppHeader = () => {
                 fontSize: '13px',
               }}>
                 <div style={{ fontWeight: 600, color: '#1a1a1a' }}>
-                  {user?.fullName}
+                  {user?.email}
                 </div>
                 <div style={{ color: '#666666', fontSize: '12px', marginTop: '2px' }}>
                   {user?.email}

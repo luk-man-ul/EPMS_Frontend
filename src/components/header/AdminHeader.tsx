@@ -51,7 +51,7 @@ const AdminHeader = ({ onMenuClick }: AdminHeaderProps) => {
             onClick={() => setShowDropdown(!showDropdown)}
             style={{ cursor: 'pointer' }}
           >
-            {user?.fullName || 'Admin'}
+            {user?.email || 'Admin'}
           </div>
 
           {showDropdown && (
@@ -73,7 +73,7 @@ const AdminHeader = ({ onMenuClick }: AdminHeaderProps) => {
                 fontSize: '13px',
               }}>
                 <div style={{ fontWeight: 600, color: '#1a1a1a' }}>
-                  {user?.fullName}
+                  {user?.email}
                 </div>
                 <div style={{ color: '#666666', fontSize: '12px', marginTop: '2px' }}>
                   {user?.email}
