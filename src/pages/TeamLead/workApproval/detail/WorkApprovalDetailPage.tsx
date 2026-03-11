@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { getTaskById, approveSelfWork, rejectSelfWork } from '../../../../utils/api'
 import type { Task } from '../../../../types/task'
+import { Button, LoadingSpinner, ErrorMessage, Modal, Input } from '../../../../components/ui'
 import InformationPanel from './components/InformationPanel'
 import ActionButtons from './components/ActionButtons'
 import FeedbackModal from './components/FeedbackModal'
@@ -52,7 +53,7 @@ const WorkApprovalDetailPage = () => {
       setActionLoading(true)
       await approveSelfWork(task.id)
       alert('Self-work task approved successfully!')
-      navigate(`${basePath}/work-approval`)
+      navigate(`${basePath}/tasks/approval`)
     } catch (err: any) {
       console.error('Error approving task:', err)
       alert(err.response?.data?.message || 'Failed to approve task')
@@ -75,7 +76,7 @@ const WorkApprovalDetailPage = () => {
       setActionLoading(true)
       await rejectSelfWork(task.id, rejectReason)
       alert('Self-work task rejected successfully!')
-      navigate(`${basePath}/work-approval`)
+      navigate(`${basePath}/tasks/approval`)
     } catch (err: any) {
       console.error('Error rejecting task:', err)
       alert(err.response?.data?.message || 'Failed to reject task')
@@ -104,12 +105,7 @@ const WorkApprovalDetailPage = () => {
           alignItems: 'center',
           minHeight: '400px',
         }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
-            <div style={{ fontSize: '16px', color: '#666666' }}>
-              Loading task details...
-            </div>
-          </div>
+          <LoadingSpinner size="lg" text="Loading task details..." />
         </div>
       </div>
     )
@@ -125,28 +121,18 @@ const WorkApprovalDetailPage = () => {
           borderRadius: '12px',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>❌</div>
-          <h2 style={{ fontSize: '24px', marginBottom: '8px' }}>
-            {error ? 'Error Loading Task' : 'Task Not Found'}
-          </h2>
-          <p style={{ color: '#666666', marginBottom: '24px' }}>
-            {error || "The task you're looking for doesn't exist."}
-          </p>
-          <button
-            onClick={() => navigate(`${basePath}/work-approval`)}
-            style={{
-              padding: '12px 24px',
-              background: '#3b82f6',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: 500,
-              cursor: 'pointer',
-            }}
-          >
-            Back to Work Approvals
-          </button>
+          <ErrorMessage
+            message={error || "The task you're looking for doesn't exist."}
+            type="page"
+          />
+          <div style={{ marginTop: '24px' }}>
+            <Button
+              onClick={() => navigate(`${basePath}/tasks/approval`)}
+              variant="primary"
+            >
+              Back to Work Approvals
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -173,34 +159,15 @@ const WorkApprovalDetailPage = () => {
     <div style={{ padding: '24px' }}>
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
-        <button
-          onClick={() => navigate(`${basePath}/work-approval`)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '8px 16px',
-            background: 'transparent',
-            border: '1px solid #e5e5e5',
-            borderRadius: '8px',
-            fontSize: '14px',
-            color: '#666666',
-            cursor: 'pointer',
-            marginBottom: '16px',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#fafafa'
-            e.currentTarget.style.borderColor = '#d4d4d4'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = '#e5e5e5'
-          }}
+        <Button
+          onClick={() => navigate(`${basePath}/tasks/approval`)}
+          variant="ghost"
+          size="sm"
+          style={{ marginBottom: '16px' }}
         >
           <span>←</span>
           <span>Back to Work Approvals</span>
-        </button>
+        </Button>
 
         <div style={{
           display: 'flex',
@@ -293,101 +260,48 @@ const WorkApprovalDetailPage = () => {
       )}
 
       {/* Rejection Modal */}
-      {showRejectModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-        }}>
-          <div style={{
-            background: '#ffffff',
-            borderRadius: '12px',
-            padding: '24px',
-            maxWidth: '500px',
-            width: '90%',
-          }}>
-            <h3 style={{
-              fontSize: '20px',
-              fontWeight: 600,
-              color: '#1a1a1a',
-              marginBottom: '16px',
-            }}>
-              Reject Self-Work Task
-            </h3>
-            <p style={{
-              fontSize: '14px',
-              color: '#666666',
-              marginBottom: '16px',
-            }}>
-              Please provide a reason for rejecting this task:
-            </p>
-            <textarea
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Enter rejection reason..."
-              style={{
-                width: '100%',
-                minHeight: '120px',
-                padding: '12px',
-                border: '1px solid #e5e5e5',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontFamily: 'inherit',
-                resize: 'vertical',
-                marginBottom: '16px',
+      <Modal
+        isOpen={showRejectModal}
+        onClose={() => {
+          setShowRejectModal(false)
+          setRejectReason('')
+        }}
+        title="Reject Self-Work Task"
+        size="md"
+        footer={
+          <>
+            <Button
+              onClick={() => {
+                setShowRejectModal(false)
+                setRejectReason('')
               }}
-            />
-            <div style={{
-              display: 'flex',
-              gap: '12px',
-              justifyContent: 'flex-end',
-            }}>
-              <button
-                onClick={() => {
-                  setShowRejectModal(false)
-                  setRejectReason('')
-                }}
-                disabled={actionLoading}
-                style={{
-                  padding: '10px 20px',
-                  background: '#f3f4f6',
-                  color: '#1a1a1a',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  cursor: actionLoading ? 'not-allowed' : 'pointer',
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRejectSubmit}
-                disabled={actionLoading || !rejectReason.trim()}
-                style={{
-                  padding: '10px 20px',
-                  background: actionLoading || !rejectReason.trim() ? '#d1d5db' : '#ef4444',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  cursor: actionLoading || !rejectReason.trim() ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {actionLoading ? 'Rejecting...' : 'Reject Task'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              disabled={actionLoading}
+              variant="secondary"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRejectSubmit}
+              disabled={actionLoading || !rejectReason.trim()}
+              loading={actionLoading}
+              variant="danger"
+            >
+              {actionLoading ? 'Rejecting...' : 'Reject Task'}
+            </Button>
+          </>
+        }
+      >
+        <p style={{ fontSize: '14px', color: '#666666', marginBottom: '16px' }}>
+          Please provide a reason for rejecting this task:
+        </p>
+        <Input
+          type="textarea"
+          value={rejectReason}
+          onChange={setRejectReason}
+          placeholder="Enter rejection reason..."
+          rows={5}
+        />
+      </Modal>
     </div>
   )
 }

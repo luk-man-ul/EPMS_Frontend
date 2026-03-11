@@ -4,6 +4,7 @@ import api from '../../../utils/api'
 import SearchBar from '../../../components/shared/SearchBar'
 import FilterComponent from '../../../components/shared/FilterComponent'
 import { ProjectStatus, getEnumOptions } from '../../../types/enums'
+import { Card, LoadingSpinner, Button } from '../../../components/ui'
 
 const MyProjectsPage = () => {
   const navigate = useNavigate()
@@ -117,7 +118,13 @@ const MyProjectsPage = () => {
 
   ////////////////////////////////////////////////////////////////
 
-  if (loading) return <div>Loading projects...</div>
+  if (loading) {
+    return (
+      <Card>
+        <LoadingSpinner text="Loading projects..." />
+      </Card>
+    )
+  }
 
   ////////////////////////////////////////////////////////////////
 
@@ -174,22 +181,16 @@ const MyProjectsPage = () => {
         borderBottom: '1px solid #e5e5e5',
       }}>
         {['all', 'active', 'completed', 'at-risk'].map((value) => (
-          <button
+          <Button
             key={value}
+            variant={filter === value ? 'primary' : 'ghost'}
+            size="sm"
             onClick={() => setFilter(value as any)}
-            style={{
-              padding: '12px 20px',
-              background: 'none',
-              border: 'none',
-              borderBottom: filter === value ? '2px solid #000' : '2px solid transparent',
-              fontWeight: filter === value ? 600 : 500,
-              cursor: 'pointer',
-            }}
           >
             {value === 'all'
               ? 'All Projects'
               : value.charAt(0).toUpperCase() + value.slice(1)}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -207,14 +208,9 @@ const MyProjectsPage = () => {
             <div
               key={project.id}
               onClick={() => navigate(`/app/projects/${project.id}`)}
-              style={{
-                background: '#fff',
-                border: '1px solid #e5e5e5',
-                borderRadius: '12px',
-                padding: '20px',
-                cursor: 'pointer',
-              }}
+              style={{ cursor: 'pointer' }}
             >
+              <Card padding="md">
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <h3>{project.name}</h3>
                 <span style={{
@@ -259,6 +255,7 @@ const MyProjectsPage = () => {
                 {' • '}
                 {daysRemaining} days left
               </div>
+              </Card>
             </div>
           )
         })}
@@ -278,12 +275,7 @@ const MyProjectsPage = () => {
 //////////////////////////////////////////////////////////////
 
 const StatCard = ({ label, value, color }: any) => (
-  <div style={{
-    background: '#fff',
-    padding: '20px',
-    borderRadius: '12px',
-    border: '1px solid #e5e5e5',
-  }}>
+  <Card padding="md">
     <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
       {label}
     </div>
@@ -294,7 +286,7 @@ const StatCard = ({ label, value, color }: any) => (
     }}>
       {value}
     </div>
-  </div>
+  </Card>
 )
 
 export default MyProjectsPage

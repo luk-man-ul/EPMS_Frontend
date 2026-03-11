@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { getPendingApprovals, getSelfWorkMetrics } from '../../../utils/api'
 import type { Task } from '../../../types/task'
 import type { SelfWorkMetrics } from '../../../types/task'
+import { Button, LoadingSpinner, ErrorMessage } from '../../../components/ui'
 import StatsCards from './components/StatsCards'
 import WorkApprovalFilters from './components/WorkApprovalFilters'
 import WorkApprovalTable from './components/WorkApprovalTable'
@@ -100,23 +101,7 @@ const WorkApprovalPage = () => {
           alignItems: 'center',
           minHeight: '400px',
         }}>
-          <div style={{
-            textAlign: 'center',
-          }}>
-            <div style={{
-              fontSize: '48px',
-              marginBottom: '16px',
-              animation: 'spin 1s linear infinite',
-            }}>
-              ⏳
-            </div>
-            <div style={{
-              fontSize: '16px',
-              color: '#666666',
-            }}>
-              Loading work approvals...
-            </div>
-          </div>
+          <LoadingSpinner size="lg" text="Loading work approvals..." />
         </div>
       </div>
     )
@@ -126,49 +111,15 @@ const WorkApprovalPage = () => {
   if (error) {
     return (
       <div style={{ padding: '24px' }}>
-        <div style={{
-          background: '#fee2e2',
-          border: '1px solid #fecaca',
-          borderRadius: '12px',
-          padding: '24px',
-          textAlign: 'center',
-        }}>
-          <div style={{
-            fontSize: '48px',
-            marginBottom: '16px',
-          }}>
-            ⚠️
-          </div>
-          <h2 style={{
-            fontSize: '20px',
-            fontWeight: 600,
-            color: '#991b1b',
-            marginBottom: '8px',
-          }}>
-            Error Loading Data
-          </h2>
-          <p style={{
-            fontSize: '14px',
-            color: '#7f1d1d',
-            marginBottom: '16px',
-          }}>
-            {error}
-          </p>
-          <button
-            onClick={fetchData}
-            style={{
-              padding: '10px 20px',
-              background: '#ef4444',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: 500,
-              cursor: 'pointer',
-            }}
-          >
+        <ErrorMessage
+          message={error}
+          type="page"
+          onDismiss={() => setError(null)}
+        />
+        <div style={{ textAlign: 'center', marginTop: '16px' }}>
+          <Button onClick={fetchData} variant="danger">
             Try Again
-          </button>
+          </Button>
         </div>
       </div>
     )

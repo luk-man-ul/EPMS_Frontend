@@ -6,6 +6,7 @@ import TaskFilters from '../../shared/tasks/components/TaskFilters'
 import SearchBar from '../../../components/shared/SearchBar'
 import { useAuth } from '../../../context/AuthContext'
 import EditTaskModal from './components/EditTaskModal'
+import { Card } from '../../../components/ui'
 
 const TeamTasksPage = () => {
   const { user } = useAuth()
@@ -242,15 +243,7 @@ const TeamTasksPage = () => {
       />
 
       {/* TABLE */}
-      <div
-        style={{
-          background: '#ffffff',
-          borderRadius: '14px',
-          padding: '24px',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.04)',
-          border: '1px solid #f1f5f9',
-        }}
-      >
+      <Card padding="lg">
         <TaskTable
           tasks={filteredTasks}
           loading={loading}
@@ -258,7 +251,7 @@ const TeamTasksPage = () => {
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
-      </div>
+      </Card>
 
       {/* Edit Modal */}
       <EditTaskModal

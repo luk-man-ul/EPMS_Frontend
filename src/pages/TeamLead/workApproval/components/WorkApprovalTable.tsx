@@ -318,7 +318,7 @@ const WorkApprovalTable = ({ approvals, onRefresh }: WorkApprovalTableProps) => 
                     </div>
                   ) : (
                     <button
-                      onClick={() => navigate(`${basePath}/work-approval/${approval.id}`)}
+                      onClick={() => navigate(`${basePath}/tasks/approval/${approval.id}`)}
                       style={{
                         padding: '8px 16px',
                         background: '#1a1a1a',

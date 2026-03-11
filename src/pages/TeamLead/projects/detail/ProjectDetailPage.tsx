@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../../../../utils/api'
+import { Button, Card, LoadingSpinner, ErrorMessage } from '../../../../components/ui'
 
 import OverviewTab from './components/OverviewTab'
 import TaskBoardTab from './components/TaskBoardTab'
@@ -46,33 +47,9 @@ const ProjectDetailPage = () => {
   // Loading state
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '400px',
-        fontSize: '14px',
-        color: '#666'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ 
-            width: '40px', 
-            height: '40px', 
-            border: '3px solid #e5e5e5',
-            borderTop: '3px solid #1a1a1a',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 12px'
-          }} />
-          Loading project...
-          <style>{`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
-        </div>
-      </div>
+      <Card>
+        <LoadingSpinner text="Loading project..." />
+      </Card>
     )
   }
 
@@ -84,45 +61,19 @@ const ProjectDetailPage = () => {
         margin: '0 auto',
         padding: '40px 20px'
       }}>
-        <button 
+        <Button 
+          variant="secondary"
           onClick={() => navigate(-1)}
-          style={{
-            padding: '10px 16px',
-            background: '#ffffff',
-            border: '1px solid #e5e5e5',
-            borderRadius: '10px',
-            fontSize: '14px',
-            fontWeight: 500,
-            cursor: 'pointer',
-            marginBottom: '20px',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#fafafa'
-            e.currentTarget.style.borderColor = '#d4d4d4'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#ffffff'
-            e.currentTarget.style.borderColor = '#e5e5e5'
-          }}
+          style={{ marginBottom: '20px' }}
         >
           ← Back
-        </button>
+        </Button>
         
-        <div style={{
-          background: '#fee2e2',
-          border: '1px solid #fecaca',
-          borderRadius: '12px',
-          padding: '20px',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '18px', fontWeight: 600, color: '#991b1b', marginBottom: '8px' }}>
-            Error Loading Project
-          </div>
-          <div style={{ fontSize: '14px', color: '#b91c1c' }}>
-            {error}
-          </div>
-        </div>
+        <ErrorMessage 
+          type="page"
+          message={error}
+          title="Error Loading Project"
+        />
       </div>
     )
   }
@@ -135,45 +86,19 @@ const ProjectDetailPage = () => {
         margin: '0 auto',
         padding: '40px 20px'
       }}>
-        <button 
+        <Button 
+          variant="secondary"
           onClick={() => navigate(-1)}
-          style={{
-            padding: '10px 16px',
-            background: '#ffffff',
-            border: '1px solid #e5e5e5',
-            borderRadius: '10px',
-            fontSize: '14px',
-            fontWeight: 500,
-            cursor: 'pointer',
-            marginBottom: '20px',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#fafafa'
-            e.currentTarget.style.borderColor = '#d4d4d4'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#ffffff'
-            e.currentTarget.style.borderColor = '#e5e5e5'
-          }}
+          style={{ marginBottom: '20px' }}
         >
           ← Back
-        </button>
+        </Button>
         
-        <div style={{
-          background: '#fef3c7',
-          border: '1px solid #fde68a',
-          borderRadius: '12px',
-          padding: '20px',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '18px', fontWeight: 600, color: '#92400e', marginBottom: '8px' }}>
-            Project Not Found
-          </div>
-          <div style={{ fontSize: '14px', color: '#b45309' }}>
-            The project you're looking for doesn't exist or you don't have access to it.
-          </div>
-        </div>
+        <ErrorMessage 
+          type="page"
+          message="The project you're looking for doesn't exist or you don't have access to it."
+          title="Project Not Found"
+        />
       </div>
     )
   }
@@ -185,33 +110,13 @@ const ProjectDetailPage = () => {
       padding: '20px'
     }}>
       {/* Back Button */}
-      <button 
+      <Button 
+        variant="secondary"
         onClick={() => navigate(-1)}
-        style={{
-          padding: '10px 16px',
-          background: '#ffffff',
-          border: '1px solid #e5e5e5',
-          borderRadius: '10px',
-          fontSize: '14px',
-          fontWeight: 500,
-          cursor: 'pointer',
-          marginBottom: '20px',
-          transition: 'all 0.2s ease',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = '#fafafa'
-          e.currentTarget.style.borderColor = '#d4d4d4'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = '#ffffff'
-          e.currentTarget.style.borderColor = '#e5e5e5'
-        }}
+        style={{ marginBottom: '20px' }}
       >
         ← Back
-      </button>
+      </Button>
 
       {/* Project Header */}
       <div style={{ marginBottom: '24px' }}>
@@ -248,33 +153,14 @@ const ProjectDetailPage = () => {
           { key: 'tasks', label: 'Tasks' },
           { key: 'tickets', label: 'Tickets' }
         ].map((tab) => (
-          <button
+          <Button
             key={tab.key}
+            variant={activeTab === tab.key ? 'primary' : 'ghost'}
+            size="sm"
             onClick={() => setActiveTab(tab.key as any)}
-            style={{
-              padding: '12px 20px',
-              background: 'none',
-              border: 'none',
-              borderBottom: activeTab === tab.key ? '2px solid #1a1a1a' : '2px solid transparent',
-              fontWeight: activeTab === tab.key ? 600 : 500,
-              fontSize: '14px',
-              color: activeTab === tab.key ? '#1a1a1a' : '#666',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              if (activeTab !== tab.key) {
-                e.currentTarget.style.color = '#1a1a1a'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (activeTab !== tab.key) {
-                e.currentTarget.style.color = '#666'
-              }
-            }}
           >
             {tab.label}
-          </button>
+          </Button>
         ))}
       </div>
 
