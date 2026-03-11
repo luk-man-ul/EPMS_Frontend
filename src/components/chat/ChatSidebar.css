@@ -1,0 +1,141 @@
+.chat-sidebar {
+  width: 320px;
+  height: 100%;
+  border-right: 1px solid #e5e5e5;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.chat-sidebar-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.chat-room-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.empty-rooms {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.empty-rooms p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.chat-room-item {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.chat-room-item:hover {
+  background-color: #f9fafb;
+}
+
+.chat-room-item.active {
+  background-color: #eff6ff;
+  border-left: 3px solid #3b82f6;
+}
+
+.room-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+  border-radius: 50%;
+}
+
+.room-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.room-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.room-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.room-time {
+  font-size: 11px;
+  color: #999;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.room-last-message {
+  font-size: 13px;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 4px;
+}
+
+.room-badge {
+  font-size: 10px;
+}
+
+/* Scrollbar styling */
+.chat-room-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-room-list::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.chat-room-list::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.chat-room-list::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+@media (max-width: 768px) {
+  .chat-sidebar {
+    width: 100%;
+    border-right: none;
+  }
+}

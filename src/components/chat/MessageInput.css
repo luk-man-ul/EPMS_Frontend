@@ -1,0 +1,22 @@
+.message-input-container {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-top: 1px solid #e5e5e5;
+  background-color: white;
+}
+
+.message-input-field {
+  flex: 1;
+}
+
+.message-send-button {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .message-input-container {
+    padding: 12px;
+    gap: 8px;
+  }
+}

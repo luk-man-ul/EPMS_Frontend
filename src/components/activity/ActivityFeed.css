@@ -1,0 +1,177 @@
+.activity-feed-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 20px 0;
+  color: #1a1a1a;
+}
+
+.activity-feed-loading,
+.activity-feed-empty {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.activity-feed-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #666;
+}
+
+.empty-icon {
+  font-size: 48px;
+}
+
+.activity-feed-empty p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.activity-feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.activity-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.activity-item:hover {
+  background-color: #fafafa;
+}
+
+.activity-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.activity-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.activity-user {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.activity-description {
+  color: #666;
+}
+
+.activity-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.activity-icon {
+  font-size: 16px;
+}
+
+.activity-badge {
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.activity-time {
+  font-size: 12px;
+  color: #999;
+  margin-left: auto;
+}
+
+.activity-feed-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.pagination-btn {
+  background: none;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .activity-feed-title {
+    font-size: 16px;
+  }
+
+  .activity-item {
+    padding: 10px;
+  }
+
+  .activity-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+
+  .activity-header {
+    font-size: 13px;
+  }
+
+  .activity-time {
+    font-size: 11px;
+  }
+
+  .pagination-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .pagination-info {
+    font-size: 12px;
+  }
+}
