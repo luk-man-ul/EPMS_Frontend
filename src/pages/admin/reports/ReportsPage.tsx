@@ -13,7 +13,6 @@ const ReportsPage = () => {
 
   const handleFilterChange = (newFilters: any) => {
     setFilters({ ...filters, ...newFilters })
-    console.log('Filters updated:', { ...filters, ...newFilters })
   }
 
   const reports = [

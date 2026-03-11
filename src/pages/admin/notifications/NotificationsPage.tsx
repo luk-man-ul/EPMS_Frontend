@@ -24,7 +24,8 @@ const NotificationsPage = () => {
   }
 
   const handleAction = (url: string) => {
-    console.log('Navigate to:', url)
+    // Navigate to the specified URL
+    // TODO: Implement navigation logic
   }
 
   const filteredNotifications = activeFilter === 'ALL' 

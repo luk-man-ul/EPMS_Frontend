@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { LoadingSpinner, Card, Button } from '../../../components/ui';
 import AttendanceTable from '../../shared/attendance/components/AttendanceTable';
 import AttendanceFilters from '../../shared/attendance/components/AttendanceFilters';
 
@@ -131,67 +132,39 @@ const AttendanceDashboardPage = () => {
           marginBottom: '24px',
         }}
       >
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e5e5e5',
-            borderRadius: '12px',
-            padding: '20px',
-          }}
-        >
+        <Card padding="md">
           <div style={{ fontSize: '13px', color: '#666666', marginBottom: '8px' }}>
             Total Sessions
           </div>
           <div style={{ fontSize: '32px', fontWeight: 600, color: '#1a1a1a' }}>
             {statistics.totalCheckIns}
           </div>
-        </div>
+        </Card>
 
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e5e5e5',
-            borderRadius: '12px',
-            padding: '20px',
-          }}
-        >
+        <Card padding="md">
           <div style={{ fontSize: '13px', color: '#666666', marginBottom: '8px' }}>
             Avg Hours/Day
           </div>
           <div style={{ fontSize: '32px', fontWeight: 600, color: '#1a1a1a' }}>
             {statistics.averageHours.toFixed(1)}h
           </div>
-        </div>
+        </Card>
 
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e5e5e5',
-            borderRadius: '12px',
-            padding: '20px',
-          }}
-        >
+        <Card padding="md">
           <div style={{ fontSize: '13px', color: '#666666', marginBottom: '8px' }}>Late Count</div>
           <div style={{ fontSize: '32px', fontWeight: 600, color: '#d97706' }}>
             {statistics.lateCount}
           </div>
-        </div>
+        </Card>
 
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e5e5e5',
-            borderRadius: '12px',
-            padding: '20px',
-          }}
-        >
+        <Card padding="md">
           <div style={{ fontSize: '13px', color: '#666666', marginBottom: '8px' }}>
             Absent Count
           </div>
           <div style={{ fontSize: '32px', fontWeight: 600, color: '#dc2626' }}>
             {statistics.absentCount}
           </div>
-        </div>
+        </Card>
       </div>
 
       <AttendanceFilters
@@ -201,20 +174,11 @@ const AttendanceDashboardPage = () => {
       />
 
       {loading ? (
-        <div
-          style={{
-            background: '#ffffff',
-            borderRadius: '12px',
-            border: '1px solid #e5e5e5',
-            padding: '60px 20px',
-            textAlign: 'center',
-          }}
-        >
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
-          <div style={{ fontSize: '16px', fontWeight: 500, color: '#666666' }}>
-            Loading attendance records...
+        <Card>
+          <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+            <LoadingSpinner size="lg" text="Loading attendance records..." />
           </div>
-        </div>
+        </Card>
       ) : (
         <>
           <AttendanceTable data={attendance} showUserColumn={true} />
@@ -229,41 +193,25 @@ const AttendanceDashboardPage = () => {
                 gap: '12px',
               }}
             >
-              <button
+              <Button
                 onClick={() => handlePageChange(pagination.page - 1)}
                 disabled={pagination.page === 1}
-                style={{
-                  padding: '8px 16px',
-                  background: pagination.page === 1 ? '#f3f4f6' : '#1a1a1a',
-                  color: pagination.page === 1 ? '#9ca3af' : '#ffffff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  cursor: pagination.page === 1 ? 'not-allowed' : 'pointer',
-                }}
+                variant="primary"
+                size="sm"
               >
                 Previous
-              </button>
+              </Button>
               <span style={{ fontSize: '14px', color: '#666666' }}>
                 Page {pagination.page} of {pagination.totalPages}
               </span>
-              <button
+              <Button
                 onClick={() => handlePageChange(pagination.page + 1)}
                 disabled={pagination.page === pagination.totalPages}
-                style={{
-                  padding: '8px 16px',
-                  background: pagination.page === pagination.totalPages ? '#f3f4f6' : '#1a1a1a',
-                  color: pagination.page === pagination.totalPages ? '#9ca3af' : '#ffffff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  cursor: pagination.page === pagination.totalPages ? 'not-allowed' : 'pointer',
-                }}
+                variant="primary"
+                size="sm"
               >
                 Next
-              </button>
+              </Button>
             </div>
           )}
         </>
