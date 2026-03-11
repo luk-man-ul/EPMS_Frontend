@@ -8,6 +8,8 @@
  * EMPS_Backend/src/tickets/ticket-workflow.service.ts
  */
 
+import type { UserRole } from '../components/sidebar/navigation-config';
+
 export type TicketStatus = 
   | 'OPEN'
   | 'IN_PROGRESS'
@@ -16,8 +18,6 @@ export type TicketStatus =
   | 'CLOSED'
   | 'REJECTED'
   | 'REOPENED'
-
-export type UserRole = 'ADMIN' | 'TEAM_LEAD' | 'EMPLOYEE'
 
 /**
  * Defines valid status transitions

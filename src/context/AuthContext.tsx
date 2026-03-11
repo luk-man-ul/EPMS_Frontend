@@ -63,39 +63,31 @@ const getStoredToken = (): string | null => {
 //////////////////////////////////////////////////////////
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Initialize user state synchronously from localStorage
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const token = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
+      
+      if (token && storedUser && token !== "undefined" && token !== "null" && storedUser !== "undefined" && storedUser !== "null") {
+        return JSON.parse(storedUser);
+      }
+    } catch (error) {
+      console.error("Failed to initialize user from localStorage:", error);
+    }
+    return null;
+  });
+  
+  // Start with loading false since we initialize synchronously
+  const [loading, setLoading] = useState(false);
 
   //////////////////////////////////////////////////////////
-  // INITIALIZE AUTH STATE ON MOUNT
+  // VERIFY AUTH STATE ON MOUNT (optional validation)
   //////////////////////////////////////////////////////////
 
   useEffect(() => {
-    const initializeAuth = () => {
-      try {
-        const token = getStoredToken();
-        const storedUser = getStoredUser();
-
-        // Both token and user must exist
-        if (token && storedUser) {
-          setUser(storedUser);
-        } else {
-          // Clear inconsistent state
-          if (token || storedUser) {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-          }
-          setUser(null);
-        }
-      } catch (error) {
-        console.error("Auth initialization failed:", error);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initializeAuth();
+    // Optional: Add any async validation here if needed
+    // For now, we trust localStorage since we initialize synchronously
   }, []);
 
   //////////////////////////////////////////////////////////

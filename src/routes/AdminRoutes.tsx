@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import AdminLayout from '../layouts/AdminLayout'
-import ProtectedRoute from '../components/ProtectedRoute'
+import { ProtectedRoute } from '../components/ProtectedRoute'
+import { RedirectRoute } from '../components/RedirectRoute'
 
 import AdminDashboard from '../pages/admin/dashboard/AdminDashboard'
 import EmployeesPage from '../pages/admin/employees/EmployeesPage'
@@ -23,11 +24,14 @@ import WorkApprovalDetailPage from '../pages/TeamLead/workApproval/detail/WorkAp
 import AttendanceDashboardPage from '../pages/admin/attendance/AttendanceDashboardPage'
 import LeaveApprovalManagementPage from '../pages/shared/leave/LeaveApprovalManagementPage'
 
+// Chat
+import ChatPage from '../pages/chat/ChatPage'
+
 const AdminRoutes = () => (
   <Routes>
     <Route
       element={
-        <ProtectedRoute role="ADMIN">
+        <ProtectedRoute requiredRoles={['ADMIN']}>
           <AdminLayout />
         </ProtectedRoute>
       }
@@ -39,15 +43,36 @@ const AdminRoutes = () => (
       <Route path="employees/:id" element={<EmployeeDetail />} />
       <Route path="projects" element={<Projects />} />
       <Route path="projects/:projectId" element={<AdminProjectDetail />} />
+      
+      {/* Task Routes */}
       <Route path="tasks" element={<Tasks />} />
       <Route path="tasks/:taskId" element={<TaskDetailPage />} />
+      <Route path="tasks/approval" element={<WorkApprovalPage />} />
+      <Route path="tasks/approval/:id" element={<WorkApprovalDetailPage />} />
+      
+      {/* Ticket Routes */}
       <Route path="tickets" element={<Tickets />} />
       <Route path="tickets/:ticketId" element={<AdminTicketDetailPage />} />
-      <Route path="work-approval" element={<WorkApprovalPage />} />
-      <Route path="work-approval/:id" element={<WorkApprovalDetailPage />} />
-      <Route path="attendance-dashboard" element={<AttendanceDashboardPage />} />
-      <Route path="leave-approvals" element={<LeaveApprovalManagementPage />} />
-      <Route path="attendance" element={<Attendance />} />
+      
+      {/* Attendance Routes */}
+      <Route path="attendance" element={<AttendanceDashboardPage />} />
+      <Route path="attendance/reports" element={<AttendanceDashboardPage />} />
+      
+      {/* Leave Routes */}
+      <Route path="leave" element={<LeaveApprovalManagementPage />} />
+      <Route path="leave/approvals" element={<LeaveApprovalManagementPage />} />
+      
+      {/* Chat */}
+      <Route path="chat" element={<ChatPage />} />
+      
+      {/* ===== REDIRECT ROUTES - Old to New Route Mappings ===== */}
+      
+      {/* Legacy Routes - Keep for backward compatibility */}
+      <Route path="work-approval" element={<RedirectRoute from="/admin/work-approval" to="/admin/tasks/approval" />} />
+      <Route path="attendance-dashboard" element={<RedirectRoute from="/admin/attendance-dashboard" to="/admin/attendance/reports" />} />
+      <Route path="leave-approvals" element={<RedirectRoute from="/admin/leave-approvals" to="/admin/leave/approvals" />} />
+      
+      {/* Other Routes */}
       <Route path="finance" element={<Finance />} />
       <Route path="reports" element={<Reports />} />
       <Route path="notifications" element={<Notifications />} />
