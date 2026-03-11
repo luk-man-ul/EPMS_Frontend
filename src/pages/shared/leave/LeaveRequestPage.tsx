@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { LeaveType, getEnumOptions } from '../../../types/enums';
+import { Button, Card, Input, Select, ErrorMessage } from '../../../components/ui';
 
 const api = axios.create({
   baseURL: 'http://localhost:3000',
@@ -106,19 +107,11 @@ const LeaveRequestPage = () => {
       </p>
 
       {error && (
-        <div
-          style={{
-            background: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-          }}
-        >
-          <div style={{ fontSize: '14px', color: '#dc2626', fontWeight: 500 }}>
-            ❌ {error}
-          </div>
-        </div>
+        <ErrorMessage
+          message={error}
+          type="page"
+          onDismiss={() => setError(null)}
+        />
       )}
 
       {success && (
@@ -138,157 +131,48 @@ const LeaveRequestPage = () => {
       )}
 
       <form onSubmit={handleSubmit}>
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e5e5e5',
-            borderRadius: '12px',
-            padding: '24px',
-          }}
-        >
-          <div style={{ marginBottom: '20px' }}>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '13px',
-                fontWeight: 600,
-                color: '#666666',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
-              Leave Type *
-            </label>
-            <select
-              value={formData.type}
-              onChange={(e) => handleChange('type', e.target.value)}
+        <Card>
+          <Select
+            label="Leave Type"
+            value={formData.type}
+            onChange={(value) => handleChange('type', value as string)}
+            options={leaveTypeOptions}
+            required
+          />
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
+            <Input
+              label="Start Date"
+              type="date"
+              value={formData.startDate}
+              onChange={(value) => handleChange('startDate', value)}
               required
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '1px solid #e5e5e5',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontFamily: 'inherit',
-                background: '#ffffff',
-              }}
-            >
-              {leaveTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            />
+
+            <Input
+              label="End Date"
+              type="date"
+              value={formData.endDate}
+              onChange={(value) => handleChange('endDate', value)}
+              required
+            />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: '#666666',
-                  marginBottom: '8px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}
-              >
-                Start Date *
-              </label>
-              <input
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => handleChange('startDate', e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontFamily: 'inherit',
-                }}
-              />
-            </div>
-
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: '#666666',
-                  marginBottom: '8px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}
-              >
-                End Date *
-              </label>
-              <input
-                type="date"
-                value={formData.endDate}
-                onChange={(e) => handleChange('endDate', e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontFamily: 'inherit',
-                }}
-              />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '13px',
-                fontWeight: 600,
-                color: '#666666',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
-              Reason *
-            </label>
-            <textarea
+          <div style={{ marginTop: '20px' }}>
+            <Input
+              label="Reason"
+              type="textarea"
               value={formData.reason}
-              onChange={(e) => handleChange('reason', e.target.value)}
+              onChange={(value) => handleChange('reason', value)}
               placeholder="Please provide a reason for your leave request..."
               required
-              maxLength={500}
-              style={{
-                width: '100%',
-                minHeight: '120px',
-                padding: '12px',
-                border: '1px solid #e5e5e5',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontFamily: 'inherit',
-                resize: 'vertical',
-              }}
+              rows={5}
+              helperText={`${characterCount} / ${characterLimit} characters`}
             />
-            <div
-              style={{
-                marginTop: '8px',
-                fontSize: '12px',
-                color: characterCount > characterLimit ? '#dc2626' : '#666666',
-                textAlign: 'right',
-              }}
-            >
-              {characterCount} / {characterLimit} characters
-            </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-            <button
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
+            <Button
               type="button"
               onClick={() =>
                 setFormData({
@@ -299,51 +183,20 @@ const LeaveRequestPage = () => {
                 })
               }
               disabled={loading}
-              style={{
-                padding: '12px 24px',
-                background: '#f3f4f6',
-                color: '#1a1a1a',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: 500,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                if (!loading) e.currentTarget.style.background = '#e5e7eb';
-              }}
-              onMouseLeave={(e) => {
-                if (!loading) e.currentTarget.style.background = '#f3f4f6';
-              }}
+              variant="secondary"
             >
               Clear
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={loading}
-              style={{
-                padding: '12px 24px',
-                background: loading ? '#d1d5db' : '#1a1a1a',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: 500,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                if (!loading) e.currentTarget.style.background = '#333333';
-              }}
-              onMouseLeave={(e) => {
-                if (!loading) e.currentTarget.style.background = '#1a1a1a';
-              }}
+              loading={loading}
+              variant="primary"
             >
               {loading ? 'Submitting...' : 'Submit Request'}
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       </form>
     </div>
   );

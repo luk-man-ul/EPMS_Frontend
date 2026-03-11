@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import LeaveStatusBadge from './components/LeaveStatusBadge';
 import LeaveTypeBadge from './components/LeaveTypeBadge';
+import { Button, Card, Input, Select, Modal, LoadingSpinner } from '../../../components/ui';
 
 const api = axios.create({
   baseURL: 'http://localhost:3000',
@@ -128,115 +129,54 @@ const LeaveApprovalManagementPage = () => {
       </p>
 
       {/* Filters */}
-      <div
-        style={{
-          background: '#ffffff',
-          border: '1px solid #e5e5e5',
-          borderRadius: '12px',
-          padding: '20px',
-          marginBottom: '24px',
-        }}
-      >
+      <Card padding="md">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
-              Status
-            </label>
-            <select
-              value={filters.status}
-              onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '8px',
-                fontSize: '14px',
-                color: '#1f2937',
-              }}
-            >
-              <option value="">All Statuses</option>
-              <option value="PENDING">Pending</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
-            </select>
-          </div>
+          <Select
+            label="Status"
+            value={filters.status}
+            onChange={(value) => setFilters({ ...filters, status: value as string, page: 1 })}
+            options={[
+              { value: '', label: 'All Statuses' },
+              { value: 'PENDING', label: 'Pending' },
+              { value: 'APPROVED', label: 'Approved' },
+              { value: 'REJECTED', label: 'Rejected' },
+            ]}
+          />
 
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
-              Leave Type
-            </label>
-            <select
-              value={filters.type}
-              onChange={(e) => setFilters({ ...filters, type: e.target.value, page: 1 })}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '8px',
-                fontSize: '14px',
-                color: '#1f2937',
-              }}
-            >
-              <option value="">All Types</option>
-              <option value="SICK">Sick</option>
-              <option value="CASUAL">Casual</option>
-              <option value="VACATION">Vacation</option>
-              <option value="UNPAID">Unpaid</option>
-            </select>
-          </div>
+          <Select
+            label="Leave Type"
+            value={filters.type}
+            onChange={(value) => setFilters({ ...filters, type: value as string, page: 1 })}
+            options={[
+              { value: '', label: 'All Types' },
+              { value: 'SICK', label: 'Sick' },
+              { value: 'CASUAL', label: 'Casual' },
+              { value: 'VACATION', label: 'Vacation' },
+              { value: 'UNPAID', label: 'Unpaid' },
+            ]}
+          />
 
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
-              Start Date
-            </label>
-            <input
-              type="date"
-              value={filters.startDate}
-              onChange={(e) => setFilters({ ...filters, startDate: e.target.value, page: 1 })}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '8px',
-                fontSize: '14px',
-                color: '#1f2937',
-              }}
-            />
-          </div>
+          <Input
+            type="date"
+            label="Start Date"
+            value={filters.startDate}
+            onChange={(value) => setFilters({ ...filters, startDate: value, page: 1 })}
+          />
 
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
-              End Date
-            </label>
-            <input
-              type="date"
-              value={filters.endDate}
-              onChange={(e) => setFilters({ ...filters, endDate: e.target.value, page: 1 })}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '8px',
-                fontSize: '14px',
-                color: '#1f2937',
-              }}
-            />
-          </div>
+          <Input
+            type="date"
+            label="End Date"
+            value={filters.endDate}
+            onChange={(value) => setFilters({ ...filters, endDate: value, page: 1 })}
+          />
         </div>
-      </div>
+      </Card>
 
       {/* Table */}
-      <div
-        style={{
-          background: '#ffffff',
-          border: '1px solid #e5e5e5',
-          borderRadius: '12px',
-          overflow: 'hidden',
-        }}
-      >
+      <Card padding="none">
         {loading ? (
-          <div style={{ padding: '48px', textAlign: 'center', color: '#666666' }}>
-            Loading leave requests...
+          <div style={{ padding: '48px' }}>
+            <LoadingSpinner text="Loading leave requests..." />
           </div>
         ) : leaveRequests.length === 0 ? (
           <div style={{ padding: '48px', textAlign: 'center', color: '#666666' }}>
@@ -295,38 +235,23 @@ const LeaveApprovalManagementPage = () => {
                   <td style={{ padding: '16px' }}>
                     {leave.status === 'PENDING' ? (
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
+                        <Button
+                          variant="primary"
+                          size="sm"
                           onClick={() => handleApprove(leave.id)}
+                          loading={actionLoading === leave.id}
                           disabled={actionLoading === leave.id}
-                          style={{
-                            padding: '6px 12px',
-                            background: actionLoading === leave.id ? '#d1d5db' : '#10b981',
-                            color: '#ffffff',
-                            border: 'none',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            fontWeight: 500,
-                            cursor: actionLoading === leave.id ? 'not-allowed' : 'pointer',
-                          }}
                         >
                           Approve
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
                           onClick={() => handleRejectClick(leave.id)}
                           disabled={actionLoading === leave.id}
-                          style={{
-                            padding: '6px 12px',
-                            background: actionLoading === leave.id ? '#d1d5db' : '#ef4444',
-                            color: '#ffffff',
-                            border: 'none',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            fontWeight: 500,
-                            cursor: actionLoading === leave.id ? 'not-allowed' : 'pointer',
-                          }}
                         >
                           Reject
-                        </button>
+                        </Button>
                       </div>
                     ) : (
                       <span style={{ fontSize: '13px', color: '#6b7280' }}>
@@ -339,130 +264,73 @@ const LeaveApprovalManagementPage = () => {
             </tbody>
           </table>
         )}
-      </div>
+      </Card>
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
         <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
             disabled={filters.page === 1}
-            style={{
-              padding: '8px 16px',
-              background: filters.page === 1 ? '#f3f4f6' : '#ffffff',
-              border: '1px solid #d1d5db',
-              borderRadius: '8px',
-              fontSize: '14px',
-              cursor: filters.page === 1 ? 'not-allowed' : 'pointer',
-            }}
           >
             Previous
-          </button>
+          </Button>
           <span style={{ padding: '8px 16px', fontSize: '14px', color: '#374151' }}>
             Page {pagination.page} of {pagination.totalPages}
           </span>
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
             disabled={filters.page === pagination.totalPages}
-            style={{
-              padding: '8px 16px',
-              background: filters.page === pagination.totalPages ? '#f3f4f6' : '#ffffff',
-              border: '1px solid #d1d5db',
-              borderRadius: '8px',
-              fontSize: '14px',
-              cursor: filters.page === pagination.totalPages ? 'not-allowed' : 'pointer',
-            }}
           >
             Next
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Reject Modal */}
-      {showRejectModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-          onClick={() => setShowRejectModal(false)}
-        >
-          <div
-            style={{
-              background: '#ffffff',
-              borderRadius: '12px',
-              padding: '24px',
-              maxWidth: '500px',
-              width: '90%',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1a1a1a', marginBottom: '16px' }}>
-              Reject Leave Request
-            </h3>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>
-              Reason (Optional)
-            </label>
-            <textarea
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Enter reason for rejection..."
-              style={{
-                width: '100%',
-                minHeight: '100px',
-                padding: '12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '8px',
-                fontSize: '14px',
-                resize: 'vertical',
+      <Modal
+        isOpen={showRejectModal}
+        onClose={() => {
+          setShowRejectModal(false);
+          setRejectReason('');
+        }}
+        title="Reject Leave Request"
+        size="md"
+        footer={
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowRejectModal(false);
+                setRejectReason('');
               }}
-            />
-            <div style={{ display: 'flex', gap: '12px', marginTop: '20px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => {
-                  setShowRejectModal(false);
-                  setRejectReason('');
-                }}
-                style={{
-                  padding: '10px 20px',
-                  background: '#ffffff',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRejectConfirm}
-                disabled={actionLoading !== null}
-                style={{
-                  padding: '10px 20px',
-                  background: actionLoading !== null ? '#d1d5db' : '#ef4444',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  cursor: actionLoading !== null ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {actionLoading !== null ? 'Processing...' : 'Reject'}
-              </button>
-            </div>
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleRejectConfirm}
+              loading={actionLoading !== null}
+              disabled={actionLoading !== null}
+            >
+              Reject
+            </Button>
           </div>
-        </div>
-      )}
+        }
+      >
+        <Input
+          type="textarea"
+          label="Reason (Optional)"
+          value={rejectReason}
+          onChange={(value) => setRejectReason(value)}
+          placeholder="Enter reason for rejection..."
+          rows={4}
+        />
+      </Modal>
     </div>
   );
 };

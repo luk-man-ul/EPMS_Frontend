@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Input, Button, Card } from '../../components/ui'
 
 const ForgotPasswordPage = () => {
   const navigate = useNavigate()
@@ -22,16 +23,7 @@ const ForgotPasswordPage = () => {
         background: 'linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%)',
         padding: '20px',
       }}>
-        <div style={{
-          background: '#ffffff',
-          borderRadius: '16px',
-          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-          width: '100%',
-          maxWidth: '440px',
-          padding: '48px 40px',
-          border: '1px solid #e5e5e5',
-          textAlign: 'center',
-        }}>
+        <Card padding="lg" style={{ maxWidth: '440px', width: '100%', textAlign: 'center' }}>
           {/* Success Icon */}
           <div style={{
             width: '64px',
@@ -69,50 +61,21 @@ const ForgotPasswordPage = () => {
             . Please check your inbox and follow the instructions.
           </p>
 
-          <button
+          <Button
+            variant="primary"
             onClick={() => navigate('/auth/login')}
-            style={{
-              width: '100%',
-              padding: '14px',
-              background: '#1a1a1a',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '10px',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              marginBottom: '16px',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#333333'
-              e.currentTarget.style.transform = 'translateY(-1px)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#1a1a1a'
-              e.currentTarget.style.transform = 'translateY(0)'
-            }}
+            style={{ width: '100%', marginBottom: '16px' }}
           >
             Back to Login
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setIsSubmitted(false)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#666666',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'color 0.2s ease',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#1a1a1a'}
-            onMouseLeave={(e) => e.currentTarget.style.color = '#666666'}
           >
             Didn't receive the email? Resend
-          </button>
-        </div>
+          </Button>
+        </Card>
       </div>
     )
   }
@@ -126,36 +89,15 @@ const ForgotPasswordPage = () => {
       background: 'linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%)',
       padding: '20px',
     }}>
-      <div style={{
-        background: '#ffffff',
-        borderRadius: '16px',
-        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-        width: '100%',
-        maxWidth: '440px',
-        padding: '48px 40px',
-        border: '1px solid #e5e5e5',
-      }}>
+      <Card padding="lg" style={{ maxWidth: '440px', width: '100%' }}>
         {/* Back Button */}
-        <button
+        <Button
+          variant="ghost"
           onClick={() => navigate('/auth/login')}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#666666',
-            fontSize: '13px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            marginBottom: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            transition: 'color 0.2s ease',
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.color = '#1a1a1a'}
-          onMouseLeave={(e) => e.currentTarget.style.color = '#666666'}
+          style={{ marginBottom: '24px' }}
         >
           ← Back to Login
-        </button>
+        </Button>
 
         {/* Logo/Title */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
@@ -197,72 +139,26 @@ const ForgotPasswordPage = () => {
 
         {/* Reset Form */}
         <form onSubmit={handleSubmit}>
-          {/* Email Field */}
           <div style={{ marginBottom: '28px' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#1a1a1a',
-              marginBottom: '8px',
-            }}>
-              Email Address
-            </label>
-            <input
+            <Input
               type="email"
+              label="Email Address"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(value) => setEmail(value)}
               placeholder="Enter your email"
               required
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                fontSize: '14px',
-                border: '1px solid #e5e5e5',
-                borderRadius: '10px',
-                background: '#fafafa',
-                transition: 'all 0.2s ease',
-                outline: 'none',
-              }}
-              onFocus={(e) => {
-                e.target.style.background = '#ffffff'
-                e.target.style.borderColor = '#1a1a1a'
-              }}
-              onBlur={(e) => {
-                e.target.style.background = '#fafafa'
-                e.target.style.borderColor = '#e5e5e5'
-              }}
             />
           </div>
 
-          {/* Submit Button */}
-          <button
+          <Button
             type="submit"
-            style={{
-              width: '100%',
-              padding: '14px',
-              background: '#1a1a1a',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '10px',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#333333'
-              e.currentTarget.style.transform = 'translateY(-1px)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#1a1a1a'
-              e.currentTarget.style.transform = 'translateY(0)'
-            }}
+            variant="primary"
+            style={{ width: '100%' }}
           >
             Send Reset Link
-          </button>
+          </Button>
         </form>
-      </div>
+      </Card>
     </div>
   )
 }

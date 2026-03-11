@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { LoadingSpinner, Card } from '../../../components/ui';
 import AttendanceTable from './components/AttendanceTable';
 import AttendanceFilters from './components/AttendanceFilters';
 
@@ -125,20 +126,11 @@ const MyAttendancePage = () => {
       />
 
       {loading ? (
-        <div
-          style={{
-            background: '#ffffff',
-            borderRadius: '12px',
-            border: '1px solid #e5e5e5',
-            padding: '60px 20px',
-            textAlign: 'center',
-          }}
-        >
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
-          <div style={{ fontSize: '16px', fontWeight: 500, color: '#666666' }}>
-            Loading attendance records...
+        <Card>
+          <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+            <LoadingSpinner size="lg" text="Loading attendance records..." />
           </div>
-        </div>
+        </Card>
       ) : (
         <AttendanceTable data={attendance} showUserColumn={false} />
       )}

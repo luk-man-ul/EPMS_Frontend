@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import LeaveTable from './components/LeaveTable';
+import { Card, LoadingSpinner } from '../../../components/ui';
 
 const api = axios.create({
   baseURL: 'http://localhost:3000',
@@ -54,20 +55,9 @@ const MyLeavePage = () => {
       </div>
 
       {loading ? (
-        <div
-          style={{
-            background: '#ffffff',
-            borderRadius: '12px',
-            border: '1px solid #e5e5e5',
-            padding: '60px 20px',
-            textAlign: 'center',
-          }}
-        >
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
-          <div style={{ fontSize: '16px', fontWeight: 500, color: '#666666' }}>
-            Loading leave requests...
-          </div>
-        </div>
+        <Card>
+          <LoadingSpinner text="Loading leave requests..." />
+        </Card>
       ) : (
         <LeaveTable data={leaveRequests} showUserColumn={false} />
       )}

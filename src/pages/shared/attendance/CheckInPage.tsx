@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Button, Card, ErrorMessage, Badge } from '../../../components/ui';
 
 const api = axios.create({
   baseURL: 'http://localhost:3000',
@@ -138,38 +139,18 @@ const CheckInPage = () => {
       </p>
 
       {!locationSupported && (
-        <div
-          style={{
-            background: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-          }}
-        >
-          <div style={{ fontSize: '14px', color: '#dc2626', fontWeight: 500 }}>
-            ⚠️ Geolocation Not Supported
-          </div>
-          <div style={{ fontSize: '13px', color: '#991b1b', marginTop: '4px' }}>
-            Your browser does not support geolocation. Please use a modern browser to check in.
-          </div>
-        </div>
+        <ErrorMessage
+          message="Geolocation is not supported by your browser. Please use a modern browser to check in."
+          type="page"
+        />
       )}
 
       {error && (
-        <div
-          style={{
-            background: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-          }}
-        >
-          <div style={{ fontSize: '14px', color: '#dc2626', fontWeight: 500 }}>
-            ❌ {error}
-          </div>
-        </div>
+        <ErrorMessage
+          message={error}
+          type="page"
+          onDismiss={() => setError(null)}
+        />
       )}
 
       {success && (
@@ -190,15 +171,7 @@ const CheckInPage = () => {
 
       {/* Today's Sessions */}
       {todayData && todayData.sessions && todayData.sessions.length > 0 && (
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e5e5e5',
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}
-        >
+        <Card className="mb-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a' }}>
               Today's Sessions
@@ -242,90 +215,42 @@ const CheckInPage = () => {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                   {!session.checkOut && (
-                    <span
-                      style={{
-                        padding: '4px 12px',
-                        background: '#0369a1',
-                        color: '#ffffff',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        fontWeight: 500,
-                      }}
-                    >
-                      Active
-                    </span>
+                    <Badge variant="info">Active</Badge>
                   )}
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Action Buttons */}
-      <div
-        style={{
-          background: '#ffffff',
-          border: '1px solid #e5e5e5',
-          borderRadius: '12px',
-          padding: '24px',
-        }}
-      >
+      <Card>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           {!hasActiveSession && (
-            <button
+            <Button
               onClick={handleCheckIn}
               disabled={loading || !locationSupported}
-              style={{
-                flex: 1,
-                minWidth: '200px',
-                padding: '16px 24px',
-                background: loading || !locationSupported ? '#d1d5db' : '#10b981',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '16px',
-                fontWeight: 600,
-                cursor: loading || !locationSupported ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                if (!loading && locationSupported) e.currentTarget.style.background = '#059669';
-              }}
-              onMouseLeave={(e) => {
-                if (!loading && locationSupported) e.currentTarget.style.background = '#10b981';
-              }}
+              loading={loading}
+              variant="primary"
+              size="lg"
+              style={{ flex: 1, minWidth: '200px' }}
             >
-              {loading ? '⏳ Processing...' : '✅ Check In'}
-            </button>
+              {loading ? 'Processing...' : '✅ Check In'}
+            </Button>
           )}
 
           {hasActiveSession && (
-            <button
+            <Button
               onClick={handleCheckOut}
               disabled={loading}
-              style={{
-                flex: 1,
-                minWidth: '200px',
-                padding: '16px 24px',
-                background: loading ? '#d1d5db' : '#ef4444',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '16px',
-                fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                if (!loading) e.currentTarget.style.background = '#dc2626';
-              }}
-              onMouseLeave={(e) => {
-                if (!loading) e.currentTarget.style.background = '#ef4444';
-              }}
+              loading={loading}
+              variant="danger"
+              size="lg"
+              style={{ flex: 1, minWidth: '200px' }}
             >
-              {loading ? '⏳ Processing...' : '🚪 Check Out'}
-            </button>
+              {loading ? 'Processing...' : '🚪 Check Out'}
+            </Button>
           )}
         </div>
 
@@ -360,7 +285,7 @@ const CheckInPage = () => {
             You have an active session. Please check out before starting a new session.
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 };
