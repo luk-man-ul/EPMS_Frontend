@@ -8,12 +8,12 @@ const menuItems = [
   { label: 'Team Tasks', path: '/App/tasks', permission: 'tasks.view' },
   { label: 'Ticket Center', path: '/App/tickets', permission: 'tasks.view' }, // adjust later
   { label: 'Check In / Out', path: '/App/attendance/check-in', permission: 'attendance.create' },
-  { label: 'My Attendance', path: '/App/attendance/my', permission: 'attendance.view' },
+  { label: 'My Attendance', path: '/App/attendance/history', permission: 'attendance.view' },
   { label: 'Request Leave', path: '/App/leave/request', permission: 'leave.create' },
-  { label: 'My Leave', path: '/App/leave/my', permission: 'leave.view' },
-  { label: 'Work Approval', path: '/App/work-approval', permission: 'tasks.update' },
-  { label: 'Team Attendance', path: '/App/team/attendance', permission: 'attendance.viewAll', roleRequired: ['TEAM_LEAD', 'ADMIN'] },
-  { label: 'Leave Approvals', path: '/App/team/leave-approvals', permission: 'leave.approve', roleRequired: ['TEAM_LEAD', 'ADMIN'] },
+  { label: 'My Leave', path: '/App/leave/history', permission: 'leave.view' },
+  { label: 'Work Approval', path: '/App/tasks/approval', permission: 'tasks.update' },
+  { label: 'Team Attendance', path: '/App/attendance/team', permission: 'attendance.viewAll', roleRequired: ['TEAM_LEAD', 'ADMIN'] },
+  { label: 'Leave Approvals', path: '/App/leave/approvals', permission: 'leave.approve', roleRequired: ['TEAM_LEAD', 'ADMIN'] },
   { label: 'Time Logs', path: '/App/time-logs', permission: 'tasks.view' }, // temp
   { label: 'Project Finance', path: '/App/finance', permission: 'finance.view' },
   { label: 'Reports', path: '/App/reports', permission: 'reports.view' },
@@ -36,7 +36,7 @@ const AppSidebar = () => {
     }
     
     // Additional role-based filtering for Work Approval
-    if (item.path === '/App/work-approval') {
+    if (item.path === '/App/tasks/approval') {
       // Only TEAM_LEAD and ADMIN can see Work Approval
       return user?.role === 'TEAM_LEAD' || user?.role === 'ADMIN'
     }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getCurrentUser, logout } from '../../utils/auth'
+import { NotificationBell } from '../notifications'
 
 interface AdminHeaderProps {
   onMenuClick?: () => void
@@ -44,7 +45,7 @@ const AdminHeader = ({ onMenuClick }: AdminHeaderProps) => {
       </div>
 
       <div className="header-actions">
-        🔔
+        <NotificationBell />
         <div style={{ position: 'relative' }}>
           <div 
             className="profile"
