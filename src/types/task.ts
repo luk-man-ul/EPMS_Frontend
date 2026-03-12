@@ -70,21 +70,6 @@ export interface TaskStatusHistory {
   createdAt: Date | string;
 }
 
-export interface TimeLog {
-  id: string;
-  taskId: string;
-  userId: string;
-  hours: number;
-  description?: string;
-  logDate: Date | string;
-  approvedById?: string | null;
-  approvedAt?: Date | string | null;
-  user?: User;
-  approvedBy?: User | null;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-}
-
 export interface SelfWorkMetrics {
   projectId: string;
   projectName: string;

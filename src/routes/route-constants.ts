@@ -78,13 +78,6 @@ export const LEAVE_ROUTES = {
 } as const;
 
 /**
- * Time Tracking Routes - Admin
- */
-export const TIME_TRACKING_ROUTES = {
-  ROOT: '/admin/time-tracking',
-} as const;
-
-/**
  * Reports Routes - Admin
  */
 export const REPORTS_ROUTES = {
@@ -162,13 +155,6 @@ export const APP_LEAVE_ROUTES = {
   REQUEST: '/app/leave/request',
   HISTORY: '/app/leave/history',
   APPROVALS: '/app/leave/approvals',
-} as const;
-
-/**
- * Time Tracking Routes - App
- */
-export const APP_TIME_TRACKING_ROUTES = {
-  ROOT: '/app/time-tracking',
 } as const;
 
 /**
@@ -398,13 +384,6 @@ export const ROUTE_DOCUMENTATION = {
       roles: ['TEAM_LEAD', 'ADMIN'],
     },
   },
-  timeTracking: {
-    root: {
-      path: TIME_TRACKING_ROUTES.ROOT,
-      description: 'Time logs',
-      roles: ['EMPLOYEE', 'TEAM_LEAD', 'ADMIN'],
-    },
-  },
   reports: {
     root: {
       path: REPORTS_ROUTES.ROOT,
@@ -445,7 +424,6 @@ export const ROUTES = {
   TICKETS: TICKET_ROUTES,
   ATTENDANCE: ATTENDANCE_ROUTES,
   LEAVE: LEAVE_ROUTES,
-  TIME_TRACKING: TIME_TRACKING_ROUTES,
   REPORTS: REPORTS_ROUTES,
   ADMIN: ADMIN_ROUTES,
 } as const;

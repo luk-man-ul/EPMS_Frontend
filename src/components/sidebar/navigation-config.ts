@@ -12,7 +12,6 @@ import {
   TICKET_ROUTES,
   ATTENDANCE_ROUTES,
   LEAVE_ROUTES,
-  TIME_TRACKING_ROUTES,
   REPORTS_ROUTES,
   ADMIN_ROUTES,
   APP_DASHBOARD_ROUTES,
@@ -21,7 +20,6 @@ import {
   APP_TICKET_ROUTES,
   APP_ATTENDANCE_ROUTES,
   APP_LEAVE_ROUTES,
-  APP_TIME_TRACKING_ROUTES,
   APP_REPORTS_ROUTES,
 } from '../../routes/route-constants';
 
@@ -240,33 +238,6 @@ export const navigationConfig: NavigationConfig = {
           label: 'Reports',
           path: REPORTS_ROUTES.ROOT,
           icon: 'reports',
-          roles: ['ADMIN'],
-        },
-      ],
-    },
-
-    // ========================================================================
-    // TIME TRACKING
-    // ========================================================================
-    {
-      id: 'time-tracking',
-      title: 'Time Tracking',
-      collapsible: true,
-      defaultExpanded: false,
-      roles: ['EMPLOYEE', 'TEAM_LEAD', 'ADMIN'],
-      items: [
-        {
-          id: 'time-logs',
-          label: 'Time Logs',
-          path: APP_TIME_TRACKING_ROUTES.ROOT,
-          icon: 'timer',
-          roles: ['EMPLOYEE', 'TEAM_LEAD'],
-        },
-        {
-          id: 'admin-time-logs',
-          label: 'Time Logs',
-          path: TIME_TRACKING_ROUTES.ROOT,
-          icon: 'timer',
           roles: ['ADMIN'],
         },
       ],
