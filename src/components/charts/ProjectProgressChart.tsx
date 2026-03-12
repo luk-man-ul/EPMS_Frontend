@@ -50,33 +50,35 @@ export function ProjectProgressChart({ data, loading }: ProjectProgressChartProp
       <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>
         Project Progress Overview
       </h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis 
-            dataKey="name" 
-            tick={{ fontSize: 12 }}
-            angle={-45}
-            textAnchor="end"
-            height={80}
-          />
-          <YAxis 
-            tick={{ fontSize: 12 }}
-            domain={[0, 100]}
-            label={{ value: 'Progress (%)', angle: -90, position: 'insideLeft' }}
-          />
-          <Tooltip 
-            formatter={(value: number) => `${value}%`}
-            labelStyle={{ color: '#1a1a1a' }}
-          />
-          <Legend />
-          <Bar dataKey="progress" name="Completion %" radius={[8, 8, 0, 0]}>
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={getProgressColor(entry.progress)} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      <div style={{ width: '100%', height: '300px' }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis 
+              dataKey="name" 
+              tick={{ fontSize: 12 }}
+              angle={-45}
+              textAnchor="end"
+              height={80}
+            />
+            <YAxis 
+              tick={{ fontSize: 12 }}
+              domain={[0, 100]}
+              label={{ value: 'Progress (%)', angle: -90, position: 'insideLeft' }}
+            />
+            <Tooltip 
+              formatter={(value: number) => `${value}%`}
+              labelStyle={{ color: '#1a1a1a' }}
+            />
+            <Legend />
+            <Bar dataKey="progress" name="Completion %" radius={[8, 8, 0, 0]}>
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={getProgressColor(entry.progress)} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </Card>
   );
 }
