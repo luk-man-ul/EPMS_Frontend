@@ -9,6 +9,7 @@ const AppLayout = () => {
   const { user } = useAuth()
   const location = useLocation()
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false)
 
   // Map user role to Sidebar UserRole type
   const userRole = (user?.role as UserRole) || 'EMPLOYEE'
@@ -20,9 +21,10 @@ const AppLayout = () => {
         currentPath={location.pathname}
         isOpen={isMobileSidebarOpen}
         onClose={() => setIsMobileSidebarOpen(false)}
+        onExpandChange={setIsSidebarExpanded}
       />
 
-      <div className="main">
+      <div className={`main main-collapsible ${isSidebarExpanded ? 'expanded' : ''}`}>
         {/* Mobile menu button */}
         <button
           onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}

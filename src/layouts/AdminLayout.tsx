@@ -9,6 +9,7 @@ const AdminLayout = () => {
   const { user } = useAuth()
   const location = useLocation()
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false)
 
   // Map user role to Sidebar UserRole type
   const userRole = (user?.role as UserRole) || 'ADMIN'
@@ -20,9 +21,10 @@ const AdminLayout = () => {
         currentPath={location.pathname}
         isOpen={isMobileSidebarOpen}
         onClose={() => setIsMobileSidebarOpen(false)}
+        onExpandChange={setIsSidebarExpanded}
       />
 
-      <div className="main">
+      <div className={`main main-collapsible ${isSidebarExpanded ? 'expanded' : ''}`}>
         <AdminHeader onMenuClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)} />
         <div className="content">
           <Outlet />
@@ -33,7 +35,14 @@ const AdminLayout = () => {
       {isMobileSidebarOpen && (
         <div
           onClick={() => setIsMobileSidebarOpen(false)}
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 190,
+            display: 'none',
+          }}
+          className="mobile-overlay"
         />
       )}
     </div>

@@ -65,6 +65,7 @@ body {
   display: flex;
   min-height: 100vh;
   background: #fafafa;
+  position: relative;
 }
 
 /* Sidebar */
@@ -81,6 +82,22 @@ body {
   height: 100vh;
   overflow-y: auto;
   z-index: 200;
+}
+
+/* Modern Sidebar */
+.sidebar-modern {
+  width: 280px;
+  background: #ffffff;
+  border-right: 1px solid #e5e5e5;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 200;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
 }
 
 .sidebar-title {
@@ -127,9 +144,11 @@ body {
   display: flex;
   flex-direction: column;
   background: #fafafa;
-  margin-left: 240px;
+  margin-left: 70px;
   min-width: 0;
-  overflow-x: auto;
+  overflow-x: hidden;
+  position: relative;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Header */
@@ -262,14 +281,16 @@ body {
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
   /* Hide sidebar on mobile by default */
-  .sidebar {
-    transform: translateX(-100%);
+  .sidebar,
+  .sidebar-modern {
+    transform: translateX(-100%) !important;
     transition: transform 0.3s ease;
   }
 
   /* Show sidebar when active */
-  .sidebar.mobile-open {
-    transform: translateX(0);
+  .sidebar.mobile-open,
+  .sidebar-modern.mobile-open {
+    transform: translateX(0) !important;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
   }
 
@@ -341,9 +362,9 @@ body {
   }
 
   /* Sidebar adjustments for mobile */
-  .sidebar {
-    width: 280px;
-    padding: 24px 0;
+  .sidebar,
+  .sidebar-modern {
+    width: 300px;
   }
 
   .sidebar-title {
@@ -356,14 +377,31 @@ body {
   }
 }
 
+/* Desktop Styles */
+@media (min-width: 769px) {
+  .sidebar-modern {
+    transform: translateX(0) !important;
+  }
+  
+  .mobile-close-btn {
+    display: none !important;
+  }
+  
+  .main {
+    margin-left: 280px !important;
+    width: calc(100% - 280px);
+  }
+}
+
 /* Tablet Responsive Styles */
 @media (max-width: 1024px) and (min-width: 769px) {
-  .sidebar {
-    width: 200px;
+  .sidebar,
+  .sidebar-modern {
+    width: 260px;
   }
 
   .main {
-    margin-left: 200px;
+    margin-left: 260px;
   }
 
   .header {
@@ -380,5 +418,67 @@ body {
 
   .dashboard-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* OVERRIDE ALL LAYOUT ISSUES - FINAL FIX */
+body {
+  overflow-x: hidden !important;
+}
+
+.layout {
+  overflow-x: hidden !important;
+}
+
+/* Prevent any horizontal scrolling */
+* {
+  max-width: 100%;
+}
+
+/* COLLAPSIBLE SIDEBAR STYLES */
+.sidebar-collapsible {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.sidebar-collapsible.collapsed {
+  width: 70px !important;
+}
+
+.sidebar-collapsible.expanded {
+  width: 280px !important;
+}
+
+/* MAIN CONTENT ADJUSTMENT FOR COLLAPSIBLE SIDEBAR */
+.main-collapsible {
+  margin-left: 70px !important;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.main-collapsible.expanded {
+  margin-left: 280px !important;
+}
+
+/* Desktop specific rules for collapsible sidebar */
+@media (min-width: 769px) {
+  .sidebar-collapsible {
+    transform: translateX(0) !important;
+    position: fixed !important;
+    left: 0 !important;
+  }
+}
+
+/* Mobile adjustments for collapsible sidebar */
+@media (max-width: 768px) {
+  .sidebar-collapsible {
+    width: 300px !important;
+    transform: translateX(-100%) !important;
+  }
+  
+  .sidebar-collapsible.mobile-open {
+    transform: translateX(0) !important;
+  }
+  
+  .main-collapsible {
+    margin-left: 0 !important;
   }
 }

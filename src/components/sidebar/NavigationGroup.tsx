@@ -9,6 +9,7 @@ interface NavigationGroupProps {
   onClose?: () => void;
   isExpanded?: boolean;
   onToggle?: () => void;
+  sidebarExpanded?: boolean;
 }
 
 export function NavigationGroup({ 
@@ -18,7 +19,8 @@ export function NavigationGroup({
   onNavigate,
   onClose,
   isExpanded,
-  onToggle
+  onToggle,
+  sidebarExpanded = false
 }: NavigationGroupProps) {
   // Use centralized state if provided, otherwise fall back to default
   const expanded = isExpanded !== undefined ? isExpanded : group.defaultExpanded;
@@ -33,51 +35,37 @@ export function NavigationGroup({
     return null;
   }
 
-  const toggleExpanded = () => {
-    if (group.collapsible && onToggle) {
-      onToggle();
-    }
-  };
-
   return (
-    <div className="mb-4">
-      {/* Group Header */}
-      <button
-        onClick={toggleExpanded}
-        className={`
-          w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-gray-700
-          ${group.collapsible ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-default'}
-          rounded-md transition-colors duration-150
-        `}
-        disabled={!group.collapsible}
-      >
-        <span className="uppercase tracking-wider">{group.title}</span>
-        {group.collapsible && (
-          <svg
-            className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        )}
-      </button>
-
-      {/* Group Items */}
-      {expanded && (
-        <div className="mt-1 space-y-1">
-          {filteredItems.map(item => (
-            <NavigationItem
-              key={item.id}
-              item={item}
-              activePath={activePath}
-              onNavigate={onNavigate}
-              onClose={onClose}
-            />
-          ))}
+    <div style={{ marginBottom: sidebarExpanded ? '32px' : '20px' }}>
+      {/* Section Title - Only show when expanded */}
+      {sidebarExpanded && (
+        <div style={{
+          padding: '0 20px 12px 20px',
+          fontSize: '11px',
+          fontWeight: 700,
+          color: '#999',
+          textTransform: 'uppercase',
+          letterSpacing: '1px',
+          opacity: sidebarExpanded ? 1 : 0,
+          transition: 'opacity 0.3s ease'
+        }}>
+          {group.title}
         </div>
       )}
+
+      {/* Section Items */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        {filteredItems.map(item => (
+          <NavigationItem
+            key={item.id}
+            item={item}
+            activePath={activePath}
+            onNavigate={onNavigate}
+            onClose={onClose}
+            sidebarExpanded={sidebarExpanded}
+          />
+        ))}
+      </div>
     </div>
   );
 }

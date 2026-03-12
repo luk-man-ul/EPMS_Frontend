@@ -1,4 +1,26 @@
 import { NavLink } from 'react-router-dom';
+import { 
+  LayoutDashboard, 
+  FolderOpen, 
+  CheckSquare, 
+  Ticket, 
+  Clock, 
+  Calendar, 
+  CalendarPlus, 
+  Users, 
+  ClipboardCheck, 
+  BarChart3, 
+  Timer, 
+  MessageCircle, 
+  User, 
+  Settings, 
+  PieChart,
+  UserCheck,
+  FileText,
+  Umbrella,
+  ClipboardList,
+  TrendingUp
+} from 'lucide-react';
 import type { NavigationItemConfig } from './navigation-config.ts';
 
 interface NavigationItemProps {
@@ -6,9 +28,10 @@ interface NavigationItemProps {
   activePath: string;
   onNavigate?: (path: string) => void;
   onClose?: () => void;
+  sidebarExpanded?: boolean;
 }
 
-export function NavigationItem({ item, activePath, onNavigate, onClose }: NavigationItemProps) {
+export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarExpanded = false }: NavigationItemProps) {
   const isActive = activePath === item.path || activePath.startsWith(item.path + '/');
 
   const handleClick = () => {
@@ -20,28 +43,58 @@ export function NavigationItem({ item, activePath, onNavigate, onClose }: Naviga
     }
   };
 
-  const baseClasses = `
-    flex items-center justify-between px-4 py-2 text-sm rounded-md
-    transition-all duration-150
-  `;
-
-  const activeClasses = isActive
-    ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-700 font-medium'
-    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900';
-
-  const disabledClasses = item.disabled
-    ? 'opacity-50 cursor-not-allowed'
-    : 'cursor-pointer';
-
   if (item.disabled) {
     return (
-      <div className={`${baseClasses} ${activeClasses} ${disabledClasses}`}>
-        <span className="flex items-center">
-          {item.icon && <span className="mr-3">{getIcon(item.icon)}</span>}
-          {item.label}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: sidebarExpanded ? '12px' : '0',
+        padding: sidebarExpanded ? '12px 20px' : '12px 15px',
+        margin: sidebarExpanded ? '0 12px' : '0 8px',
+        borderRadius: '12px',
+        fontSize: '14px',
+        fontWeight: 500,
+        color: '#999',
+        opacity: 0.5,
+        cursor: 'not-allowed',
+        justifyContent: sidebarExpanded ? 'flex-start' : 'center',
+        transition: 'all 0.3s ease'
+      }}>
+        <span style={{ 
+          fontSize: '16px',
+          minWidth: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0
+        }}>
+          {getIcon(item.icon)}
         </span>
-        {item.badge && (
-          <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-gray-200 text-gray-600 rounded-full">
+        
+        {sidebarExpanded && (
+          <span style={{ 
+            flex: 1,
+            opacity: sidebarExpanded ? 1 : 0,
+            transform: sidebarExpanded ? 'translateX(0)' : 'translateX(-10px)',
+            transition: 'opacity 0.3s ease, transform 0.3s ease',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden'
+          }}>
+            {item.label}
+          </span>
+        )}
+        
+        {item.badge && sidebarExpanded && (
+          <span style={{
+            padding: '2px 8px',
+            fontSize: '11px',
+            fontWeight: 600,
+            background: '#f3f4f6',
+            color: '#666',
+            borderRadius: '12px',
+            opacity: sidebarExpanded ? 1 : 0,
+            transition: 'opacity 0.3s ease'
+          }}>
             {typeof item.badge === 'function' ? item.badge() : item.badge}
           </span>
         )}
@@ -53,14 +106,78 @@ export function NavigationItem({ item, activePath, onNavigate, onClose }: Naviga
     <NavLink
       to={item.path}
       onClick={handleClick}
-      className={`${baseClasses} ${activeClasses} ${disabledClasses}`}
+      style={({ isActive: linkActive }) => ({
+        display: 'flex',
+        alignItems: 'center',
+        gap: sidebarExpanded ? '12px' : '0',
+        padding: sidebarExpanded ? '12px 20px' : '12px 15px',
+        margin: sidebarExpanded ? '0 12px' : '0 8px',
+        borderRadius: '12px',
+        textDecoration: 'none',
+        fontSize: '14px',
+        fontWeight: 500,
+        color: (isActive || linkActive) ? '#ffffff' : '#666',
+        background: (isActive || linkActive)
+          ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+          : 'transparent',
+        boxShadow: (isActive || linkActive) ? '0 4px 12px rgba(102, 126, 234, 0.3)' : 'none',
+        transition: 'all 0.3s ease',
+        position: 'relative',
+        overflow: 'hidden',
+        justifyContent: sidebarExpanded ? 'flex-start' : 'center'
+      })}
+      onMouseEnter={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.background = '#f8f9fa'
+          e.currentTarget.style.color = '#1a1a1a'
+          if (sidebarExpanded) {
+            e.currentTarget.style.transform = 'translateX(4px)'
+          }
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.background = 'transparent'
+          e.currentTarget.style.color = '#666'
+          e.currentTarget.style.transform = 'translateX(0)'
+        }
+      }}
     >
-      <span className="flex items-center">
-        {item.icon && <span className="mr-3">{getIcon(item.icon)}</span>}
-        {item.label}
+      <span style={{ 
+        fontSize: '16px',
+        minWidth: '20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0
+      }}>
+        {getIcon(item.icon)}
       </span>
-      {item.badge && (
-        <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-700 rounded-full">
+      
+      {sidebarExpanded && (
+        <span style={{ 
+          flex: 1,
+          opacity: sidebarExpanded ? 1 : 0,
+          transform: sidebarExpanded ? 'translateX(0)' : 'translateX(-10px)',
+          transition: 'opacity 0.3s ease, transform 0.3s ease',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden'
+        }}>
+          {item.label}
+        </span>
+      )}
+      
+      {item.badge && sidebarExpanded && (
+        <span style={{
+          padding: '2px 8px',
+          fontSize: '11px',
+          fontWeight: 600,
+          background: isActive ? 'rgba(255, 255, 255, 0.2)' : '#e0f2fe',
+          color: isActive ? '#ffffff' : '#0369a1',
+          borderRadius: '12px',
+          opacity: sidebarExpanded ? 1 : 0,
+          transition: 'opacity 0.3s ease'
+        }}>
           {typeof item.badge === 'function' ? item.badge() : item.badge}
         </span>
       )}
@@ -68,21 +185,67 @@ export function NavigationItem({ item, activePath, onNavigate, onClose }: Naviga
   );
 }
 
-// Simple icon mapping - can be replaced with a proper icon library later
-function getIcon(iconName: string): string {
-  const icons: Record<string, string> = {
-    home: '🏠',
-    folder: '📁',
-    'check-square': '✓',
-    users: '👥',
-    'clipboard-check': '📋',
-    ticket: '🎫',
-    clock: '🕐',
-    calendar: '📅',
-    'calendar-plus': '📅+',
-    list: '📝',
-    'bar-chart': '📊',
-    settings: '⚙️',
+// Professional icon mapping using lucide-react
+function getIcon(iconName?: string): JSX.Element {
+  const iconProps = {
+    size: 18,
+    strokeWidth: 2
   };
-  return icons[iconName] || '•';
+
+  const iconMap: Record<string, JSX.Element> = {
+    // Dashboard
+    'dashboard': <LayoutDashboard {...iconProps} />,
+    '📊': <LayoutDashboard {...iconProps} />,
+    
+    // Projects & Work
+    'projects': <FolderOpen {...iconProps} />,
+    '📁': <FolderOpen {...iconProps} />,
+    
+    // Tasks
+    'tasks': <CheckSquare {...iconProps} />,
+    '✓': <CheckSquare {...iconProps} />,
+    'approval': <ClipboardCheck {...iconProps} />,
+    '✅': <ClipboardCheck {...iconProps} />,
+    
+    // Tickets
+    'tickets': <Ticket {...iconProps} />,
+    '🎫': <Ticket {...iconProps} />,
+    
+    // Time & Attendance
+    'clock': <Clock {...iconProps} />,
+    '⏰': <Clock {...iconProps} />,
+    'calendar': <Calendar {...iconProps} />,
+    '📅': <Calendar {...iconProps} />,
+    'timer': <Timer {...iconProps} />,
+    '⏱️': <Timer {...iconProps} />,
+    
+    // Leave & Requests
+    'umbrella': <Umbrella {...iconProps} />,
+    '🏖️': <Umbrella {...iconProps} />,
+    'clipboard': <ClipboardList {...iconProps} />,
+    '📋': <ClipboardList {...iconProps} />,
+    'file-text': <FileText {...iconProps} />,
+    '📝': <FileText {...iconProps} />,
+    
+    // Team & Users
+    'users': <Users {...iconProps} />,
+    '👥': <Users {...iconProps} />,
+    'user': <User {...iconProps} />,
+    '👤': <User {...iconProps} />,
+    
+    // Communication
+    'message': <MessageCircle {...iconProps} />,
+    '💬': <MessageCircle {...iconProps} />,
+    
+    // Admin & Settings
+    'settings': <Settings {...iconProps} />,
+    '⚙️': <Settings {...iconProps} />,
+    
+    // Reports & Analytics
+    'reports': <BarChart3 {...iconProps} />,
+    '📈': <TrendingUp {...iconProps} />,
+    'analytics': <PieChart {...iconProps} />
+  };
+
+  return iconMap[iconName || ''] || <ClipboardList {...iconProps} />;
 }
