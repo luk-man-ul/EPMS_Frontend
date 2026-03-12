@@ -45,7 +45,28 @@ const LeaveApprovalManagementPage = () => {
   const fetchLeaveRequests = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/leave', { params: filters });
+      
+      // Build params object with only non-empty values
+      const params: any = {
+        page: filters.page,
+        limit: filters.limit,
+      };
+      
+      // Only add filter params if they have valid values
+      if (filters.status && filters.status !== '') {
+        params.status = filters.status;
+      }
+      if (filters.type && filters.type !== '') {
+        params.type = filters.type;
+      }
+      if (filters.startDate && filters.startDate !== '') {
+        params.startDate = filters.startDate;
+      }
+      if (filters.endDate && filters.endDate !== '') {
+        params.endDate = filters.endDate;
+      }
+      
+      const response = await api.get('/leave', { params });
       setLeaveRequests(response.data.data);
       setPagination({
         total: response.data.total,

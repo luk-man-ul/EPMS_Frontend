@@ -30,14 +30,23 @@ const CheckInPage = () => {
 
   const fetchTodayAttendance = async () => {
     try {
-      const response = await api.get('/attendance/today');
-      setTodayData(response.data);
+      const response = await api.get('/attendance/today', {
+        // Prevent caching
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
+      });
+      setTodayData({
+        sessions: response.data.sessions || [],
+        totalHours: response.data.totalHours || 0,
+      });
     } catch (err: any) {
       // 404 means no attendance record for today, which is fine
       if (err.response?.status !== 404) {
         console.error('Error fetching attendance:', err);
       }
-      setTodayData(null);
+      setTodayData({ sessions: [], totalHours: 0 });
     }
   };
 
@@ -64,7 +73,11 @@ const CheckInPage = () => {
             longitude,
           });
           setSuccess('Successfully checked in!');
-          await fetchTodayAttendance();
+          // Force refresh to get updated state
+          setTimeout(async () => {
+            await fetchTodayAttendance();
+            setSuccess(null);
+          }, 1000);
         } catch (err: any) {
           console.error('Check-in error:', err);
           setError(err.response?.data?.message || 'Failed to check in. Please try again.');
@@ -93,7 +106,11 @@ const CheckInPage = () => {
     try {
       await api.post('/attendance/check-out');
       setSuccess('Successfully checked out!');
-      await fetchTodayAttendance();
+      // Force refresh to get updated state
+      setTimeout(async () => {
+        await fetchTodayAttendance();
+        setSuccess(null);
+      }, 1000);
     } catch (err: any) {
       console.error('Check-out error:', err);
       setError(err.response?.data?.message || 'Failed to check out. Please try again.');
@@ -177,7 +194,7 @@ const CheckInPage = () => {
               Today's Sessions
             </h3>
             <div style={{ fontSize: '16px', fontWeight: 600, color: '#10b981' }}>
-              Total: {todayData.totalHours.toFixed(2)}h
+              Total: {(todayData.totalHours || 0).toFixed(2)}h
             </div>
           </div>
 

@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react'
-import { channels, messages as initialMessages } from './data/chatData'
 import ChannelList from './components/ChannelList'
 import ChatWindow from './components/ChatWindow'
 import type { Message } from './types/chat.types'

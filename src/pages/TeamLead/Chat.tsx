@@ -1,7 +1,7 @@
-import TeamChatPage from './chat/TeamChatPage'
+import ChatPage from '../chat/ChatPage'
 
 const Chat = () => {
-  return <TeamChatPage />
+  return <ChatPage />
 }
 
 export default Chat
