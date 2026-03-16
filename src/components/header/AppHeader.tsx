@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getCurrentUser, logout } from '../../utils/auth'
+import { useAuth } from '../../context/AuthContext'
 import { NotificationBell } from '../notifications'
 
 const AppHeader = () => {
   const navigate = useNavigate()
-  const user = getCurrentUser()
+  const { user, logout: authLogout } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
 
   const handleLogout = () => {
-    logout()
+    authLogout()
     navigate('/auth/login')
   }
 
