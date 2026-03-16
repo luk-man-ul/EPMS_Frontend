@@ -63,7 +63,8 @@ body {
 /* Layout */
 .layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;       /* fixed height anchor — nothing escapes this box */
+  overflow: hidden;
   background: #fafafa;
   position: relative;
 }
@@ -146,7 +147,9 @@ body {
   background: #fafafa;
   margin-left: 70px;
   min-width: 0;
+  overflow-y: auto;    /* normal pages scroll here */
   overflow-x: hidden;
+  height: 100%;
   position: relative;
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -209,6 +212,18 @@ body {
   max-width: 1600px;
   width: 100%;
   margin: 0 auto;
+  flex: 1;
+  min-height: 0;
+  /* no overflow — normal pages grow naturally and .main scrolls them */
+}
+
+/* Chat page - needs full height with no padding */
+.content.content-chat {
+  padding: 0;
+  max-width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Dashboard */

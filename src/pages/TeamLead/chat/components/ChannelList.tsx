@@ -39,6 +39,8 @@ const ChannelList = ({ channels, selectedChannel, onChannelSelect }: ChannelList
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
+      minHeight: 0,       // allows flex child to shrink
+      overflow: 'hidden', // clip content, let inner div scroll
     }}>
       {/* Header */}
       <div style={{
@@ -62,11 +64,12 @@ const ChannelList = ({ channels, selectedChannel, onChannelSelect }: ChannelList
         </p>
       </div>
 
-      {/* Channel List */}
+      {/* Channel List - scrollable */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
         padding: '12px 0',
+        minHeight: 0,  // critical: allows this to scroll instead of push parent
       }}>
         {Object.entries(groupedChannels).map(([projectName, projectChannels]) => (
           <div key={projectName} style={{ marginBottom: '16px' }}>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { Message, Channel } from '../types/chat.types'
 
 type ChatWindowProps = {
@@ -10,6 +10,17 @@ type ChatWindowProps = {
 const ChatWindow = ({ channel, messages, onSendMessage }: ChatWindowProps) => {
   const [messageInput, setMessageInput] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  // Ref on the scrollable messages container itself (not a sentinel element)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+
+  // Scroll to bottom ONLY when the active channel changes (room switch)
+  // Does NOT fire when new messages arrive, so users can freely scroll up
+  useEffect(() => {
+    const el = messagesContainerRef.current
+    if (el) {
+      el.scrollTop = el.scrollHeight
+    }
+  }, [channel?.id])
 
   const handleSend = () => {
     if (messageInput.trim()) {
@@ -71,7 +82,8 @@ const ChatWindow = ({ channel, messages, onSendMessage }: ChatWindowProps) => {
       display: 'flex',
       flexDirection: 'column',
       background: '#ffffff',
-      height: '100%',
+      minHeight: 0,   // critical: allows flex child to shrink below content size
+      overflow: 'hidden',
     }}>
       {/* Chat Header */}
       <div style={{
@@ -128,13 +140,17 @@ const ChatWindow = ({ channel, messages, onSendMessage }: ChatWindowProps) => {
         </div>
       </div>
 
-      {/* Messages */}
-      <div style={{
-        flex: 1,
-        overflowY: 'auto',
-        padding: '24px',
-        background: '#fafafa',
-      }}>
+      {/* Messages - independent scroll area, ref used for room-switch scroll-to-bottom */}
+      <div
+        ref={messagesContainerRef}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          padding: '24px',
+          background: '#fafafa',
+        }}
+      >
         {messages.map((message) => (
           <div
             key={message.id}
