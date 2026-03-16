@@ -32,7 +32,7 @@ interface NavigationItemProps {
 }
 
 export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarExpanded = false }: NavigationItemProps) {
-  const isActive = activePath === item.path || activePath.startsWith(item.path + '/');
+  const isActive = activePath === item.path;
 
   const handleClick = () => {
     if (onNavigate) {
@@ -105,6 +105,7 @@ export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarE
   return (
     <NavLink
       to={item.path}
+      end
       onClick={handleClick}
       style={({ isActive: linkActive }) => ({
         display: 'flex',
