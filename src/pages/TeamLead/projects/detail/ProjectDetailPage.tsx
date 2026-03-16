@@ -185,7 +185,7 @@ const ProjectDetailPage = () => {
         )}
 
         {activeTab === 'tickets' && (
-          <TicketsTab tickets={project.tickets} />
+          <TicketsTab tickets={project.tickets} projectId={projectId} />
         )}
       </div>
     </div>
