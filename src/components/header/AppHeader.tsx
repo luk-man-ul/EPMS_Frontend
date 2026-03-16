@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getCurrentUser, logout } from '../../utils/auth'
+import { useAuth } from '../../context/AuthContext'
 import { NotificationBell } from '../notifications'
 import api from '../../utils/api'
 
@@ -23,7 +23,7 @@ const typeConfig = {
 
 const AppHeader = () => {
   const navigate = useNavigate()
-  const user = getCurrentUser()
+  const { user, logout: authLogout } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
 
   // Search state
@@ -37,7 +37,7 @@ const AppHeader = () => {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleLogout = () => {
-    logout()
+    authLogout()
     navigate('/auth/login')
   }
 
