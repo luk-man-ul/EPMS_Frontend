@@ -4,7 +4,7 @@ import { Building2 } from 'lucide-react'
 import { NavigationGroup } from './NavigationGroup.tsx'
 import { navigationConfig, type UserRole } from './navigation-config.ts'
 import { useSidebarState } from '../../hooks/useSidebarState.ts'
-import { useAuth } from '../../context/AuthContext'
+
 
 export interface SidebarProps {
   role: UserRole
@@ -27,7 +27,6 @@ export function Sidebar({
   const location = useLocation()
   const activePath = currentPath || location.pathname
   const { state, toggleGroup } = useSidebarState()
-  const { user } = useAuth()
   const [isExpanded, setIsExpanded] = useState(false)
 
   // Notify parent when expansion state changes
@@ -87,22 +86,22 @@ export function Sidebar({
 
       {/* Header */}
       <div style={{
-        padding: isExpanded ? '24px 20px' : '24px 15px',
+        padding: '24px 15px',
         borderBottom: '1px solid #f0f0f0',
         display: 'flex',
         alignItems: 'center',
         minHeight: '88px',
-        transition: 'padding 0.3s ease'
       }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: isExpanded ? '12px' : '0',
-          transition: 'gap 0.3s ease',
-          width: '100%'
+          gap: '12px',
+          width: '100%',
+          justifyContent: isExpanded ? 'flex-start' : 'center',
         }}>
           <div style={{
             width: '40px',
+            minWidth: '40px',
             height: '40px',
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             borderRadius: '12px',
@@ -177,7 +176,9 @@ export function Sidebar({
       </div>
 
       {/* Navigation (Scrollable) */}
-      <nav style={{ 
+      <nav
+        className="sidebar-nav-scroll"
+        style={{ 
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
@@ -198,71 +199,6 @@ export function Sidebar({
         ))}
       </nav>
 
-      {/* Footer */}
-      <div style={{
-        padding: isExpanded ? '20px' : '15px 10px',
-        borderTop: '1px solid #f0f0f0',
-        background: '#fafafa',
-        transition: 'padding 0.3s ease'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: isExpanded ? '12px' : '0',
-          padding: isExpanded ? '12px' : '8px',
-          background: '#ffffff',
-          borderRadius: '12px',
-          border: '1px solid #e5e5e5',
-          transition: 'gap 0.3s ease, padding 0.3s ease',
-          justifyContent: isExpanded ? 'flex-start' : 'center'
-        }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '14px',
-            fontWeight: 700,
-            color: '#ffffff',
-            flexShrink: 0
-          }}>
-            {user?.firstName?.[0]?.toUpperCase() || 'A'}
-          </div>
-          
-          <div style={{ 
-            flex: 1, 
-            minWidth: 0,
-            opacity: isExpanded ? 1 : 0,
-            transform: isExpanded ? 'translateX(0)' : 'translateX(-10px)',
-            transition: 'opacity 0.3s ease, transform 0.3s ease',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#1a1a1a',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}>
-              {user?.firstName} {user?.lastName}
-            </div>
-            <div style={{
-              fontSize: '11px',
-              color: '#666',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}>
-              {roleLabel}
-            </div>
-          </div>
-        </div>
-      </div>
 
     </aside>
   )

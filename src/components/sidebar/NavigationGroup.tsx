@@ -18,12 +18,8 @@ export function NavigationGroup({
   activePath, 
   onNavigate,
   onClose,
-  isExpanded,
-  onToggle,
   sidebarExpanded = false
 }: NavigationGroupProps) {
-  // Use centralized state if provided, otherwise fall back to default
-  const expanded = isExpanded !== undefined ? isExpanded : group.defaultExpanded;
 
   // Filter items based on user role
   const filteredItems = group.items.filter(item => 
@@ -36,20 +32,36 @@ export function NavigationGroup({
   }
 
   return (
-    <div style={{ marginBottom: sidebarExpanded ? '32px' : '20px' }}>
-      {/* Section Title - Only show when expanded */}
-      {sidebarExpanded && (
+    <div style={{ marginBottom: sidebarExpanded ? '17px' : '16px' }}>
+      {/* Section Title or Divider — same vertical space in both states */}
+      {sidebarExpanded ? (
         <div style={{
-          padding: '0 20px 12px 20px',
-          fontSize: '11px',
+          paddingLeft: '63px',
+          paddingTop: '2px',
+          paddingBottom: '6px',
+          fontSize: '10px',
           fontWeight: 700,
-          color: '#999',
+          color: '#bbb',
           textTransform: 'uppercase',
-          letterSpacing: '1px',
-          opacity: sidebarExpanded ? 1 : 0,
-          transition: 'opacity 0.3s ease'
+          letterSpacing: '0.08em',
+          lineHeight: '14px',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
         }}>
           {group.title}
+        </div>
+      ) : (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          height: '22px',
+          padding: '0 16px',
+        }}>
+          <div style={{
+            flex: 1,
+            height: '1px',
+            background: 'rgba(0,0,0,0.10)',
+          }} />
         </div>
       )}
 
