@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useLayoutEffect } from "react";
 import type { ReactNode } from "react";
 
 //////////////////////////////////////////////////////////
@@ -15,7 +15,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (data: any) => void;
+  login: (data: any, rememberMe?: boolean) => void;
   logout: () => void;
 }
 
@@ -30,32 +30,49 @@ interface AuthProviderProps {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 //////////////////////////////////////////////////////////
-// SAFE LOCALSTORAGE PARSER
+// STORAGE HELPERS
+// - localStorage  → persists across browser restarts (rememberMe = true)
+// - sessionStorage → cleared when tab/browser closes  (rememberMe = false)
 //////////////////////////////////////////////////////////
 
-const getStoredUser = (): User | null => {
+const STORAGE_KEY_TOKEN = "token";
+const STORAGE_KEY_USER  = "user";
+
+/** Read token from either storage (localStorage takes priority) */
+const readToken = (): string | null => {
   try {
-    const stored = localStorage.getItem("user");
-
-    if (!stored || stored === "undefined" || stored === "null") {
-      return null;
-    }
-
-    return JSON.parse(stored);
-  } catch (error) {
-    console.error("Failed to parse stored user:", error);
-    return null;
-  }
+    const ls = localStorage.getItem(STORAGE_KEY_TOKEN);
+    if (ls && ls !== "undefined" && ls !== "null") return ls;
+    const ss = sessionStorage.getItem(STORAGE_KEY_TOKEN);
+    if (ss && ss !== "undefined" && ss !== "null") return ss;
+  } catch { /* ignore */ }
+  return null;
 };
 
-const getStoredToken = (): string | null => {
+/** Read user from either storage (localStorage takes priority) */
+const readUser = (): User | null => {
   try {
-    const token = localStorage.getItem("token");
-    return token && token !== "undefined" && token !== "null" ? token : null;
-  } catch (error) {
-    console.error("Failed to get stored token:", error);
-    return null;
-  }
+    const ls = localStorage.getItem(STORAGE_KEY_USER);
+    if (ls && ls !== "undefined" && ls !== "null") return JSON.parse(ls);
+    const ss = sessionStorage.getItem(STORAGE_KEY_USER);
+    if (ss && ss !== "undefined" && ss !== "null") return JSON.parse(ss);
+  } catch { /* ignore */ }
+  return null;
+};
+
+/** Write token + user to the appropriate storage */
+const writeSession = (token: string, user: User, rememberMe: boolean) => {
+  const storage = rememberMe ? localStorage : sessionStorage;
+  storage.setItem(STORAGE_KEY_TOKEN, token);
+  storage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
+};
+
+/** Clear token + user from BOTH storages */
+const clearSession = () => {
+  localStorage.removeItem(STORAGE_KEY_TOKEN);
+  localStorage.removeItem(STORAGE_KEY_USER);
+  sessionStorage.removeItem(STORAGE_KEY_TOKEN);
+  sessionStorage.removeItem(STORAGE_KEY_USER);
 };
 
 //////////////////////////////////////////////////////////
@@ -63,46 +80,37 @@ const getStoredToken = (): string | null => {
 //////////////////////////////////////////////////////////
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  // Initialize user state synchronously from localStorage
+  // loading = true on first render so ProtectedRoute waits before redirecting.
+  // useLayoutEffect fires synchronously before paint and flips it to false
+  // after the storage read completes — no async work, no flicker.
+  const [loading, setLoading] = useState(true);
+
+  // Initialize user from storage (synchronous read)
   const [user, setUser] = useState<User | null>(() => {
-    try {
-      const token = localStorage.getItem("token");
-      const storedUser = localStorage.getItem("user");
-      
-      if (token && storedUser && token !== "undefined" && token !== "null" && storedUser !== "undefined" && storedUser !== "null") {
-        return JSON.parse(storedUser);
-      }
-    } catch (error) {
-      console.error("Failed to initialize user from localStorage:", error);
-    }
-    return null;
+    const token = readToken();
+    const storedUser = readUser();
+    return token && storedUser ? storedUser : null;
   });
-  
-  // Start with loading false since we initialize synchronously
-  const [loading, setLoading] = useState(false);
 
-  //////////////////////////////////////////////////////////
-  // VERIFY AUTH STATE ON MOUNT (optional validation)
-  //////////////////////////////////////////////////////////
-
-  useEffect(() => {
-    // Optional: Add any async validation here if needed
-    // For now, we trust localStorage since we initialize synchronously
+  // Flip loading off after the first synchronous render cycle.
+  // useLayoutEffect runs before the browser paints, so ProtectedRoute
+  // never renders a redirect on the frame where user is still being read.
+  useLayoutEffect(() => {
+    setLoading(false);
   }, []);
 
   //////////////////////////////////////////////////////////
   // LOGIN
+  // rememberMe = true  → localStorage  (survives browser restart)
+  // rememberMe = false → sessionStorage (cleared on tab close)
   //////////////////////////////////////////////////////////
 
-  const login = (data: any) => {
+  const login = (data: any, rememberMe = false) => {
     try {
-      // Defensive: clear before setting
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
+      clearSession(); // always start clean
 
       if (data?.access_token && data?.user) {
-        localStorage.setItem("token", data.access_token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        writeSession(data.access_token, data.user, rememberMe);
         setUser(data.user);
       } else {
         console.error("Invalid login data:", data);
@@ -118,8 +126,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = () => {
     try {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      clearSession();
       setUser(null);
     } catch (error) {
       console.error("Logout failed:", error);

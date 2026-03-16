@@ -1,26 +1,32 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { Button, ErrorMessage } from '../../components/ui'
 import './LoginPage.css'
 
-const API_URL = 'http://localhost:3000'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 const LoginPage = () => {
   const navigate = useNavigate()
-  const { login: setAuthUser } = useAuth()
+  const { login: setAuthUser, user, loading } = useAuth()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [formLoading, setFormLoading] = useState(false)
+
+  // Already authenticated — redirect to appropriate dashboard
+  if (!loading && user) {
+    if (user.role === 'ADMIN') return <Navigate to="/admin/dashboard" replace />
+    return <Navigate to="/app/dashboard" replace />
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    setLoading(true)
+    setFormLoading(true)
 
     try {
       const response = await fetch(`${API_URL}/auth/login`, {
@@ -30,15 +36,15 @@ const LoginPage = () => {
       })
 
       const data = await response.json()
-      setLoading(false)
+      setFormLoading(false)
 
       if (!response.ok) {
         setError(data.message || 'Login failed')
         return
       }
 
-      // Save via AuthContext
-      setAuthUser(data)
+      // Save via AuthContext — pass rememberMe so storage is chosen correctly
+      setAuthUser(data, rememberMe)
 
       // Redirect based on role (correct routes)
       const role = data.user.role
@@ -51,7 +57,7 @@ const LoginPage = () => {
         navigate('/unauthorized', { replace: true })
       }
     } catch (err) {
-      setLoading(false)
+      setFormLoading(false)
       setError('Server error. Please try again.')
     }
   }
@@ -187,13 +193,13 @@ const LoginPage = () => {
             <Button
               type="submit"
               variant="primary"
-              loading={loading}
-              disabled={loading}
+              loading={formLoading}
+              disabled={formLoading}
               fullWidth
               size="lg"
               className="login-button"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {formLoading ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
         </div>
