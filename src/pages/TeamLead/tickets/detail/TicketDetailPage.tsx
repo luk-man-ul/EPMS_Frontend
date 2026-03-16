@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useEffect, useState, useRef } from 'react'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import api from '../../../../utils/api'
 import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
@@ -7,10 +7,47 @@ import ConfirmationModal from '../../../../components/shared/ConfirmationModal'
 import TicketStatusTimeline from '../../../admin/tickets/detail/components/TicketStatusTimeline'
 import { getAllowedTransitions, formatStatus as formatStatusEnum, type TicketStatus } from '../../../../types/ticketWorkflow'
 
+const typeConfig: Record<string, { icon: string; color: string; bg: string }> = {
+  BUG:         { icon: '🐛', color: '#dc2626', bg: '#fef2f2' },
+  FEATURE:     { icon: '✨', color: '#7c3aed', bg: '#f5f3ff' },
+  IMPROVEMENT: { icon: '🔧', color: '#2563eb', bg: '#eff6ff' },
+  QUESTION:    { icon: '❓', color: '#d97706', bg: '#fffbeb' },
+  SUPPORT:     { icon: '🎧', color: '#0891b2', bg: '#ecfeff' },
+}
+
+const priorityConfig: Record<string, { color: string; bg: string }> = {
+  LOW:    { color: '#16a34a', bg: '#f0fdf4' },
+  MEDIUM: { color: '#2563eb', bg: '#eff6ff' },
+  HIGH:   { color: '#d97706', bg: '#fffbeb' },
+  URGENT: { color: '#dc2626', bg: '#fef2f2' },
+}
+
+const statusConfig: Record<string, { color: string; bg: string; border: string }> = {
+  OPEN:             { color: '#1e40af', bg: '#dbeafe', border: '#bfdbfe' },
+  IN_PROGRESS:      { color: '#b45309', bg: '#fef3c7', border: '#fde68a' },
+  WAITING_FOR_USER: { color: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
+  RESOLVED:         { color: '#065f46', bg: '#d1fae5', border: '#a7f3d0' },
+  CLOSED:           { color: '#374151', bg: '#e5e7eb', border: '#d1d5db' },
+  REJECTED:         { color: '#991b1b', bg: '#fecaca', border: '#fca5a5' },
+  REOPENED:         { color: '#1e40af', bg: '#dbeafe', border: '#bfdbfe' },
+}
+
 const TicketDetailPage = () => {
   const { ticketId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
+
+  const fromProject = location.state?.fromProject
+  const fromProjectRef = useRef(fromProject)
+
+  const handleBack = () => {
+    if (fromProjectRef.current) {
+      navigate(`/app/projects/${fromProjectRef.current}?tab=tickets`)
+    } else {
+      navigate('/app/tickets')
+    }
+  }
 
   const [ticket, setTicket] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -22,497 +59,255 @@ const TicketDetailPage = () => {
   const [deleting, setDeleting] = useState(false)
   const [resolution, setResolution] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('')
-
   const { showToast } = useToast()
-
-  ////////////////////////////////////////////////////////////
-  // FETCH
-  ////////////////////////////////////////////////////////////
 
   const fetchTicket = async () => {
     try {
       setLoading(true)
       setError(null)
-
       const res = await api.get(`/tickets/${ticketId}`)
       setTicket(res.data)
     } catch (err: any) {
-      if (err.response?.status === 403) {
-        setError('restricted')
-      } else if (err.response?.status === 404) {
-        setError('notfound')
-      } else {
-        setError('failed')
-      }
-    } finally {
-      setLoading(false)
-    }
+      if (err.response?.status === 403) setError('restricted')
+      else if (err.response?.status === 404) setError('notfound')
+      else setError('failed')
+    } finally { setLoading(false) }
   }
 
-  useEffect(() => {
-    if (ticketId) fetchTicket()
-  }, [ticketId, navigate])
-
-  ////////////////////////////////////////////////////////////
-  // ACTIONS
-  ////////////////////////////////////////////////////////////
+  useEffect(() => { if (ticketId) fetchTicket() }, [ticketId])
 
   const handleSelfAssign = async () => {
     try {
       setSelfAssigning(true)
-
       await api.patch(`/tickets/${ticket.id}/self-assign`)
-
-      showToast('success', 'Ticket assigned to you successfully')
+      showToast('success', 'Ticket assigned to you')
       await fetchTicket()
     } catch (err: any) {
-      showToast('error', err.response?.data?.message || 'Failed to self-assign ticket')
-    } finally {
-      setSelfAssigning(false)
-    }
+      showToast('error', err.response?.data?.message || 'Failed to self-assign')
+    } finally { setSelfAssigning(false) }
   }
 
   const handleAssign = async (userId: string) => {
     try {
       setAssigning(true)
-
-      await api.patch(`/tickets/${ticket.id}/assign`, {
-        assignedToId: userId || null,
-      })
-
-      showToast('success', 'Ticket assigned successfully')
+      await api.patch(`/tickets/${ticket.id}/assign`, { assignedToId: userId || null })
+      showToast('success', 'Ticket assigned')
       await fetchTicket()
     } catch (err: any) {
-      showToast('error', err.response?.data?.message || 'Failed to assign ticket')
-    } finally {
-      setAssigning(false)
-    }
+      showToast('error', err.response?.data?.message || 'Failed to assign')
+    } finally { setAssigning(false) }
   }
 
   const handleStatusChange = async (newStatus: string) => {
-    // Validate resolution is provided when transitioning to RESOLVED
     if (newStatus === 'RESOLVED' && !resolution.trim()) {
-      showToast('error', 'Resolution is required when marking ticket as resolved')
+      showToast('error', 'Resolution is required when marking as resolved')
       return
     }
-
     try {
       setUpdatingStatus(true)
-
-      const payload: any = {
-        status: newStatus,
-      }
-
-      // Include resolution only when transitioning to RESOLVED
-      if (newStatus === 'RESOLVED') {
-        payload.resolution = resolution.trim()
-      }
-
+      const payload: any = { status: newStatus }
+      if (newStatus === 'RESOLVED') payload.resolution = resolution.trim()
       await api.patch(`/tickets/${ticket.id}/status`, payload)
-
-      showToast('success', 'Status updated successfully')
-      
-      // Clear resolution input after successful update
+      showToast('success', 'Status updated')
       setResolution('')
       setSelectedStatus('')
-      
       await fetchTicket()
     } catch (err: any) {
       showToast('error', err.response?.data?.message || 'Failed to update status')
-    } finally {
-      setUpdatingStatus(false)
-    }
-  }
-
-  const handleDeleteClick = () => {
-    setShowDeleteConfirm(true)
+    } finally { setUpdatingStatus(false) }
   }
 
   const handleDeleteConfirm = async () => {
     try {
       setDeleting(true)
       await api.delete(`/tickets/${ticket.id}`)
-      showToast('success', 'Ticket deleted successfully')
-      navigate('/app/tickets')
+      handleBack()
+      showToast('success', 'Ticket deleted')
     } catch (err: any) {
-      showToast('error', err.response?.data?.message || 'Failed to delete ticket')
-    } finally {
-      setDeleting(false)
-      setShowDeleteConfirm(false)
-    }
+      showToast('error', err.response?.data?.message || 'Failed to delete')
+    } finally { setDeleting(false); setShowDeleteConfirm(false) }
   }
 
-  ////////////////////////////////////////////////////////////
-  // LOADING + ERROR STATES
-  ////////////////////////////////////////////////////////////
+  if (loading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column', gap: 16 }}>
+      <div style={{ width: 40, height: 40, border: '3px solid #e5e5e5', borderTopColor: '#1a1a1a', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <span style={{ color: '#666', fontSize: 14 }}>Loading ticket...</span>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
 
-  if (loading) return <div>Loading ticket...</div>
+  if (error === 'restricted') return (
+    <div style={{ padding: 60, textAlign: 'center', maxWidth: 500, margin: '0 auto' }}>
+      <div style={{ fontSize: 56, marginBottom: 16 }}>🔒</div>
+      <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Access Restricted</h2>
+      <p style={{ color: '#666', marginBottom: 28 }}>You don't have permission to view this ticket.</p>
+      <button onClick={handleBack} style={{ padding: '10px 24px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>← Go Back</button>
+    </div>
+  )
 
-  if (error === 'restricted') {
-    return <div>🔒 Restricted Access</div>
-  }
+  if (error === 'notfound') return (
+    <div style={{ padding: 60, textAlign: 'center', maxWidth: 500, margin: '0 auto' }}>
+      <div style={{ fontSize: 56, marginBottom: 16 }}>🎫</div>
+      <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Ticket Not Found</h2>
+      <button onClick={handleBack} style={{ marginTop: 16, padding: '10px 24px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>← Back</button>
+    </div>
+  )
 
-  if (error === 'notfound') {
-    return (
-      <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎫</div>
-        <div style={{ fontSize: '18px', fontWeight: 600 }}>
-          Ticket Not Found
-        </div>
-        <button
-          onClick={() => navigate('/app/tickets')}
-          style={{
-            marginTop: '20px',
-            padding: '10px 20px',
-            background: '#1a1a1a',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-          }}
-        >
-          ← Back to Tickets
-        </button>
-      </div>
-    )
-  }
-
-  if (error === 'failed') return <div>Failed to load ticket</div>
+  if (error === 'failed') return <div style={{ padding: 40, color: '#dc2626' }}>Failed to load ticket.</div>
   if (!ticket) return null
 
-  ////////////////////////////////////////////////////////////
-  // ROLE LOGIC
-  ////////////////////////////////////////////////////////////
-
   const isAdmin = user?.role === 'ADMIN'
-  const isLead =
-    user?.role === 'TEAM_LEAD' &&
-    ticket.project?.leadId === user?.id
+  const isLead = user?.role === 'TEAM_LEAD' && ticket.project?.leadId === user?.id
   const isEmployee = user?.role === 'EMPLOYEE'
-
   const isAssignee = ticket.assignedToId === user?.id
   const isReporter = ticket.reporterId === user?.id
   const isUnassigned = !ticket.assignedToId
-
-  // Check if employee is project member
-  const isProjectMember = ticket.project?.members?.some(
-    (member: any) => member.userId === user?.id
-  )
-
-  // Assignment permissions
+  const isProjectMember = ticket.project?.members?.some((m: any) => m.userId === user?.id)
   const canAssign = isAdmin || isLead
   const canSelfAssign = isEmployee && isUnassigned && isProjectMember
-
-  // Status change permissions
   const canUpdateStatus = isAdmin || isLead || (isEmployee && isAssignee)
-
-  // Edit/Delete permissions
   const canEditDelete = isReporter
-
-  ////////////////////////////////////////////////////////////
-  // STATUS TRANSITION LOGIC (Using Shared Workflow)
-  ////////////////////////////////////////////////////////////
 
   const allowedTransitions = getAllowedTransitions(
     ticket?.status as TicketStatus || 'OPEN',
     user?.role as 'ADMIN' | 'TEAM_LEAD' | 'EMPLOYEE' || 'EMPLOYEE',
-    isLead // Pass whether user is project lead for privileged transitions
+    isLead
   )
 
-  ////////////////////////////////////////////////////////////
-  // FORMATTERS
-  ////////////////////////////////////////////////////////////
+  const type = typeConfig[ticket.type] || { icon: '📋', color: '#666', bg: '#f5f5f5' }
+  const priority = priorityConfig[ticket.priority] || priorityConfig.MEDIUM
+  const status = statusConfig[ticket.status] || statusConfig.OPEN
+  const assigneeName = ticket.assignee ? `${ticket.assignee.firstName} ${ticket.assignee.lastName}` : 'Unassigned'
+  const reporterName = `${ticket.reporter?.firstName} ${ticket.reporter?.lastName}`
 
-  const formatStatus = (status: string) =>
-    formatStatusEnum(status as TicketStatus).toLowerCase()
-
-  const formatPriority = (priority: string) =>
-    priority.toLowerCase()
-
-  const assignedTo = ticket.assignee
-    ? `${ticket.assignee.firstName} ${ticket.assignee.lastName}`
-    : 'Unassigned'
-
-  const reporter = `${ticket.reporter.firstName} ${ticket.reporter.lastName}`
-
-  ////////////////////////////////////////////////////////////
-  // UI
-  ////////////////////////////////////////////////////////////
+  const avatarInitials = (name: string) =>
+    name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 
   return (
-    <div>
-      {/* Back Button */}
-      <button
-        onClick={() => navigate('/app/tickets')}
-        style={{
-          background: 'none',
-          border: 'none',
-          color: '#666666',
-          fontSize: '14px',
-          fontWeight: 600,
-          cursor: 'pointer',
-          marginBottom: '24px',
-        }}
-      >
-        ← Back to Tickets
-      </button>
+    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 24px' }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
 
-      {/* Main Container */}
-      <div
-        style={{
-          background: '#ffffff',
-          padding: '32px',
-          borderRadius: '12px',
-          border: '1px solid #e5e5e5',
-        }}
-      >
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          marginBottom: '16px',
-        }}>
-          <h1
-            style={{
-              fontSize: '24px',
-              fontWeight: 700,
-            }}
-          >
-            {ticket.title}
-          </h1>
+      {/* TOP BAR */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+        <button onClick={handleBack} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid #e5e5e5', borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 500, color: '#444', cursor: 'pointer' }}>
+          ← Back
+        </button>
+        {canEditDelete && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => navigate(`/app/tickets/${ticket.id}/edit`)} style={{ padding: '8px 16px', background: '#fafafa', border: '1px solid #e5e5e5', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#1a1a1a', cursor: 'pointer' }}>
+              ✏️ Edit
+            </button>
+            <button onClick={() => setShowDeleteConfirm(true)} style={{ padding: '8px 16px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#dc2626', cursor: 'pointer' }}>
+              🗑️ Delete
+            </button>
+          </div>
+        )}
+      </div>
 
-          {canEditDelete && (
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                onClick={() => navigate(`/app/tickets/${ticket.id}/edit`)}
-                style={{
-                  padding: '8px 16px',
-                  background: '#fafafa',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '8px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: '#1a1a1a',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#f5f5f5'
-                  e.currentTarget.style.borderColor = '#d4d4d4'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#fafafa'
-                  e.currentTarget.style.borderColor = '#e5e5e5'
-                }}
-              >
-                Edit
-              </button>
-              <button
-                onClick={handleDeleteClick}
-                style={{
-                  padding: '8px 16px',
-                  background: '#fee2e2',
-                  border: '1px solid #fecaca',
-                  borderRadius: '8px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: '#dc2626',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#fecaca'
-                  e.currentTarget.style.borderColor = '#fca5a5'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#fee2e2'
-                  e.currentTarget.style.borderColor = '#fecaca'
-                }}
-              >
-                Delete
-              </button>
+      {/* HERO CARD */}
+      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '28px 32px', marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1 }}>
+            {/* Breadcrumb */}
+            <div style={{ fontSize: 12, color: '#999', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span>📁</span><span>{ticket.project?.name}</span><span>›</span><span>Tickets</span>
+            </div>
+            {/* Type + Title */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+              <span style={{ fontSize: 22 }}>{type.icon}</span>
+              <h1 style={{ fontSize: 26, fontWeight: 700, color: '#0f0f0f', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
+                {ticket.title}
+              </h1>
+            </div>
+            {/* Ticket ID */}
+            <div style={{ fontSize: 11, color: '#bbb', fontFamily: 'monospace', marginTop: 4 }}>
+              #{ticket.id?.slice(0, 8).toUpperCase()}
+            </div>
+          </div>
+
+          {/* Badges */}
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            <span style={{ padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, background: type.bg, color: type.color }}>
+              {ticket.type}
+            </span>
+            <span style={{ padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, background: priority.bg, color: priority.color }}>
+              {ticket.priority}
+            </span>
+            <span style={{ padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, background: status.bg, color: status.color, border: `1px solid ${status.border}` }}>
+              {ticket.status.replace(/_/g, ' ')}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* MAIN GRID */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20 }}>
+
+        {/* LEFT */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+          {/* Description */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '24px 28px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>Description</div>
+            <p style={{ fontSize: 15, color: '#333', lineHeight: 1.75, margin: 0, whiteSpace: 'pre-wrap' }}>
+              {ticket.description || <span style={{ color: '#bbb', fontStyle: 'italic' }}>No description provided.</span>}
+            </p>
+          </div>
+
+          {/* Resolution */}
+          {ticket.resolution && (
+            <div style={{ background: '#f0fdf4', borderRadius: 16, border: '1px solid #a7f3d0', padding: '24px 28px' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#065f46', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>✅ Resolution</div>
+              <p style={{ fontSize: 15, color: '#065f46', lineHeight: 1.75, margin: 0 }}>{ticket.resolution}</p>
+            </div>
+          )}
+
+          {/* Status History */}
+          {ticket.statusHistory?.length > 0 && (
+            <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '24px 28px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>Activity</div>
+              <TicketStatusTimeline statusHistory={ticket.statusHistory} />
             </div>
           )}
         </div>
 
-        {/* Meta Grid */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '16px',
-            marginBottom: '24px',
-          }}
-        >
-          <Meta label="Ticket ID" value={ticket.id} mono />
-          <Meta label="Project" value={ticket.project?.name} />
-          <Meta label="Reporter" value={reporter} />
+        {/* RIGHT */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-          {/* ASSIGNED TO */}
-          <div>
-            <div style={{ fontSize: '13px', color: '#666666', marginBottom: '4px' }}>
-              Assigned To
-            </div>
-
-            {canAssign ? (
-              <select
-                value={ticket.assignedToId || ''}
-                disabled={assigning}
-                onChange={(e) => handleAssign(e.target.value)}
-                style={{
-                  padding: '6px 10px',
-                  borderRadius: '6px',
-                  border: '1px solid #e5e5e5',
-                  fontSize: '14px',
-                }}
-              >
-                <option value="">Unassigned</option>
-
-                {ticket.project?.members?.map((member: any) => (
-                  <option key={member.user.id} value={member.user.id}>
-                    {member.user.firstName} {member.user.lastName}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <>
-                <div style={{ fontSize: '16px', fontWeight: 600 }}>
-                  {assignedTo}
-                </div>
-                
-                {canSelfAssign && (
-                  <button
-                    onClick={handleSelfAssign}
-                    disabled={selfAssigning}
-                    style={{
-                      marginTop: '8px',
-                      padding: '8px 16px',
-                      background: '#1a1a1a',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '13px',
-                      fontWeight: 600,
-                      cursor: selfAssigning ? 'wait' : 'pointer',
-                      opacity: selfAssigning ? 0.6 : 1,
-                      transition: 'all 0.2s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!selfAssigning) e.currentTarget.style.background = '#333333'
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!selfAssigning) e.currentTarget.style.background = '#1a1a1a'
-                    }}
-                  >
-                    {selfAssigning ? 'Assigning...' : '✋ Assign to Me'}
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* STATUS */}
-          <div>
-            <div style={{ fontSize: '13px', color: '#666666', marginBottom: '4px' }}>
-              Status
-            </div>
-
+          {/* Status Control */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '20px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Status</div>
             {canUpdateStatus ? (
               <>
                 <select
                   value={selectedStatus || ticket.status}
                   disabled={updatingStatus}
                   onChange={(e) => {
-                    const newStatus = e.target.value
-                    setSelectedStatus(newStatus)
-                    
-                    // If not RESOLVED, submit immediately
-                    if (newStatus !== 'RESOLVED') {
-                      setResolution('')
-                      setSelectedStatus('') // Clear before API call
-                      handleStatusChange(newStatus)
-                    }
+                    const val = e.target.value
+                    setSelectedStatus(val)
+                    if (val !== 'RESOLVED') { setResolution(''); setSelectedStatus(''); handleStatusChange(val) }
                   }}
-                  style={{
-                    padding: '6px 10px',
-                    borderRadius: '6px',
-                    border: '1px solid #e5e5e5',
-                    fontSize: '14px',
-                    cursor: updatingStatus ? 'wait' : 'pointer',
-                  }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #e5e5e5', fontSize: 13, fontWeight: 500, background: '#fafafa', cursor: 'pointer', outline: 'none' }}
                 >
-                  {[
-                    'OPEN',
-                    'IN_PROGRESS',
-                    'WAITING_FOR_USER',
-                    'RESOLVED',
-                    'CLOSED',
-                    'REJECTED',
-                    'REOPENED',
-                  ].map((status) => {
-                    const isAllowed = allowedTransitions.includes(status as TicketStatus)
-                    return (
-                      <option
-                        key={status}
-                        value={status}
-                        disabled={!isAllowed}
-                        style={{
-                          color: !isAllowed ? '#999999' : '#1a1a1a',
-                          opacity: !isAllowed ? 0.6 : 1,
-                          cursor: !isAllowed ? 'not-allowed' : 'pointer',
-                        }}
-                      >
-                        {status.replace(/_/g, ' ')}
-                      </option>
-                    )
-                  })}
+                  {['OPEN','IN_PROGRESS','WAITING_FOR_USER','RESOLVED','CLOSED','REJECTED','REOPENED'].map(s => (
+                    <option key={s} value={s} disabled={!allowedTransitions.includes(s as TicketStatus)}>
+                      {s.replace(/_/g, ' ')}
+                    </option>
+                  ))}
                 </select>
-
-                {/* Resolution Input - Shows when RESOLVED is selected */}
                 {selectedStatus === 'RESOLVED' && (
-                  <div style={{ marginTop: '12px' }}>
+                  <div style={{ marginTop: 12 }}>
                     <textarea
                       value={resolution}
                       onChange={(e) => setResolution(e.target.value)}
-                      placeholder="Describe how this ticket was resolved..."
-                      disabled={updatingStatus}
-                      style={{
-                        width: '100%',
-                        minHeight: '80px',
-                        padding: '8px 12px',
-                        borderRadius: '6px',
-                        border: '1px solid #e5e5e5',
-                        fontSize: '14px',
-                        fontFamily: 'inherit',
-                        resize: 'vertical',
-                        cursor: updatingStatus ? 'wait' : 'text',
-                      }}
+                      placeholder="Describe how this was resolved..."
+                      rows={3}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #e5e5e5', fontSize: 13, fontFamily: 'inherit', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
                     />
                     <button
                       onClick={() => handleStatusChange('RESOLVED')}
                       disabled={updatingStatus || !resolution.trim()}
-                      style={{
-                        marginTop: '8px',
-                        padding: '8px 16px',
-                        background: updatingStatus || !resolution.trim() ? '#e5e5e5' : '#1a1a1a',
-                        color: updatingStatus || !resolution.trim() ? '#999999' : '#ffffff',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        cursor: updatingStatus || !resolution.trim() ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!updatingStatus && resolution.trim()) {
-                          e.currentTarget.style.background = '#333333'
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!updatingStatus && resolution.trim()) {
-                          e.currentTarget.style.background = '#1a1a1a'
-                        }
-                      }}
+                      style={{ marginTop: 8, width: '100%', padding: '10px', background: resolution.trim() ? '#1a1a1a' : '#e5e5e5', color: resolution.trim() ? '#fff' : '#999', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: resolution.trim() ? 'pointer' : 'not-allowed' }}
                     >
                       {updatingStatus ? 'Updating...' : 'Mark as Resolved'}
                     </button>
@@ -520,59 +315,82 @@ const TicketDetailPage = () => {
                 )}
               </>
             ) : (
-              <div
-                style={{
-                  fontSize: '16px',
-                  fontWeight: 600,
-                  textTransform: 'capitalize',
-                }}
-              >
-                {formatStatus(ticket.status)}
-              </div>
+              <span style={{ padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, background: status.bg, color: status.color, display: 'inline-block' }}>
+                {ticket.status.replace(/_/g, ' ')}
+              </span>
             )}
           </div>
 
-          <Meta label="Priority" value={formatPriority(ticket.priority)} />
-          <Meta
-            label="Created At"
-            value={new Date(ticket.createdAt).toLocaleString()}
-          />
+          {/* People */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '20px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>People</div>
 
-          {ticket.resolvedAt && (
-            <Meta
-              label="Resolved At"
-              value={new Date(ticket.resolvedAt).toLocaleString()}
-            />
-          )}
+            {/* Reporter */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 11, color: '#bbb', fontWeight: 600, marginBottom: 8 }}>REPORTER</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                  {avatarInitials(reporterName)}
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>{reporterName}</span>
+              </div>
+            </div>
 
-          {ticket.closedAt && (
-            <Meta
-              label="Closed At"
-              value={new Date(ticket.closedAt).toLocaleString()}
-            />
+            {/* Assignee */}
+            <div>
+              <div style={{ fontSize: 11, color: '#bbb', fontWeight: 600, marginBottom: 8 }}>ASSIGNEE</div>
+              {canAssign ? (
+                <select
+                  value={ticket.assignedToId || ''}
+                  disabled={assigning}
+                  onChange={(e) => handleAssign(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #e5e5e5', fontSize: 13, background: '#fafafa', outline: 'none' }}
+                >
+                  <option value="">Unassigned</option>
+                  {ticket.project?.members?.map((member: any) => (
+                    <option key={member.user.id} value={member.user.id}>
+                      {member.user.firstName} {member.user.lastName}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: ticket.assignee ? 'linear-gradient(135deg, #f093fb, #f5576c)' : '#e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                      {ticket.assignee ? avatarInitials(assigneeName) : '?'}
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: ticket.assignee ? '#1a1a1a' : '#bbb' }}>{assigneeName}</span>
+                  </div>
+                  {canSelfAssign && (
+                    <button
+                      onClick={handleSelfAssign}
+                      disabled={selfAssigning}
+                      style={{ marginTop: 10, width: '100%', padding: '9px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      {selfAssigning ? 'Assigning...' : '✋ Assign to Me'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Dates */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '20px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>Dates</div>
+            <DateRow icon="📅" label="Created" value={new Date(ticket.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} />
+            {ticket.resolvedAt && <DateRow icon="✅" label="Resolved" value={new Date(ticket.resolvedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} />}
+            {ticket.closedAt && <DateRow icon="🔒" label="Closed" value={new Date(ticket.closedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} />}
+          </div>
+
+          {/* Linked Task */}
+          {ticket.task && (
+            <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '20px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Linked Task</div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: '#2563eb' }}>📌 {ticket.task.title}</div>
+            </div>
           )}
         </div>
-
-        {/* Description */}
-        <Section title="Description">
-          {ticket.description}
-        </Section>
-
-        {/* Resolution */}
-        {ticket.resolution && (
-          <Section title="Resolution">
-            {ticket.resolution}
-          </Section>
-        )}
-
-        {/* Status History */}
-        {ticket.statusHistory && ticket.statusHistory.length > 0 && (
-          <div style={{ marginBottom: '24px' }}>
-            <TicketStatusTimeline 
-              statusHistory={ticket.statusHistory || []}
-            />
-          </div>
-        )}
       </div>
 
       <ConfirmationModal
@@ -589,39 +407,12 @@ const TicketDetailPage = () => {
   )
 }
 
-const Meta = ({ label, value, mono }: any) => (
-  <div>
-    <div style={{ fontSize: '13px', color: '#666666', marginBottom: '4px' }}>
-      {label}
+const DateRow = ({ icon, label, value }: { icon: string; label: string; value: string }) => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#999', fontWeight: 500 }}>
+      <span>{icon}</span>{label}
     </div>
-    <div
-      style={{
-        fontSize: '16px',
-        fontWeight: 600,
-        fontFamily: mono ? 'monospace' : 'inherit',
-        textTransform: 'capitalize',
-      }}
-    >
-      {value}
-    </div>
-  </div>
-)
-
-const Section = ({ title, children }: any) => (
-  <div
-    style={{
-      marginBottom: '24px',
-      padding: '16px',
-      background: '#fafafa',
-      borderRadius: '10px',
-    }}
-  >
-    <div style={{ fontSize: '13px', color: '#666666', marginBottom: '8px' }}>
-      {title}
-    </div>
-    <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
-      {children}
-    </div>
+    <span style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>{value}</span>
   </div>
 )
 

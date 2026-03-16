@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import  { useEffect, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../../../../utils/api'
 import { Button, Card, LoadingSpinner, ErrorMessage } from '../../../../components/ui'
@@ -15,10 +15,13 @@ const ProjectDetailPage = () => {
   const [project, setProject] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] =
-    useState<'overview' | 'tasks' | 'tickets'>('overview')
 
-  // Handle tab from URL query parameter
+  const initialTab = searchParams.get('tab')
+  const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'tickets'>(
+    (['overview', 'tasks', 'tickets'].includes(initialTab || '') ? initialTab : 'overview') as 'overview' | 'tasks' | 'tickets'
+  )
+
+  // Sync tab if URL param changes
   useEffect(() => {
     const tabParam = searchParams.get('tab')
     if (tabParam && ['overview', 'tasks', 'tickets'].includes(tabParam)) {
@@ -171,11 +174,18 @@ const ProjectDetailPage = () => {
         )}
 
         {activeTab === 'tasks' && (
-          <TaskBoardTab tasks={project.tasks} />
+          <TaskBoardTab
+            tasks={project.tasks}
+            projectId={projectId}
+            onTaskCreated={async () => {
+              const res = await api.get(`/projects/${projectId}`)
+              setProject(res.data)
+            }}
+          />
         )}
 
         {activeTab === 'tickets' && (
-          <TicketsTab tickets={project.tickets} />
+          <TicketsTab tickets={project.tickets} projectId={projectId} />
         )}
       </div>
     </div>

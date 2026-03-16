@@ -131,6 +131,11 @@ const TaskForm = ({
       return
     }
 
+    if (taskType === TaskType.SELF_WORK && form.description.trim().length < 10) {
+      showToast('error', 'Description must be at least 10 characters for self-work tasks')
+      return
+    }
+
     try {
       setLoading(true)
 
@@ -234,6 +239,11 @@ const TaskForm = ({
           }
           style={{ ...inputStyle, height: 90 }}
         />
+        {taskType === TaskType.SELF_WORK && (
+          <span style={{ fontSize: 12, color: form.description.trim().length < 10 ? '#dc2626' : '#16a34a', marginTop: 4, display: 'block' }}>
+            {form.description.trim().length}/10 minimum characters
+          </span>
+        )}
       </FormField>
 
       <div style={{ display: 'flex', gap: 16 }}>

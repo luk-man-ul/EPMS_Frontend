@@ -1,7 +1,11 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import CreateTaskModal from '../../../../admin/tasks/components/CreateTaskModal'
 
 interface Props {
   tasks: any[]
+  projectId?: string
+  onTaskCreated?: () => void
 }
 
 const priorityColors: Record<string, string> = {
@@ -18,8 +22,9 @@ const columnConfig = [
   { id: 'COMPLETED', title: 'Completed', color: '#16a34a' },
 ]
 
-const TaskBoardTab = ({ tasks }: Props) => {
+const TaskBoardTab = ({ tasks, projectId, onTaskCreated }: Props) => {
   const navigate = useNavigate()
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   if (!tasks) return null
 
@@ -27,13 +32,33 @@ const TaskBoardTab = ({ tasks }: Props) => {
     tasks.filter((task) => task.status === status)
 
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: 24,
-      }}
-    >
+    <>
+      {/* Create Task Button */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          style={{
+            padding: '8px 18px',
+            background: '#1a1a1a',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 8,
+            fontSize: 14,
+            fontWeight: 500,
+            cursor: 'pointer',
+          }}
+        >
+          + Create Task
+        </button>
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 24,
+        }}
+      >
       {columnConfig.map((column) => {
         const columnTasks = getTasksByStatus(column.id)
 
@@ -88,7 +113,7 @@ const TaskBoardTab = ({ tasks }: Props) => {
                 <div
                   key={task.id}
                   onClick={() => navigate(`/app/tasks/${task.id}`, {
-                    state: { fromProject: task.projectId, fromProjectName: task.project?.name }
+                    state: { fromProject: task.projectId || projectId, fromProjectName: task.project?.name }
                   })}
                   style={{
                     background: '#ffffff',
@@ -181,6 +206,17 @@ const TaskBoardTab = ({ tasks }: Props) => {
         )
       })}
     </div>
+
+      <CreateTaskModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreated={() => {
+          setShowCreateModal(false)
+          onTaskCreated?.()
+        }}
+        defaultProjectId={projectId}
+      />
+    </>
   )
 }
 
