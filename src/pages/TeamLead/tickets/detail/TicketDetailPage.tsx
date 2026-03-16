@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import api from '../../../../utils/api'
 import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
@@ -10,7 +10,18 @@ import { getAllowedTransitions, formatStatus as formatStatusEnum, type TicketSta
 const TicketDetailPage = () => {
   const { ticketId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
+
+  const fromProject = location.state?.fromProject
+
+  const handleBack = () => {
+    if (fromProject) {
+      navigate(`/app/projects/${fromProject}?tab=tickets`)
+    } else {
+      navigate('/app/tickets')
+    }
+  }
 
   const [ticket, setTicket] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -132,8 +143,8 @@ const TicketDetailPage = () => {
     try {
       setDeleting(true)
       await api.delete(`/tickets/${ticket.id}`)
+      handleBack()
       showToast('success', 'Ticket deleted successfully')
-      navigate('/app/tickets')
     } catch (err: any) {
       showToast('error', err.response?.data?.message || 'Failed to delete ticket')
     } finally {
@@ -160,7 +171,7 @@ const TicketDetailPage = () => {
           Ticket Not Found
         </div>
         <button
-          onClick={() => navigate('/app/tickets')}
+          onClick={handleBack}
           style={{
             marginTop: '20px',
             padding: '10px 20px',
@@ -243,7 +254,7 @@ const TicketDetailPage = () => {
     <div>
       {/* Back Button */}
       <button
-        onClick={() => navigate('/app/tickets')}
+        onClick={handleBack}
         style={{
           background: 'none',
           border: 'none',

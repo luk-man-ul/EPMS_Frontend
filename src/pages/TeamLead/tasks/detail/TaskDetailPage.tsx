@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import api from '../../../../utils/api'
 import { useToast } from '../../../../context/ToastContext'
 import EditTaskModal from '../components/EditTaskModal'
@@ -15,7 +15,18 @@ const statusOptions = [
 const TaskDetailPage = () => {
   const { taskId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { showToast } = useToast()
+
+  const fromProject = location.state?.fromProject
+
+  const handleBack = () => {
+    if (fromProject) {
+      navigate(`/app/projects/${fromProject}?tab=tasks`)
+    } else {
+      navigate('/app/tasks')
+    }
+  }
 
   const [task, setTask] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -208,7 +219,7 @@ const TaskDetailPage = () => {
           You are not authorized to view this task. This task may not be assigned to you or you may not have the required permissions.
         </p>
         <button 
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           style={{
             padding: '12px 24px',
             background: '#1a1a1a',
@@ -233,7 +244,7 @@ const TaskDetailPage = () => {
     return (
       <div style={{ padding: 60, textAlign: 'center' }}>
         <h2>Task Not Found</h2>
-        <button onClick={() => navigate(-1)}>← Back</button>
+        <button onClick={handleBack}>← Back</button>
       </div>
     )
 
@@ -247,7 +258,7 @@ const TaskDetailPage = () => {
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             style={{
               background: 'none',
               border: 'none',

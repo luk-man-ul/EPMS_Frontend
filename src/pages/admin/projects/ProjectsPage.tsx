@@ -54,7 +54,9 @@ const ProjectsPage = () => {
     try {
       setLoading(true)
       const response = await api.get('/projects')
-      setProjects(response.data.data)
+      const projectData = response.data.data || response.data || []
+      console.log('First project raw data:', projectData[0])
+      setProjects(projectData)
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load projects')
     } finally {
@@ -171,8 +173,11 @@ const ProjectsPage = () => {
     }
 
     // Owner/Team Lead filter
-    if (filters.ownerId && project.owner?.id !== filters.ownerId) {
-      return false
+    if (filters.ownerId) {
+      console.log('Filter ownerId:', filters.ownerId, '| Project lead id:', project.lead?.id, '| Project:', project.name)
+      if (project.lead?.id !== filters.ownerId) {
+        return false
+      }
     }
 
     // Member filter

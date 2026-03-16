@@ -2,24 +2,44 @@ import { useNavigate } from 'react-router-dom'
 
 interface Props {
   tickets: any[]
+  projectId?: string
 }
 
-const TicketsTab = ({ tickets }: Props) => {
+const TicketsTab = ({ tickets, projectId }: Props) => {
   const navigate = useNavigate()
 
   if (!tickets || tickets.length === 0) {
     return (
-      <div style={{ 
-        padding: '64px 32px', 
-        background: '#fafafa', 
-        borderRadius: '12px',
-        textAlign: 'center',
-        border: '2px dashed #e5e5e5'
-      }}>
-        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎫</div>
-        <p style={{ color: '#999', fontSize: '15px', margin: 0 }}>
-          No tickets found for this project
-        </p>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+          <button
+            onClick={() => navigate('/app/tickets/create', { state: { defaultProjectId: projectId } })}
+            style={{
+              padding: '8px 18px',
+              background: '#1a1a1a',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
+          >
+            + Create Ticket
+          </button>
+        </div>
+        <div style={{ 
+          padding: '64px 32px', 
+          background: '#fafafa', 
+          borderRadius: '12px',
+          textAlign: 'center',
+          border: '2px dashed #e5e5e5'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎫</div>
+          <p style={{ color: '#999', fontSize: '15px', margin: 0 }}>
+            No tickets found for this project
+          </p>
+        </div>
       </div>
     )
   }
@@ -56,18 +76,30 @@ const TicketsTab = ({ tickets }: Props) => {
 
   return (
     <div>
-      <div style={{ marginBottom: '24px' }}>
-        <h3 style={{
-          fontSize: '20px',
-          fontWeight: 600,
-          color: '#1a1a1a',
-          margin: '0 0 4px 0'
-        }}>
-          Tickets ({tickets.length})
-        </h3>
-        <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
-          All tickets for this project
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+        <div>
+          <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#1a1a1a', margin: '0 0 4px 0' }}>
+            Tickets ({tickets.length})
+          </h3>
+          <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
+            All tickets for this project
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/app/tickets/create', { state: { defaultProjectId: projectId } })}
+          style={{
+            padding: '8px 18px',
+            background: '#1a1a1a',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 8,
+            fontSize: 14,
+            fontWeight: 500,
+            cursor: 'pointer',
+          }}
+        >
+          + Create Ticket
+        </button>
       </div>
 
       <div style={{
@@ -82,7 +114,9 @@ const TicketsTab = ({ tickets }: Props) => {
           return (
             <div
               key={ticket.id}
-              onClick={() => navigate(`/app/tickets/${ticket.id}`)}
+              onClick={() => navigate(`/app/tickets/${ticket.id}`, {
+                state: { fromProject: projectId }
+              })}
               style={{
                 background: '#ffffff',
                 borderRadius: '12px',
