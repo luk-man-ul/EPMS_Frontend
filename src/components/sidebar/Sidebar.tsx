@@ -86,22 +86,22 @@ export function Sidebar({
 
       {/* Header */}
       <div style={{
-        padding: isExpanded ? '24px 20px' : '24px 15px',
+        padding: '24px 15px',
         borderBottom: '1px solid #f0f0f0',
         display: 'flex',
         alignItems: 'center',
         minHeight: '88px',
-        transition: 'padding 0.3s ease'
       }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: isExpanded ? '12px' : '0',
-          transition: 'gap 0.3s ease',
-          width: '100%'
+          gap: '12px',
+          width: '100%',
+          justifyContent: isExpanded ? 'flex-start' : 'center',
         }}>
           <div style={{
             width: '40px',
+            minWidth: '40px',
             height: '40px',
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             borderRadius: '12px',
@@ -176,7 +176,9 @@ export function Sidebar({
       </div>
 
       {/* Navigation (Scrollable) */}
-      <nav style={{ 
+      <nav
+        className="sidebar-nav-scroll"
+        style={{ 
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',

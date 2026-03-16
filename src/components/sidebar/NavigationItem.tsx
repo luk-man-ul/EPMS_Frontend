@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import type { ReactElement } from 'react';
 import { 
   LayoutDashboard, 
   FolderOpen, 
@@ -6,7 +7,6 @@ import {
   Ticket, 
   Clock, 
   Calendar, 
-  CalendarPlus, 
   Users, 
   ClipboardCheck, 
   BarChart3, 
@@ -15,7 +15,6 @@ import {
   User, 
   Settings, 
   PieChart,
-  UserCheck,
   FileText,
   Umbrella,
   ClipboardList,
@@ -35,12 +34,8 @@ export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarE
   const isActive = activePath === item.path;
 
   const handleClick = () => {
-    if (onNavigate) {
-      onNavigate(item.path);
-    }
-    if (onClose) {
-      onClose();
-    }
+    if (onNavigate) onNavigate(item.path);
+    if (onClose) onClose();
   };
 
   if (item.disabled) {
@@ -48,9 +43,9 @@ export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarE
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: sidebarExpanded ? '12px' : '0',
-        padding: sidebarExpanded ? '12px 20px' : '12px 15px',
-        margin: sidebarExpanded ? '0 12px' : '0 8px',
+        gap: '0',
+        padding: '10px 15px',
+        margin: '0 8px',
         borderRadius: '12px',
         fontSize: '14px',
         fontWeight: 500,
@@ -61,30 +56,29 @@ export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarE
         transition: 'all 0.3s ease'
       }}>
         <span style={{ 
-          fontSize: '16px',
-          minWidth: '20px',
+          width: '40px',
+          minWidth: '40px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: sidebarExpanded ? 'flex-start' : 'center',
           flexShrink: 0
         }}>
           {getIcon(item.icon)}
         </span>
-        
-        {sidebarExpanded && (
-          <span style={{ 
-            flex: 1,
-            opacity: sidebarExpanded ? 1 : 0,
-            transform: sidebarExpanded ? 'translateX(0)' : 'translateX(-10px)',
-            transition: 'opacity 0.3s ease, transform 0.3s ease',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden'
-          }}>
-            {item.label}
-          </span>
-        )}
-        
-        {item.badge && sidebarExpanded && (
+        <span style={{ 
+          flex: 1,
+          minWidth: 0,
+          opacity: sidebarExpanded ? 1 : 0,
+          transform: sidebarExpanded ? 'translateX(0)' : 'translateX(-6px)',
+          transition: 'opacity 0.25s ease, transform 0.25s ease',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          pointerEvents: 'none',
+        }}>
+          {item.label}
+        </span>
+        {item.badge && (
           <span style={{
             padding: '2px 8px',
             fontSize: '11px',
@@ -93,9 +87,10 @@ export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarE
             color: '#666',
             borderRadius: '12px',
             opacity: sidebarExpanded ? 1 : 0,
-            transition: 'opacity 0.3s ease'
+            transition: 'opacity 0.25s ease',
+            flexShrink: 0,
           }}>
-            {typeof item.badge === 'function' ? item.badge() : item.badge}
+            {item.badge}
           </span>
         )}
       </div>
@@ -110,9 +105,9 @@ export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarE
       style={({ isActive: linkActive }) => ({
         display: 'flex',
         alignItems: 'center',
-        gap: sidebarExpanded ? '12px' : '0',
-        padding: sidebarExpanded ? '12px 20px' : '12px 15px',
-        margin: sidebarExpanded ? '0 12px' : '0 8px',
+        gap: '0',
+        padding: '10px 15px',
+        margin: '0 8px',
         borderRadius: '12px',
         textDecoration: 'none',
         fontSize: '14px',
@@ -125,50 +120,47 @@ export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarE
         transition: 'all 0.3s ease',
         position: 'relative',
         overflow: 'hidden',
-        justifyContent: sidebarExpanded ? 'flex-start' : 'center'
+        justifyContent: sidebarExpanded ? 'flex-start' : 'center',
       })}
       onMouseEnter={(e) => {
         if (!isActive) {
-          e.currentTarget.style.background = '#f8f9fa'
-          e.currentTarget.style.color = '#1a1a1a'
-          if (sidebarExpanded) {
-            e.currentTarget.style.transform = 'translateX(4px)'
-          }
+          e.currentTarget.style.background = '#f8f9fa';
+          e.currentTarget.style.color = '#1a1a1a';
+          if (sidebarExpanded) e.currentTarget.style.transform = 'translateX(4px)';
         }
       }}
       onMouseLeave={(e) => {
         if (!isActive) {
-          e.currentTarget.style.background = 'transparent'
-          e.currentTarget.style.color = '#666'
-          e.currentTarget.style.transform = 'translateX(0)'
+          e.currentTarget.style.background = 'transparent';
+          e.currentTarget.style.color = '#666';
+          e.currentTarget.style.transform = 'translateX(0)';
         }
       }}
     >
       <span style={{ 
-        fontSize: '16px',
-        minWidth: '20px',
+        width: '40px',
+        minWidth: '40px',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: sidebarExpanded ? 'flex-start' : 'center',
         flexShrink: 0
       }}>
         {getIcon(item.icon)}
       </span>
-      
-      {sidebarExpanded && (
-        <span style={{ 
-          flex: 1,
-          opacity: sidebarExpanded ? 1 : 0,
-          transform: sidebarExpanded ? 'translateX(0)' : 'translateX(-10px)',
-          transition: 'opacity 0.3s ease, transform 0.3s ease',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden'
-        }}>
-          {item.label}
-        </span>
-      )}
-      
-      {item.badge && sidebarExpanded && (
+      <span style={{ 
+        flex: 1,
+        minWidth: 0,
+        opacity: sidebarExpanded ? 1 : 0,
+        transform: sidebarExpanded ? 'translateX(0)' : 'translateX(-6px)',
+        transition: 'opacity 0.25s ease, transform 0.25s ease',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        pointerEvents: 'none',
+      }}>
+        {item.label}
+      </span>
+      {item.badge && (
         <span style={{
           padding: '2px 8px',
           fontSize: '11px',
@@ -177,75 +169,53 @@ export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarE
           color: isActive ? '#ffffff' : '#0369a1',
           borderRadius: '12px',
           opacity: sidebarExpanded ? 1 : 0,
-          transition: 'opacity 0.3s ease'
+          transition: 'opacity 0.25s ease',
+          flexShrink: 0,
         }}>
-          {typeof item.badge === 'function' ? item.badge() : item.badge}
+          {item.badge}
         </span>
       )}
     </NavLink>
   );
 }
 
-// Professional icon mapping using lucide-react
-function getIcon(iconName?: string): JSX.Element {
-  const iconProps = {
-    size: 18,
-    strokeWidth: 2
-  };
+function getIcon(iconName?: string): ReactElement {
+  const iconProps = { size: 18, strokeWidth: 2 };
 
-  const iconMap: Record<string, JSX.Element> = {
-    // Dashboard
+  const iconMap: Record<string, ReactElement> = {
     'dashboard': <LayoutDashboard {...iconProps} />,
     '📊': <LayoutDashboard {...iconProps} />,
-    
-    // Projects & Work
     'projects': <FolderOpen {...iconProps} />,
     '📁': <FolderOpen {...iconProps} />,
-    
-    // Tasks
     'tasks': <CheckSquare {...iconProps} />,
     '✓': <CheckSquare {...iconProps} />,
     'approval': <ClipboardCheck {...iconProps} />,
     '✅': <ClipboardCheck {...iconProps} />,
-    
-    // Tickets
     'tickets': <Ticket {...iconProps} />,
     '🎫': <Ticket {...iconProps} />,
-    
-    // Time & Attendance
     'clock': <Clock {...iconProps} />,
     '⏰': <Clock {...iconProps} />,
     'calendar': <Calendar {...iconProps} />,
     '📅': <Calendar {...iconProps} />,
     'timer': <Timer {...iconProps} />,
     '⏱️': <Timer {...iconProps} />,
-    
-    // Leave & Requests
     'umbrella': <Umbrella {...iconProps} />,
     '🏖️': <Umbrella {...iconProps} />,
     'clipboard': <ClipboardList {...iconProps} />,
     '📋': <ClipboardList {...iconProps} />,
     'file-text': <FileText {...iconProps} />,
     '📝': <FileText {...iconProps} />,
-    
-    // Team & Users
     'users': <Users {...iconProps} />,
     '👥': <Users {...iconProps} />,
     'user': <User {...iconProps} />,
     '👤': <User {...iconProps} />,
-    
-    // Communication
     'message': <MessageCircle {...iconProps} />,
     '💬': <MessageCircle {...iconProps} />,
-    
-    // Admin & Settings
     'settings': <Settings {...iconProps} />,
     '⚙️': <Settings {...iconProps} />,
-    
-    // Reports & Analytics
     'reports': <BarChart3 {...iconProps} />,
     '📈': <TrendingUp {...iconProps} />,
-    'analytics': <PieChart {...iconProps} />
+    'analytics': <PieChart {...iconProps} />,
   };
 
   return iconMap[iconName || ''] || <ClipboardList {...iconProps} />;
