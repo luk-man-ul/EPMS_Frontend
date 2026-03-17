@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import api from '../../../../utils/api'
 import { useToast } from '../../../../context/ToastContext'
+import { useAuth } from '../../../../context/AuthContext'
 import EditTaskModal from '../components/EditTaskModal'
 
 const statusOptions = [
@@ -31,6 +32,7 @@ const TaskDetailPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { showToast } = useToast()
+  const { user } = useAuth()
 
   const fromProject = location.state?.fromProject
 
@@ -64,11 +66,6 @@ const TaskDetailPage = () => {
     }
     if (taskId && !accessDenied) fetchTask()
   }, [taskId, accessDenied])
-
-  const userStr = localStorage.getItem('user')
-  const user = userStr ? JSON.parse(userStr) : null
-  const canEditStatus = user?.role === 'ADMIN' || user?.role === 'TEAM_LEAD' || user?.id === task?.assignedToId
-  const canEditTask = user?.role === 'ADMIN' || user?.role === 'TEAM_LEAD'
 
   const handleEditSuccess = async () => {
     try {
@@ -129,6 +126,10 @@ const TaskDetailPage = () => {
   const assigneeName = task.assignee ? `${task.assignee.firstName} ${task.assignee.lastName}` : 'Unassigned'
   const creatorName = task.creator ? `${task.creator.firstName} ${task.creator.lastName}` : '—'
   const avatarInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+
+  // Computed after task is loaded so assignedToId is available
+  const canEditStatus = user?.role === 'ADMIN' || user?.role === 'TEAM_LEAD' || user?.id === task.assignedToId
+  const canEditTask = user?.role === 'ADMIN' || user?.role === 'TEAM_LEAD'
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 24px' }}>

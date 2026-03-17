@@ -5,6 +5,22 @@ import { TaskStatus, formatEnumLabel } from '../../../../types/enums'
 import { useToast } from '../../../../context/ToastContext'
 import TaskTypeBadge from '../../../../components/shared/TaskTypeBadge'
 
+const priorityConfig: Record<string, { color: string; bg: string; dot: string }> = {
+  LOW:    { color: '#16a34a', bg: '#f0fdf4', dot: '#16a34a' },
+  MEDIUM: { color: '#2563eb', bg: '#eff6ff', dot: '#2563eb' },
+  HIGH:   { color: '#d97706', bg: '#fffbeb', dot: '#d97706' },
+  URGENT: { color: '#dc2626', bg: '#fef2f2', dot: '#dc2626' },
+}
+
+const statusConfig: Record<string, { color: string; bg: string }> = {
+  TODO:        { color: '#6b7280', bg: '#f3f4f6' },
+  IN_PROGRESS: { color: '#2563eb', bg: '#eff6ff' },
+  REVIEW:      { color: '#d97706', bg: '#fffbeb' },
+  COMPLETED:   { color: '#16a34a', bg: '#f0fdf4' },
+  CANCELLED:   { color: '#dc2626', bg: '#fef2f2' },
+  REJECTED:    { color: '#dc2626', bg: '#fef2f2' },
+}
+
 const TaskDetailPage = () => {
   const { taskId } = useParams()
   const navigate = useNavigate()
@@ -17,406 +33,295 @@ const TaskDetailPage = () => {
   const [newHours, setNewHours] = useState('')
   const [accessDenied, setAccessDenied] = useState(false)
   const [toastShown, setToastShown] = useState(false)
+  const [updatingStatus, setUpdatingStatus] = useState(false)
 
-  // Get navigation state
   const fromProject = location.state?.fromProject
-  const fromProjectName = location.state?.fromProjectName
-
-  ////////////////////////////////////////////////////////////
-  // FETCH TASK
-  ////////////////////////////////////////////////////////////
-  // FETCH TASK
-  ////////////////////////////////////////////////////////////
 
   const fetchTask = async () => {
-    // Prevent fetch if already denied access
     if (accessDenied) return
-
     try {
       const res = await api.get(`/tasks/${taskId}`)
       setTask(res.data)
     } catch (err: any) {
-      console.error('Failed to load task', err)
-      
-      // Handle specific error cases
       if (err.response?.status === 403) {
         setAccessDenied(true)
-        // Only show toast once
-        if (!toastShown) {
-          showToast('error', 'You are not authorized to view this task')
-          setToastShown(true)
-        }
-      } else if (err.response?.status === 404) {
-        setTask(null)
-      }
-      // 401 is handled by axios interceptor
-    } finally {
-      setLoading(false)
-    }
+        if (!toastShown) { showToast('error', 'You are not authorized to view this task'); setToastShown(true) }
+      } else if (err.response?.status === 404) { setTask(null) }
+    } finally { setLoading(false) }
   }
 
   useEffect(() => {
-    if (taskId && !accessDenied) {
-      fetchTask()
-    }
+    if (taskId && !accessDenied) fetchTask()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId])
 
-  ////////////////////////////////////////////////////////////
-  // STATUS UPDATE
-  ////////////////////////////////////////////////////////////
-
   const updateStatus = async (status: string) => {
     try {
+      setUpdatingStatus(true)
       await api.patch(`/tasks/${taskId}`, { status })
       await fetchTask()
       showToast('success', 'Task status updated successfully')
     } catch (err: any) {
-      console.error('Status update failed', err)
-      const errorMessage = err.response?.data?.message || 'Failed to update task status'
-      showToast('error', errorMessage)
-    }
+      showToast('error', err.response?.data?.message || 'Failed to update task status')
+    } finally { setUpdatingStatus(false) }
   }
-
-  ////////////////////////////////////////////////////////////
-  // NAVIGATE BACK WITH REFRESH
-  ////////////////////////////////////////////////////////////
 
   const handleBack = () => {
-    // If came from a project, return to that project's tasks tab
     if (fromProject) {
       const isAdmin = window.location.pathname.startsWith('/admin')
-      const projectPath = isAdmin 
-        ? `/admin/projects/${fromProject}?tab=tasks`
-        : `/app/projects/${fromProject}?tab=tasks`
-      navigate(projectPath)
+      navigate(isAdmin ? `/admin/projects/${fromProject}?tab=tasks` : `/app/projects/${fromProject}?tab=tasks`)
       return
     }
-
-    // Otherwise, go to general tasks list
     const isAdmin = window.location.pathname.startsWith('/admin')
-    const tasksPath = isAdmin ? '/admin/tasks' : '/app/tasks'
-    
-    // Navigate to tasks list with refresh state
-    navigate(tasksPath, { state: { refresh: true } })
+    navigate(isAdmin ? '/admin/tasks' : '/app/tasks', { state: { refresh: true } })
   }
 
-  ////////////////////////////////////////////////////////////
+  // ── Loading ──
+  if (loading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column', gap: 16 }}>
+      <div style={{ width: 40, height: 40, border: '3px solid #e5e5e5', borderTopColor: '#1a1a1a', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <span style={{ color: '#666', fontSize: 14 }}>Loading task...</span>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
 
-  if (loading) return <div style={{ padding: 40 }}>Loading...</div>
-  
-  if (accessDenied) {
-    return (
-      <div style={{ 
-        padding: 60, 
-        textAlign: 'center',
-        maxWidth: 600,
-        margin: '0 auto'
-      }}>
-        <div style={{ fontSize: 64, marginBottom: 20 }}>🔒</div>
-        <h2 style={{ fontSize: 24, fontWeight: 600, marginBottom: 12 }}>
-          Access Denied
-        </h2>
-        <p style={{ color: '#666', marginBottom: 32, lineHeight: 1.6 }}>
-          You are not authorized to view this task. This task may not be assigned to you or you may not have the required permissions.
-        </p>
-        <button 
-          onClick={handleBack}
-          style={{
-            padding: '12px 24px',
-            background: '#1a1a1a',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#333'}
-          onMouseLeave={(e) => e.currentTarget.style.background = '#1a1a1a'}
-        >
-          ← Go Back
-        </button>
-      </div>
-    )
-  }
-  
-  if (!task) return <div style={{ padding: 40 }}>Task not found</div>
+  // ── Access denied ──
+  if (accessDenied) return (
+    <div style={{ padding: 60, textAlign: 'center', maxWidth: 500, margin: '0 auto' }}>
+      <div style={{ fontSize: 56, marginBottom: 16 }}>🔒</div>
+      <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Access Denied</h2>
+      <p style={{ color: '#666', marginBottom: 28, lineHeight: 1.6 }}>You are not authorized to view this task.</p>
+      <button onClick={handleBack} style={{ padding: '10px 24px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>← Go Back</button>
+    </div>
+  )
 
-  const totalHours =
-    task.timeLogs?.reduce((acc: number, log: any) => acc + log.hours, 0) || 0
+  if (!task) return (
+    <div style={{ padding: 60, textAlign: 'center' }}>
+      <div style={{ fontSize: 48, marginBottom: 12 }}>📋</div>
+      <h2 style={{ fontSize: 20, fontWeight: 700 }}>Task Not Found</h2>
+      <button onClick={handleBack} style={{ marginTop: 20, padding: '10px 20px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>← Back</button>
+    </div>
+  )
+
+  const totalHours = task.timeLogs?.reduce((acc: number, log: any) => acc + log.hours, 0) || 0
+  const priority = priorityConfig[task.priority] || priorityConfig.MEDIUM
+  const statusStyle = statusConfig[task.status] || statusConfig.TODO
+  const assigneeName = task.assignee ? `${task.assignee.firstName} ${task.assignee.lastName}` : 'Unassigned'
+  const creatorName = task.creator ? `${task.creator.firstName} ${task.creator.lastName}` : '—'
+  const avatarInitials = (name: string) => name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
 
   return (
-    <div style={containerStyle}>
-      {/* HEADER */}
-      <div style={headerStyle}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            <h2 style={{ margin: 0 }}>{task.title}</h2>
-            <TaskTypeBadge type={task.type} status={task.status} />
+    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 24px' }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+
+      {/* TOP BAR */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+        <button onClick={handleBack} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid #e5e5e5', borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 500, color: '#444', cursor: 'pointer' }}>
+          ← Back
+        </button>
+      </div>
+
+      {/* HERO CARD */}
+      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '28px 32px', marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1 }}>
+            {/* Breadcrumb */}
+            <div style={{ fontSize: 12, color: '#999', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span>📁</span><span>{task.project?.name}</span><span>›</span><span>Tasks</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <h1 style={{ fontSize: 26, fontWeight: 700, color: '#0f0f0f', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
+                {task.title}
+              </h1>
+              <TaskTypeBadge type={task.type} status={task.status} />
+            </div>
           </div>
-          <p style={{ color: '#666', marginTop: 4 }}>
-            Project: {task.project.name}
-          </p>
-          
-          {/* Show approval metadata if present */}
-          {task.approvedBy && (
-            <div style={{ 
-              marginTop: '12px', 
-              padding: '12px', 
-              background: '#f0fdf4', 
-              borderRadius: '8px',
-              border: '1px solid #86efac'
-            }}>
-              <p style={{ margin: 0, fontSize: '14px', color: '#166534' }}>
-                ✓ Approved by: {task.approvedBy.firstName} {task.approvedBy.lastName}
-              </p>
-              <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#166534' }}>
-                Approved at: {new Date(task.approvedAt).toLocaleString()}
-              </p>
-            </div>
-          )}
-          
-          {/* Show rejection reason if rejected */}
-          {task.status === 'REJECTED' && task.rejectionReason && (
-            <div style={{ 
-              marginTop: '12px', 
-              padding: '12px', 
-              background: '#fef2f2', 
-              borderRadius: '8px',
-              border: '1px solid #fca5a5'
-            }}>
-              <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#991b1b' }}>
-                Rejection Reason:
-              </p>
-              <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#991b1b' }}>
-                {task.rejectionReason}
-              </p>
-            </div>
-          )}
+
+          {/* Badges */}
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            <span style={{ padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, background: priority.bg, color: priority.color, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: priority.dot, display: 'inline-block' }} />
+              {task.priority}
+            </span>
+            <span style={{ padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, background: statusStyle.bg, color: statusStyle.color }}>
+              {task.status?.replace(/_/g, ' ')}
+            </span>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button style={secondaryBtn} onClick={handleBack}>
-            Back
-          </button>
-        </div>
+        {/* Approval banner */}
+        {task.approvedBy && (
+          <div style={{ marginTop: 20, padding: '12px 16px', background: '#f0fdf4', borderRadius: 10, border: '1px solid #86efac' }}>
+            <p style={{ margin: 0, fontSize: 13, color: '#166534', fontWeight: 500 }}>
+              ✅ Approved by {task.approvedBy.firstName} {task.approvedBy.lastName} · {new Date(task.approvedAt).toLocaleString()}
+            </p>
+          </div>
+        )}
+
+        {/* Rejection banner */}
+        {task.status === 'REJECTED' && task.rejectionReason && (
+          <div style={{ marginTop: 20, padding: '12px 16px', background: '#fef2f2', borderRadius: 10, border: '1px solid #fca5a5' }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#991b1b' }}>Rejection Reason</p>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#991b1b' }}>{task.rejectionReason}</p>
+          </div>
+        )}
       </div>
 
       {/* MAIN GRID */}
-      <div style={gridStyle}>
-        {/* LEFT SIDE */}
-        <div>
-          <Section title="Description">
-            <p>{task.description || 'No description provided.'}</p>
-          </Section>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20 }}>
 
-          <Section title="Status History">
-            {task.statusHistory?.length ? (
-              task.statusHistory.map((h: any) => (
-                <div key={h.id} style={historyItem}>
-                  <strong>{h.oldStatus}</strong> →{' '}
-                  <strong>{h.newStatus}</strong> by{' '}
-                  {h.changedBy.firstName} {h.changedBy.lastName}
-                </div>
-              ))
+        {/* LEFT */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+          {/* Description */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '24px 28px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>Description</div>
+            <p style={{ fontSize: 15, color: '#333', lineHeight: 1.75, margin: 0, whiteSpace: 'pre-wrap' }}>
+              {task.description || <span style={{ color: '#bbb', fontStyle: 'italic' }}>No description provided.</span>}
+            </p>
+          </div>
+
+          {/* Status History */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '24px 28px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>Activity</div>
+            {!task.statusHistory?.length ? (
+              <p style={{ color: '#bbb', fontSize: 14, margin: 0 }}>No activity yet.</p>
             ) : (
-              <p>No history yet</p>
-            )}
-          </Section>
-
-          <Section title="Time Logs">
-            <p>Total Hours: {totalHours}</p>
-
-            {task.timeLogs?.map((log: any) => (
-              <div key={log.id} style={logItem}>
-                {log.hours}h — {log.description}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {task.statusHistory.map((entry: any, i: number) => {
+                  const from = statusConfig[entry.oldStatus] || statusConfig.TODO
+                  const to = statusConfig[entry.newStatus] || statusConfig.TODO
+                  return (
+                    <div key={entry.id} style={{ display: 'flex', gap: 14, paddingBottom: 16, position: 'relative' }}>
+                      {i < task.statusHistory.length - 1 && (
+                        <div style={{ position: 'absolute', left: 15, top: 32, bottom: 0, width: 2, background: '#f0f0f0' }} />
+                      )}
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#f5f5f5', border: '2px solid #e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>🔄</div>
+                      <div style={{ paddingTop: 4 }}>
+                        <div style={{ fontSize: 13, color: '#333', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <span style={{ padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, background: from.bg, color: from.color }}>{entry.oldStatus?.replace(/_/g, ' ')}</span>
+                          <span style={{ color: '#999' }}>→</span>
+                          <span style={{ padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, background: to.bg, color: to.color }}>{entry.newStatus?.replace(/_/g, ' ')}</span>
+                          <span style={{ color: '#666', fontSize: 12 }}>by <strong>{entry.changedBy?.firstName} {entry.changedBy?.lastName}</strong></span>
+                        </div>
+                        <div style={{ fontSize: 11, color: '#bbb', marginTop: 3 }}>{new Date(entry.changedAt).toLocaleString()}</div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-            ))}
+            )}
+          </div>
 
-            <div style={{ marginTop: 12 }}>
+          {/* Time Logs */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '24px 28px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Time Logs</div>
+              <span style={{ fontSize: 22, fontWeight: 700, color: '#1a1a1a' }}>{totalHours}h <span style={{ fontSize: 12, fontWeight: 400, color: '#999' }}>total</span></span>
+            </div>
+
+            {task.timeLogs?.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                {task.timeLogs.map((log: any) => (
+                  <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f5f5f5', fontSize: 13, color: '#555' }}>
+                    <span style={{ fontWeight: 500 }}>⏱ {log.hours}h</span>
+                    {log.description && <span style={{ color: '#999', fontSize: 12 }}>{log.description}</span>}
+                    <span style={{ color: '#bbb', fontSize: 12 }}>{new Date(log.createdAt).toLocaleDateString()}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
               <input
                 type="number"
                 placeholder="Hours"
                 value={newHours}
                 onChange={(e) => setNewHours(e.target.value)}
-                style={inputStyle}
+                style={{ flex: 1, padding: '9px 12px', borderRadius: 10, border: '1px solid #e5e5e5', fontSize: 13, outline: 'none', background: '#fafafa' }}
               />
-              <button style={primaryBtn}>
-                Add Log (Mock)
+              <button style={{ padding: '9px 16px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                + Add Log
               </button>
             </div>
-          </Section>
+          </div>
 
-          <Section title="Comments (Mock)">
-            <div style={{ marginBottom: 10 }}>
-              <textarea
-                placeholder="Write a comment..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                style={{ ...inputStyle, height: 80 }}
-              />
-              <button style={primaryBtn}>
-                Add Comment
-              </button>
-            </div>
-
-            <p style={{ color: '#888' }}>No comments yet</p>
-          </Section>
+          {/* Comments */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '24px 28px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>Comments</div>
+            <textarea
+              placeholder="Write a comment..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              rows={3}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #e5e5e5', fontSize: 13, fontFamily: 'inherit', resize: 'vertical', outline: 'none', background: '#fafafa', boxSizing: 'border-box', marginBottom: 8 }}
+            />
+            <button style={{ padding: '9px 18px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              Add Comment
+            </button>
+            <p style={{ color: '#bbb', fontSize: 13, marginTop: 16, marginBottom: 0 }}>No comments yet.</p>
+          </div>
         </div>
 
-        {/* RIGHT SIDE */}
-        <div>
-          <Section title="Details">
-            <DetailRow label="Priority" value={task.priority} />
-            <DetailRow label="Status">
-              <select
-                value={task.status}
-                onChange={(e) => updateStatus(e.target.value)}
-                style={inputStyle}
-              >
-                {Object.values(TaskStatus).map((status) => (
-                  <option key={status} value={status}>
-                    {formatEnumLabel(status)}
-                  </option>
-                ))}
-              </select>
-            </DetailRow>
-            <DetailRow
-              label="Assignee"
-              value={
-                task.assignee
-                  ? `${task.assignee.firstName} ${task.assignee.lastName}`
-                  : 'Unassigned'
-              }
-            />
-            <DetailRow
-              label="Due Date"
-              value={
-                task.dueDate
-                  ? new Date(task.dueDate).toLocaleDateString()
-                  : '—'
-              }
-            />
-            <DetailRow
-              label="Created By"
-              value={`${task.creator.firstName} ${task.creator.lastName}`}
-            />
-            <DetailRow
-              label="Completed At"
-              value={
-                task.completedAt
-                  ? new Date(task.completedAt).toLocaleDateString()
-                  : '—'
-              }
-            />
-          </Section>
+        {/* RIGHT */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+          {/* Status Control */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '20px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Status</div>
+            <select
+              value={task.status}
+              disabled={updatingStatus}
+              onChange={(e) => updateStatus(e.target.value)}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #e5e5e5', fontSize: 13, fontWeight: 500, background: '#fafafa', cursor: 'pointer', outline: 'none' }}
+            >
+              {Object.values(TaskStatus).map((status) => (
+                <option key={status} value={status}>{formatEnumLabel(status)}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* People */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '20px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>People</div>
+            <PersonRow label="Assignee" name={assigneeName} gradient="linear-gradient(135deg, #667eea, #764ba2)" />
+            <PersonRow label="Created By" name={creatorName} gradient="linear-gradient(135deg, #f093fb, #f5576c)" />
+          </div>
+
+          {/* Dates */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '20px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>Dates</div>
+            <MetaRow icon="📅" label="Due Date" value={task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'} />
+            <MetaRow icon="✅" label="Completed" value={task.completedAt ? new Date(task.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'} />
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-////////////////////////////////////////////////////////////
-// REUSABLE COMPONENTS
-////////////////////////////////////////////////////////////
+const PersonRow = ({ label, name, gradient }: { label: string; name: string; gradient: string }) => {
+  const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+      <span style={{ fontSize: 12, color: '#999', fontWeight: 500 }}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ width: 28, height: 28, borderRadius: '50%', background: gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff' }}>
+          {initials}
+        </div>
+        <span style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>{name}</span>
+      </div>
+    </div>
+  )
+}
 
-const Section = ({
-  title,
-  children,
-}: {
-  title: string
-  children: React.ReactNode
-}) => (
-  <div style={sectionStyle}>
-    <h3>{title}</h3>
-    {children}
+const MetaRow = ({ icon, label, value }: { icon: string; label: string; value: string }) => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#999', fontWeight: 500 }}>
+      <span>{icon}</span>{label}
+    </div>
+    <span style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>{value}</span>
   </div>
 )
-
-const DetailRow = ({
-  label,
-  value,
-  children,
-}: any) => (
-  <div style={detailRow}>
-    <span style={{ fontWeight: 500 }}>{label}</span>
-    {children || <span>{value}</span>}
-  </div>
-)
-
-////////////////////////////////////////////////////////////
-// STYLES
-////////////////////////////////////////////////////////////
-
-const containerStyle: React.CSSProperties = {
-  padding: 40,
-  maxWidth: 1200,
-  margin: '0 auto',
-}
-
-const headerStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginBottom: 30,
-}
-
-const gridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '2fr 1fr',
-  gap: 30,
-}
-
-const sectionStyle: React.CSSProperties = {
-  background: '#fff',
-  padding: 24,
-  borderRadius: 14,
-  border: '1px solid #eee',
-  marginBottom: 24,
-}
-
-const detailRow: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  marginBottom: 12,
-}
-
-const historyItem: React.CSSProperties = {
-  padding: 8,
-  borderBottom: '1px solid #f0f0f0',
-}
-
-const logItem: React.CSSProperties = {
-  padding: 8,
-  borderBottom: '1px solid #f0f0f0',
-}
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '8px 10px',
-  borderRadius: 8,
-  border: '1px solid #ddd',
-  marginBottom: 8,
-}
-
-const primaryBtn: React.CSSProperties = {
-  padding: '8px 14px',
-  borderRadius: 8,
-  border: 'none',
-  background: '#111',
-  color: '#fff',
-  cursor: 'pointer',
-  marginTop: 6,
-}
-
-const secondaryBtn: React.CSSProperties = {
-  padding: '8px 14px',
-  borderRadius: 8,
-  border: '1px solid #ddd',
-  background: '#fff',
-  cursor: 'pointer',
-}
 
 export default TaskDetailPage
