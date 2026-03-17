@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getSelfWorkMetrics } from '../../utils/api';
+import api from '../../utils/api';
 import type { SelfWorkMetrics } from '../../types/task';
-import axios from 'axios';
 
 interface SelfWorkMetricsDashboardProps {
   projectId?: string;
@@ -33,12 +33,7 @@ const SelfWorkMetricsDashboard = ({ projectId }: SelfWorkMetricsDashboardProps) 
 
   const fetchProjects = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:3000/projects/my', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await api.get('/projects/my');
       
       if (res.data && Array.isArray(res.data)) {
         setProjects(res.data);

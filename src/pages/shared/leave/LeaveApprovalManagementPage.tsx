@@ -1,20 +1,8 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../utils/api';
 import LeaveStatusBadge from './components/LeaveStatusBadge';
 import LeaveTypeBadge from './components/LeaveTypeBadge';
 import { Button, Card, Input, Select, Modal, LoadingSpinner } from '../../../components/ui';
-
-const api = axios.create({
-  baseURL: 'http://localhost:3000',
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 const LeaveApprovalManagementPage = () => {
   const [leaveRequests, setLeaveRequests] = useState<any[]>([]);

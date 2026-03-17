@@ -30,7 +30,11 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
     // Connect socket and join room
     const socket = socketService.getSocket();
     if (socket) {
-      socketService.joinRoom(roomId, user.id);
+      socketService.joinRoom(roomId, user.id, (response) => {
+        if (response && !response.success) {
+          console.error('Failed to join room:', response.error);
+        }
+      });
 
       // Listen for new messages
       socketService.onReceiveMessage((message: ChatMessage) => {

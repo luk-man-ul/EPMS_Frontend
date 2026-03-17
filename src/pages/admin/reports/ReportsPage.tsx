@@ -39,10 +39,10 @@ const ReportsPage = () => {
             fontSize: '24px', 
             fontWeight: 600, 
             marginBottom: 4,
-            color: '#1a1a1a',
+            color: '#f21010ff',
             letterSpacing: '-0.01em'
           }}>
-            Reports & Analytics
+            Reports & Analytics (MOCK DATA)
           </h1>
           <p style={{ color: '#666', fontSize: '14px' }}>
             Comprehensive insights and performance metrics
