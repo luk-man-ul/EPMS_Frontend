@@ -44,8 +44,12 @@ class SocketService {
     return this.socket;
   }
 
-  joinRoom(roomId: string, userId: string) {
-    this.socket?.emit('joinRoom', { roomId, userId });
+  joinRoom(roomId: string, userId: string, callback?: (res: any) => void) {
+    if (callback) {
+      this.socket?.emit('joinRoom', { roomId, userId }, callback);
+    } else {
+      this.socket?.emit('joinRoom', { roomId, userId });
+    }
   }
 
   leaveRoom(roomId: string, userId: string) {
