@@ -1,19 +1,7 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../../../../utils/api';
 import LeaveTypeBadge from '../../../shared/leave/components/LeaveTypeBadge';
 import type { LeaveType } from '../../../../types/enums';
-
-const api = axios.create({
-  baseURL: 'http://localhost:3000',
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 interface LeaveRequest {
   id: string;

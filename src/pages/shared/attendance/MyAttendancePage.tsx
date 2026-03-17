@@ -1,20 +1,8 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../utils/api';
 import { LoadingSpinner, Card } from '../../../components/ui';
 import AttendanceTable from './components/AttendanceTable';
 import AttendanceFilters from './components/AttendanceFilters';
-
-const api = axios.create({
-  baseURL: 'http://localhost:3000',
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 const MyAttendancePage = () => {
   const [attendance, setAttendance] = useState<any[]>([]);

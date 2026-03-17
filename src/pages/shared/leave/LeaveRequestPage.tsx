@@ -1,19 +1,7 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../../../utils/api';
 import { LeaveType, getEnumOptions } from '../../../types/enums';
 import { Button, Card, Input, Select, ErrorMessage } from '../../../components/ui';
-
-const api = axios.create({
-  baseURL: 'http://localhost:3000',
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 const LeaveRequestPage = () => {
   const [formData, setFormData] = useState({

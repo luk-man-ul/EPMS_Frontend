@@ -22,10 +22,10 @@ const SettingsPage = () => {
           fontSize: '24px', 
           fontWeight: 600, 
           marginBottom: 4,
-          color: '#1a1a1a',
+          color: '#de1515ff',
           letterSpacing: '-0.01em'
         }}>
-          Settings
+          Settings (MOCK DATA)
         </h1>
         <p style={{ color: '#666', fontSize: '14px' }}>
           Manage your system configuration and preferences

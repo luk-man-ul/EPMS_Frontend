@@ -1,19 +1,7 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../utils/api';
 import LeaveTable from '../../shared/leave/components/LeaveTable';
 import { ApprovalStatus, LeaveType, getEnumOptions } from '../../../types/enums';
-
-const api = axios.create({
-  baseURL: 'http://localhost:3000',
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 const LeaveManagementPage = () => {
   const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
