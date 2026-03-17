@@ -25,7 +25,7 @@ const SummaryCards = ({ summary }: Props) => {
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gridTemplateColumns: 'repeat(6, 1fr)',
         gap: '16px',
         marginBottom: '24px',
       }}

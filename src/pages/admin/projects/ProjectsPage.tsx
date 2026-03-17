@@ -258,6 +258,23 @@ const ProjectsPage = () => {
         </button>
       </div>
 
+      {/* Stats Cards */}
+      {!loading && !error && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+          {[
+            { label: 'Total Projects',     value: projects.length,                                          color: '#1a1a1a' },
+            { label: 'Active Projects',    value: projects.filter(p => p.status === 'ACTIVE').length,       color: '#16a34a' },
+            { label: 'Completed',          value: projects.filter(p => p.status === 'COMPLETED').length,    color: '#2563eb' },
+            { label: 'At Risk',            value: projects.filter(p => p.status === 'ON_HOLD' || p.status === 'CANCELLED').length, color: '#dc2626' },
+          ].map((card) => (
+            <div key={card.label} style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e5e5', padding: '20px 24px' }}>
+              <p style={{ fontSize: '13px', color: '#888', margin: '0 0 8px 0', fontWeight: 500 }}>{card.label}</p>
+              <p style={{ fontSize: '28px', fontWeight: 700, color: card.color, margin: 0, lineHeight: 1 }}>{card.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Search Bar */}
       <div style={{ marginBottom: '20px' }}>
         <SearchBar
