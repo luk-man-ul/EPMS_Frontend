@@ -20,7 +20,7 @@ export function FilePreview({ file }: FilePreviewProps) {
     <div className="file-preview">
       {isImage ? (
         <img
-          src={`http://localhost:3000${file.fileUrl}`}
+          src={`${import.meta.env.VITE_API_URL}${file.fileUrl}`}
           alt={file.fileName}
           className="file-preview-image"
         />

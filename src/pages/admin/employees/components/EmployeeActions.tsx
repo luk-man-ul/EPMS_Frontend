@@ -11,7 +11,7 @@ const EmployeeActions = ({ employee, onRefresh }: Props) => {
   const roleNames = employee.roles.map(r => r.role.name)
 
   const callApi = async (endpoint: string) => {
-    await fetch(`http://localhost:3000/users/${employee.id}/${endpoint}`, {
+    await fetch(`${import.meta.env.VITE_API_URL}/users/${employee.id}/${endpoint}`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
     })

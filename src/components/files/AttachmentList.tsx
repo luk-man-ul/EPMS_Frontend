@@ -77,7 +77,7 @@ export function AttachmentList({ files, onDelete, currentUserId }: AttachmentLis
 
           <div className="attachment-info">
             <a
-              href={`http://localhost:3000${file.fileUrl}`}
+              href={`${import.meta.env.VITE_API_URL}${file.fileUrl}`}
               target="_blank"
               rel="noopener noreferrer"
               className="attachment-name"

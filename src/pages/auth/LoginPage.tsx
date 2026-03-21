@@ -4,7 +4,8 @@ import { useAuth } from '../../context/AuthContext'
 import { Button, ErrorMessage } from '../../components/ui'
 import './LoginPage.css'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API_URL = import.meta.env.VITE_API_URL
+
 
 const LoginPage = () => {
   const navigate = useNavigate()

@@ -3,7 +3,7 @@ import type { Task, SelfWorkMetrics } from '../types/task'
 import { TaskType } from '../types/enums'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  baseURL: import.meta.env.VITE_API_URL,
 })
 
 // Request interceptor — read token from localStorage first, then sessionStorage
