@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getAuthHeaders } from '../../../utils/auth'
 import type { Employee } from './types/employee.types'
 import {
   ArrowLeft,
@@ -13,8 +12,7 @@ import {
   Briefcase,
   User,
 } from 'lucide-react'
-
-const API_URL = import.meta.env.VITE_API_URL
+import api from '../../../utils/api'
 
 const EmployeeDetail = () => {
   const { id } = useParams<{ id: string }>()
@@ -31,17 +29,13 @@ const EmployeeDetail = () => {
     try {
       setLoading(true)
       setError('')
-      // No GET /users/:id endpoint exists — fetch all and find by id
-      const response = await fetch(`${API_URL}/users`, {
-        headers: { ...getAuthHeaders() },
-      })
-      if (!response.ok) throw new Error('Failed to fetch employee details')
-      const data: Employee[] = await response.json()
+      const res = await api.get('/users')
+      const data: Employee[] = res.data
       const found = data.find((u) => u.id === employeeId)
       if (!found) throw new Error('Employee not found')
       setEmployee(found)
     } catch (err: any) {
-      setError(err.message || 'Something went wrong')
+      setError(err.response?.data?.message || err.message || 'Something went wrong')
     } finally {
       setLoading(false)
     }

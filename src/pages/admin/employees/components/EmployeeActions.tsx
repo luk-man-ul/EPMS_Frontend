@@ -1,20 +1,16 @@
 import type { Employee } from '../types/employee.types'
-import { getAuthHeaders } from '../../../../utils/auth'
+import api from '../../../../utils/api'
 
 interface Props {
   employee: Employee
   onRefresh: () => void
 }
 
-
 const EmployeeActions = ({ employee, onRefresh }: Props) => {
   const roleNames = employee.roles.map(r => r.role.name)
 
   const callApi = async (endpoint: string) => {
-    await fetch(`${import.meta.env.VITE_API_URL}/users/${employee.id}/${endpoint}`, {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-    })
+    await api.patch(`/users/${employee.id}/${endpoint}`)
     onRefresh()
   }
 

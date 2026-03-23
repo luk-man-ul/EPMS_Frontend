@@ -1,5 +1,5 @@
 import { useState,useEffect } from 'react'
-import { getAuthHeaders } from '../../../../utils/auth'
+import api from '../../../../utils/api'
 
 interface Props {
   onClose: () => void
@@ -60,68 +60,31 @@ const EmployeeForm = ({
   }
 
   const handleAddSkill = async () => {
-  if (!newSkill.trim()) return
-
-  try {
-    const res = await fetch(`${API_URL}/skills`, {
-      method: 'POST',
-      headers: {
-        ...getAuthHeaders(),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name: newSkill.trim() }),
-    })
-
-    if (!res.ok) throw new Error('Failed to create skill')
-
-    // 🔥 Refresh skills from parent
-    await refreshSkills()
-
-    setNewSkill('')
-    setShowAddSkill(false)
-
-  } catch (err: any) {
-    alert(err.message)
+    if (!newSkill.trim()) return
+    try {
+      await api.post('/skills', { name: newSkill.trim() })
+      await refreshSkills()
+      setNewSkill('')
+      setShowAddSkill(false)
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to create skill')
+    }
   }
-}
-
 
   const handleSubmit = async () => {
     try {
-      const url = employee
-        ? `${API_URL}/users/${employee.id}`
-        : `${API_URL}/users`
-
-      const method = employee ? 'PATCH' : 'POST'
-
       const body = employee
-        ? {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            phone: formData.phone,
-            department: formData.department,
-            profilePhoto: formData.profilePhoto,
-            skillIds: selectedSkills,
-          }
-        : {
-            ...formData,
-            skillIds: selectedSkills,
-          }
+        ? { firstName: formData.firstName, lastName: formData.lastName, phone: formData.phone, department: formData.department, profilePhoto: formData.profilePhoto, skillIds: selectedSkills }
+        : { ...formData, skillIds: selectedSkills }
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          ...getAuthHeaders(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      })
-
-      if (!res.ok) throw new Error('Operation failed')
-
+      if (employee) {
+        await api.patch(`/users/${employee.id}`, body)
+      } else {
+        await api.post('/users', body)
+      }
       onSuccess()
     } catch (err: any) {
-      alert(err.message)
+      alert(err.response?.data?.message || 'Operation failed')
     }
   }
 

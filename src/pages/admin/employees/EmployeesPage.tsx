@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react'
 import EmployeeTable from './components/EmployeeTable'
-import { getAuthHeaders } from '../../../utils/auth'
 import type { Employee } from './types/employee.types'
 import EmployeeForm from './form/EmployeeForm'
 import FilterComponent from '../../../components/shared/FilterComponent'
 import { UserStatus, getEnumOptions } from '../../../types/enums'
-
-const API_URL = import.meta.env.VITE_API_URL
+import api from '../../../utils/api'
 
 const EmployeesPage = () => {
   const [employees, setEmployees] = useState<Employee[]>([])
@@ -28,12 +26,8 @@ const EmployeesPage = () => {
 
 const fetchSkills = async () => {
   try {
-    const res = await fetch(`${API_URL}/skills`, {
-      headers: { ...getAuthHeaders() },
-    })
-
-    const data = await res.json()
-    setSkills(data)
+    const res = await api.get('/skills')
+    setSkills(res.data)
   } catch (err) {
     console.error('Failed to fetch skills')
   }
@@ -45,21 +39,10 @@ const fetchSkills = async () => {
     try {
       setLoading(true)
       setError('')
-
-      const response = await fetch(`${API_URL}/users`, {
-        headers: {
-          ...getAuthHeaders(),
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch employees')
-      }
-
-      const data = await response.json()
-      setEmployees(data)
+      const res = await api.get('/users')
+      setEmployees(res.data)
     } catch (err: any) {
-      setError(err.message || 'Something went wrong')
+      setError(err.response?.data?.message || err.message || 'Something went wrong')
     } finally {
       setLoading(false)
     }
@@ -67,73 +50,41 @@ const fetchSkills = async () => {
 
   const promoteUser = async (id: string) => {
     try {
-      const res = await fetch(`${API_URL}/users/${id}/promote`, {
-        method: 'PATCH',
-        headers: { ...getAuthHeaders() },
-      })
-
-      if (!res.ok) throw new Error('Failed to promote')
-
+      await api.patch(`/users/${id}/promote`)
       fetchEmployees()
     } catch (err: any) {
-      alert(err.message)
+      alert(err.response?.data?.message || 'Failed to promote')
     }
   }
 
   const demoteUser = async (id: string) => {
     try {
-      const res = await fetch(`${API_URL}/users/${id}/demote`, {
-        method: 'PATCH',
-        headers: { ...getAuthHeaders() },
-      })
-
-      if (!res.ok) throw new Error('Failed to demote')
-
+      await api.patch(`/users/${id}/demote`)
       fetchEmployees()
     } catch (err: any) {
-      alert(err.message)
+      alert(err.response?.data?.message || 'Failed to demote')
     }
   }
 
   const deactivateUser = async (id: string) => {
-    const confirmAction = window.confirm(
-      'Are you sure you want to deactivate this employee?'
-    )
-
+    const confirmAction = window.confirm('Are you sure you want to deactivate this employee?')
     if (!confirmAction) return
-
     try {
-      const res = await fetch(`${API_URL}/users/${id}/deactivate`, {
-        method: 'PATCH',
-        headers: { ...getAuthHeaders() },
-      })
-
-      if (!res.ok) throw new Error('Failed to deactivate')
-
+      await api.patch(`/users/${id}/deactivate`)
       fetchEmployees()
     } catch (err: any) {
-      alert(err.message)
+      alert(err.response?.data?.message || 'Failed to deactivate')
     }
   }
 
   const activateUser = async (id: string) => {
-    const confirmAction = window.confirm(
-      'Are you sure you want to activate this employee?'
-    )
-
+    const confirmAction = window.confirm('Are you sure you want to activate this employee?')
     if (!confirmAction) return
-
     try {
-      const res = await fetch(`${API_URL}/users/${id}/activate`, {
-        method: 'PATCH',
-        headers: { ...getAuthHeaders() },
-      })
-
-      if (!res.ok) throw new Error('Failed to activate')
-
+      await api.patch(`/users/${id}/activate`)
       fetchEmployees()
     } catch (err: any) {
-      alert(err.message)
+      alert(err.response?.data?.message || 'Failed to activate')
     }
   }
 
