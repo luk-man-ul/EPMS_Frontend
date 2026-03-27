@@ -76,7 +76,22 @@ const EmployeeDetail = () => {
       <div style={styles.heroCard}>
         <div style={styles.heroGradient} />
         <div style={styles.heroContent}>
-          <div style={styles.avatar}>{initials}</div>
+          <div style={styles.avatar}>
+            {employee.profilePhoto ? (
+              <img
+                src={employee.profilePhoto}
+                alt={fullName}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                onError={(e) => {
+                  // If image fails to load, hide it and show initials
+                  e.currentTarget.style.display = 'none'
+                  e.currentTarget.parentElement!.textContent = initials
+                }}
+              />
+            ) : (
+              initials
+            )}
+          </div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <h1 style={styles.heroName}>{fullName}</h1>

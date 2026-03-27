@@ -147,6 +147,11 @@ const EmployeeTable = ({
                           height: '100%',
                           objectFit: 'cover',
                         }}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                          e.currentTarget.parentElement!.textContent =
+                            emp.firstName?.[0] ?? ''
+                        }}
                       />
                     ) : (
                       emp.firstName?.[0]
