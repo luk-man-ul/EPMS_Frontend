@@ -343,10 +343,17 @@ const tdStyle = {
 }
 
 const dotsBtn = {
-  border: 'none',
-  background: 'transparent',
+  border: '1px solid #e5e5e5',
+  background: '#fafafa',
   cursor: 'pointer',
-  fontSize: '18px',
+  fontSize: '20px',
+  width: '34px',
+  height: '34px',
+  borderRadius: '8px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  lineHeight: 1,
 }
 
 const dropdownStyle = {
