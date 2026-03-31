@@ -37,6 +37,7 @@ const EmployeeForm = ({
 
   const [showAddSkill, setShowAddSkill] = useState(false)
   const [newSkill, setNewSkill] = useState('')
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   /* -------------------- PHOTO STATE -------------------- */
 
@@ -52,6 +53,7 @@ const EmployeeForm = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
+    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: '' })
   }
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,7 +104,27 @@ const EmployeeForm = ({
     }
   }
 
+  const validate = () => {
+    const e: Record<string, string> = {}
+    if (!formData.firstName.trim()) e.firstName = 'First name is required'
+    if (!formData.lastName.trim()) e.lastName = 'Last name is required'
+    if (!formData.email.trim()) e.email = 'Email is required'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) e.email = 'Enter a valid email'
+    if (!employee) {
+      if (!formData.password.trim()) e.password = 'Password is required'
+      else if (formData.password.length < 6) e.password = 'Password must be at least 6 characters'
+    }
+    if (formData.phone && !/^\+?[\d\s\-()]{7,15}$/.test(formData.phone)) e.phone = 'Enter a valid phone number'
+    return e
+  }
+
   const handleSubmit = async () => {
+    const validationErrors = validate()
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors)
+      return
+    }
+    setErrors({})
     try {
       let profilePhotoUrl = formData.profilePhoto
 
@@ -170,15 +192,15 @@ const EmployeeForm = ({
 
       {/* Grid Layout */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <Input label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} />
-        <Input label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} />
-        <Input label="Email" name="email" value={formData.email} onChange={handleChange} disabled={!!employee} />
+        <Input label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} error={errors.firstName} />
+        <Input label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} error={errors.lastName} />
+        <Input label="Email" name="email" value={formData.email} onChange={handleChange} disabled={!!employee} error={errors.email} />
 
         {!employee && (
-          <Input label="Password" name="password" type="password" value={formData.password} onChange={handleChange} />
+          <Input label="Password" name="password" type="password" value={formData.password} onChange={handleChange} error={errors.password} />
         )}
 
-        <Input label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
+        <Input label="Phone" name="phone" value={formData.phone} onChange={handleChange} error={errors.phone} />
         <Input label="Department" name="department" value={formData.department} onChange={handleChange} />
       </div>
 
@@ -411,6 +433,7 @@ const Input = ({
   onChange,
   type = 'text',
   disabled = false,
+  error,
 }: any) => (
   <div style={{ display: 'flex', flexDirection: 'column' }}>
     <label style={{ fontSize: 13, marginBottom: 4, fontWeight: 500 }}>
@@ -425,10 +448,15 @@ const Input = ({
       style={{
         padding: '8px 10px',
         borderRadius: 8,
-        border: '1px solid #ddd',
+        border: `1px solid ${error ? '#dc2626' : '#ddd'}`,
         fontSize: 14,
+        outline: 'none',
+        background: disabled ? '#f9fafb' : '#fff',
       }}
     />
+    {error && (
+      <span style={{ fontSize: 11, color: '#dc2626', marginTop: 4 }}>{error}</span>
+    )}
   </div>
 )
 
