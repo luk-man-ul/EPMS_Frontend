@@ -118,7 +118,7 @@ const DropdownItem = ({ label, onClick, danger }: ItemProps) => {
     <div
       onClick={onClick}
       style={{
-        padding: '10px 14px',
+        padding: '12px 18px',
         cursor: 'pointer',
         fontSize: '14px',
         color: danger ? '#dc2626' : '#1a1a1a',
@@ -159,7 +159,7 @@ const dropdownStyle: React.CSSProperties = {
   border: '1px solid #e5e5e5',
   borderRadius: '10px',
   boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-  width: 160,
+  width: 200,
   zIndex: 9999,
 }
 
