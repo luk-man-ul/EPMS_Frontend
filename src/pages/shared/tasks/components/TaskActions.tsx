@@ -118,11 +118,12 @@ const DropdownItem = ({ label, onClick, danger }: ItemProps) => {
     <div
       onClick={onClick}
       style={{
-        padding: '12px 18px',
+        padding: '10px 16px',
         cursor: 'pointer',
         fontSize: '14px',
         color: danger ? '#dc2626' : '#1a1a1a',
         transition: 'background 0.15s ease',
+        whiteSpace: 'nowrap',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.backgroundColor = '#f5f5f5'
@@ -159,7 +160,7 @@ const dropdownStyle: React.CSSProperties = {
   border: '1px solid #e5e5e5',
   borderRadius: '10px',
   boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-  width: 200,
+  minWidth: '160px',
   zIndex: 9999,
 }
 
