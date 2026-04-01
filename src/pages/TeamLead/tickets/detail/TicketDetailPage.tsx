@@ -329,8 +329,10 @@ const TicketDetailPage = () => {
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 11, color: '#bbb', fontWeight: 600, marginBottom: 8 }}>REPORTER</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                  {avatarInitials(reporterName)}
+                <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+                  {ticket.reporter?.profilePhoto ? (
+                    <img src={ticket.reporter.profilePhoto} alt={reporterName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.textContent = avatarInitials(reporterName) }} />
+                  ) : avatarInitials(reporterName)}
                 </div>
                 <span style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>{reporterName}</span>
               </div>
@@ -356,8 +358,10 @@ const TicketDetailPage = () => {
               ) : (
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: ticket.assignee ? 'linear-gradient(135deg, #f093fb, #f5576c)' : '#e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                      {ticket.assignee ? avatarInitials(assigneeName) : '?'}
+                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: ticket.assignee ? 'linear-gradient(135deg, #f093fb, #f5576c)' : '#e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+                      {ticket.assignee?.profilePhoto ? (
+                        <img src={ticket.assignee.profilePhoto} alt={assigneeName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.textContent = avatarInitials(assigneeName) }} />
+                      ) : ticket.assignee ? avatarInitials(assigneeName) : '?'}
                     </div>
                     <span style={{ fontSize: 13, fontWeight: 500, color: ticket.assignee ? '#1a1a1a' : '#bbb' }}>{assigneeName}</span>
                   </div>

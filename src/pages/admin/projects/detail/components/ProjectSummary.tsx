@@ -396,9 +396,18 @@ const ProjectSummary = ({ project }: Props) => {
                   justifyContent: 'center',
                   fontSize: '20px',
                   fontWeight: 700,
-                  border: '3px solid rgba(255, 255, 255, 0.3)'
+                  border: '3px solid rgba(255, 255, 255, 0.3)',
+                  overflow: 'hidden',
+                  flexShrink: 0,
                 }}>
-                  {getInitials(owner.firstName, owner.lastName)}
+                  {owner.profilePhoto ? (
+                    <img
+                      src={owner.profilePhoto}
+                      alt={`${owner.firstName} ${owner.lastName}`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.textContent = getInitials(owner.firstName, owner.lastName) }}
+                    />
+                  ) : getInitials(owner.firstName, owner.lastName)}
                 </div>
                 
                 <div style={{ flex: 1 }}>
@@ -485,9 +494,17 @@ const ProjectSummary = ({ project }: Props) => {
                     fontSize: '16px',
                     fontWeight: 700,
                     color: '#ffffff',
-                    flexShrink: 0
+                    flexShrink: 0,
+                    overflow: 'hidden',
                   }}>
-                    {getInitials(m.user?.firstName, m.user?.lastName)}
+                    {m.user?.profilePhoto ? (
+                      <img
+                        src={m.user.profilePhoto}
+                        alt={`${m.user?.firstName} ${m.user?.lastName}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.textContent = getInitials(m.user?.firstName, m.user?.lastName) }}
+                      />
+                    ) : getInitials(m.user?.firstName, m.user?.lastName)}
                   </div>
                   
                   <div style={{ flex: 1, minWidth: 0 }}>

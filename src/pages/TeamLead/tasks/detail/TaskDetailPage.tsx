@@ -248,8 +248,8 @@ const TaskDetailPage = () => {
           {/* People */}
           <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '20px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>People</div>
-            <PersonRow label="Assignee" name={assigneeName} />
-            <PersonRow label="Created By" name={creatorName} />
+            <PersonRow label="Assignee" name={assigneeName} photo={task.assignee?.profilePhoto} />
+            <PersonRow label="Created By" name={creatorName} photo={task.creator?.profilePhoto} />
           </div>
 
           {/* Dates */}
@@ -285,14 +285,16 @@ const TaskDetailPage = () => {
   )
 }
 
-const PersonRow = ({ label, name }: { label: string; name: string }) => {
+const PersonRow = ({ label, name, photo }: { label: string; name: string; photo?: string }) => {
   const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
       <span style={{ fontSize: 12, color: '#999', fontWeight: 500 }}>{label}</span>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff' }}>
-          {initials}
+        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', overflow: 'hidden', flexShrink: 0 }}>
+          {photo ? (
+            <img src={photo} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.textContent = initials }} />
+          ) : initials}
         </div>
         <span style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>{name}</span>
       </div>

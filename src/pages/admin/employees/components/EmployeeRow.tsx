@@ -40,9 +40,18 @@ const EmployeeRow = ({ employee, onRefresh }: Props) => {
               justifyContent: 'center',
               fontWeight: 600,
               fontSize: '14px',
+              overflow: 'hidden',
+              flexShrink: 0,
             }}
           >
-            {employee.firstName?.[0] ?? '?'}
+            {employee.profilePhoto ? (
+              <img
+                src={employee.profilePhoto}
+                alt={fullName}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.textContent = employee.firstName?.[0] ?? '?' }}
+              />
+            ) : (employee.firstName?.[0] ?? '?')}
           </div>
 
           <div>
