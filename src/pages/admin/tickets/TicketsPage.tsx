@@ -225,8 +225,7 @@ const handleFilterChange = (newFilters: any) => {
           backgroundColor: '#fff',
           borderRadius: '12px',
           border: '1px solid #e5e5e5',
-          overflowX: 'auto',
-          overflowY: 'visible',
+          overflow: 'visible',
         }}
       >
         <TicketTable 

@@ -166,7 +166,7 @@ const threeDotButtonStyle: React.CSSProperties = {
 const dropdownStyle: React.CSSProperties = {
   position: 'absolute',
   right: '60%',
-  bottom: 10,
+  bottom: 35,
   background: '#fff',
   border: '1px solid #e5e5e5',
   borderRadius: '8px',
