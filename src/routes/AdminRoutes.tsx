@@ -24,6 +24,9 @@ import WorkApprovalDetailPage from '../pages/TeamLead/workApproval/detail/WorkAp
 import AttendanceDashboardPage from '../pages/admin/attendance/AttendanceDashboardPage'
 import LeaveApprovalManagementPage from '../pages/shared/leave/LeaveApprovalManagementPage'
 
+// WFH Pages
+import WfhApprovalPage from '../pages/shared/wfh/WfhApprovalPage'
+
 // Chat
 import ChatPage from '../pages/chat/ChatPage'
 
@@ -61,6 +64,10 @@ const AdminRoutes = () => (
       {/* Leave Routes */}
       <Route path="leave" element={<LeaveApprovalManagementPage />} />
       <Route path="leave/approvals" element={<LeaveApprovalManagementPage />} />
+
+      {/* WFH Routes */}
+      <Route path="wfh" element={<WfhApprovalPage />} />
+      <Route path="wfh/approvals" element={<WfhApprovalPage />} />
       
       {/* Chat */}
       <Route path="chat" element={<ChatPage />} />

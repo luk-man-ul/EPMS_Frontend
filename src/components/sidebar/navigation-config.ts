@@ -178,6 +178,20 @@ export const navigationConfig: NavigationConfig = {
           icon: 'clipboard',
           roles: ['EMPLOYEE', 'TEAM_LEAD'],
         },
+        {
+          id: 'wfh-request',
+          label: 'Request WFH',
+          path: '/app/wfh/request',
+          icon: 'home',
+          roles: ['EMPLOYEE', 'TEAM_LEAD'],
+        },
+        {
+          id: 'wfh-history',
+          label: 'My WFH',
+          path: '/app/wfh',
+          icon: 'laptop',
+          roles: ['EMPLOYEE', 'TEAM_LEAD'],
+        },
       ],
     },
 
@@ -220,10 +234,24 @@ export const navigationConfig: NavigationConfig = {
           roles: ['TEAM_LEAD'],
         },
         {
+          id: 'wfh-approvals',
+          label: 'WFH Approvals',
+          path: '/app/wfh/approvals',
+          icon: 'home',
+          roles: ['TEAM_LEAD'],
+        },
+        {
           id: 'admin-leave-approvals',
           label: 'Leave Approvals',
           path: LEAVE_ROUTES.APPROVALS,
           icon: 'file-text',
+          roles: ['ADMIN'],
+        },
+        {
+          id: 'admin-wfh-approvals',
+          label: 'WFH Approvals',
+          path: '/admin/wfh/approvals',
+          icon: 'home',
           roles: ['ADMIN'],
         },
         {

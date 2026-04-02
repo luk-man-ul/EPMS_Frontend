@@ -26,6 +26,11 @@ import LeaveRequestPage from '../pages/shared/leave/LeaveRequestPage'
 import MyLeavePage from '../pages/shared/leave/MyLeavePage'
 import LeaveApprovalManagementPage from '../pages/shared/leave/LeaveApprovalManagementPage'
 
+// WFH Pages
+import WfhRequestPage from '../pages/shared/wfh/WfhRequestPage'
+import MyWfhPage from '../pages/shared/wfh/MyWfhPage'
+import WfhApprovalPage from '../pages/shared/wfh/WfhApprovalPage'
+
 // Attendance & Leave - Team Lead Pages
 import TeamAttendancePage from '../pages/TeamLead/attendance/TeamAttendancePage'
 
@@ -95,6 +100,18 @@ const AppWorkspaceRoutes = () => {
               <LeaveApprovalManagementPage />
             </ProtectedRoute>
           } 
+        />
+
+        {/* WFH Routes */}
+        <Route path="wfh" element={<MyWfhPage />} />
+        <Route path="wfh/request" element={<WfhRequestPage />} />
+        <Route
+          path="wfh/approvals"
+          element={
+            <ProtectedRoute requiredRoles={['TEAM_LEAD', 'ADMIN']}>
+              <WfhApprovalPage />
+            </ProtectedRoute>
+          }
         />
 
         {/* Chat */}
