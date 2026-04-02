@@ -19,11 +19,11 @@ interface Attachment {
 }
 
 interface Props {
-  taskId: string
+  entityType: string
+  entityId: string
 }
 
 const VITE_API_URL = import.meta.env.VITE_API_URL || ''
-// Strip trailing /api or / so we can prepend to relative paths like /uploads/...
 const BACKEND_ORIGIN = VITE_API_URL.replace(/\/api\/?$/, '').replace(/\/$/, '')
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
@@ -45,12 +45,11 @@ const formatBytes = (bytes: number): string => {
 
 const resolveUrl = (fileUrl: string): string => {
   if (fileUrl.startsWith('http')) return fileUrl
-  // Ensure single slash between origin and path
   const path = fileUrl.startsWith('/') ? fileUrl : `/${fileUrl}`
   return `${BACKEND_ORIGIN}${path}`
 }
 
-const TaskAttachments = ({ taskId }: Props) => {
+const Attachments = ({ entityType, entityId }: Props) => {
   const { user } = useAuth()
   const { showToast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -63,7 +62,7 @@ const TaskAttachments = ({ taskId }: Props) => {
 
   const fetchAttachments = async () => {
     try {
-      const res = await api.get(`/files/task/${taskId}`)
+      const res = await api.get(`/files/${entityType}/${entityId}`)
       setAttachments(res.data)
     } catch {
       // silently fail — attachments are non-critical
@@ -73,8 +72,8 @@ const TaskAttachments = ({ taskId }: Props) => {
   }
 
   useEffect(() => {
-    if (taskId) fetchAttachments()
-  }, [taskId])
+    if (entityType && entityId) fetchAttachments()
+  }, [entityType, entityId])
 
   // Close lightbox on ESC
   useEffect(() => {
@@ -88,7 +87,6 @@ const TaskAttachments = ({ taskId }: Props) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Client-side validation
     if (file.size > MAX_FILE_SIZE) {
       showToast('error', 'File too large (max 5MB)')
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -102,8 +100,8 @@ const TaskAttachments = ({ taskId }: Props) => {
 
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('entityType', 'task')
-    formData.append('entityId', taskId)
+    formData.append('entityType', entityType)
+    formData.append('entityId', entityId)
 
     try {
       setUploading(true)
@@ -111,7 +109,7 @@ const TaskAttachments = ({ taskId }: Props) => {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       showToast('success', 'File uploaded successfully')
-      await fetchAttachments() // always re-fetch from backend
+      await fetchAttachments()
     } catch (err: any) {
       showToast('error', err.response?.data?.message || 'Upload failed')
     } finally {
@@ -121,17 +119,14 @@ const TaskAttachments = ({ taskId }: Props) => {
   }
 
   const handleDelete = async (attachmentId: string) => {
-    // Save previous state for rollback
     const previous = attachments
     setDeletingId(attachmentId)
-    // Optimistic removal
     setAttachments((prev) => prev.filter((a) => a.id !== attachmentId))
 
     try {
       await api.delete(`/files/${attachmentId}`)
       showToast('success', 'File deleted')
     } catch (err: any) {
-      // Rollback on failure
       setAttachments(previous)
       showToast('error', err.response?.data?.message || 'Delete failed')
     } finally {
@@ -144,6 +139,8 @@ const TaskAttachments = ({ taskId }: Props) => {
     return user.id === attachment.uploadedById || user.role === 'ADMIN'
   }
 
+  const inputId = `file-upload-${entityType}-${entityId}`
+
   return (
     <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '24px 28px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
       {/* Header */}
@@ -153,7 +150,7 @@ const TaskAttachments = ({ taskId }: Props) => {
         </div>
 
         <label
-          htmlFor={`task-file-upload-${taskId}`}
+          htmlFor={inputId}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -172,7 +169,7 @@ const TaskAttachments = ({ taskId }: Props) => {
           {uploading ? '⏳ Uploading...' : '📎 Attach File'}
         </label>
         <input
-          id={`task-file-upload-${taskId}`}
+          id={inputId}
           ref={fileInputRef}
           type="file"
           accept=".jpg,.jpeg,.png,.webp,.pdf,.txt"
@@ -210,28 +207,18 @@ const TaskAttachments = ({ taskId }: Props) => {
                 onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#e5e5e5')}
                 onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#f0f0f0')}
               >
-                {/* Icon or image thumbnail */}
                 {isImage ? (
                   <img
                     src={resolvedUrl}
                     alt={attachment.fileName}
                     onClick={() => setPreviewUrl(resolvedUrl)}
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 6,
-                      objectFit: 'cover',
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                      border: '1px solid #e5e5e5',
-                    }}
+                    style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', cursor: 'pointer', flexShrink: 0, border: '1px solid #e5e5e5' }}
                     onError={(e) => { e.currentTarget.style.display = 'none' }}
                   />
                 ) : (
                   <span style={{ fontSize: 22, flexShrink: 0 }}>{fileIcon(attachment.fileType)}</span>
                 )}
 
-                {/* File info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {attachment.fileName}
@@ -242,24 +229,13 @@ const TaskAttachments = ({ taskId }: Props) => {
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                   <a
                     href={resolvedUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     download={attachment.fileName}
-                    style={{
-                      padding: '5px 10px',
-                      borderRadius: 6,
-                      border: '1px solid #e5e5e5',
-                      background: '#fff',
-                      color: '#374151',
-                      fontSize: 11,
-                      fontWeight: 500,
-                      textDecoration: 'none',
-                      cursor: 'pointer',
-                    }}
+                    style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #e5e5e5', background: '#fff', color: '#374151', fontSize: 11, fontWeight: 500, textDecoration: 'none', cursor: 'pointer' }}
                   >
                     ↓ Download
                   </a>
@@ -268,16 +244,7 @@ const TaskAttachments = ({ taskId }: Props) => {
                     <button
                       onClick={() => handleDelete(attachment.id)}
                       disabled={isDeleting}
-                      style={{
-                        padding: '5px 10px',
-                        borderRadius: 6,
-                        border: '1px solid #fecaca',
-                        background: '#fff5f5',
-                        color: isDeleting ? '#999' : '#dc2626',
-                        fontSize: 11,
-                        fontWeight: 500,
-                        cursor: isDeleting ? 'not-allowed' : 'pointer',
-                      }}
+                      style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #fecaca', background: '#fff5f5', color: isDeleting ? '#999' : '#dc2626', fontSize: 11, fontWeight: 500, cursor: isDeleting ? 'not-allowed' : 'pointer' }}
                     >
                       {isDeleting ? '...' : '🗑️'}
                     </button>
@@ -289,20 +256,11 @@ const TaskAttachments = ({ taskId }: Props) => {
         </div>
       )}
 
-      {/* Image preview lightbox — close on backdrop click or ESC */}
+      {/* Lightbox — close on backdrop click or ESC */}
       {previewUrl && (
         <div
           onClick={() => setPreviewUrl(null)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.75)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-            cursor: 'zoom-out',
-          }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, cursor: 'zoom-out' }}
         >
           <img
             src={previewUrl}
@@ -316,4 +274,4 @@ const TaskAttachments = ({ taskId }: Props) => {
   )
 }
 
-export default TaskAttachments
+export default Attachments

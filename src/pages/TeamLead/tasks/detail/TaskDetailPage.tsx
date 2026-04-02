@@ -4,7 +4,7 @@ import api from '../../../../utils/api'
 import { useToast } from '../../../../context/ToastContext'
 import { useAuth } from '../../../../context/AuthContext'
 import EditTaskModal from '../components/EditTaskModal'
-import TaskAttachments from '../../../../components/shared/TaskAttachments'
+import Attachments from '../../../../components/shared/Attachments'
 
 const statusOptions = [
   { value: 'TODO', label: 'To Do' },
@@ -224,7 +224,7 @@ const TaskDetailPage = () => {
           </div>
 
           {/* Attachments */}
-          <TaskAttachments taskId={taskId!} />
+          <Attachments entityType="task" entityId={taskId!} />
         </div>
 
         {/* RIGHT COLUMN */}

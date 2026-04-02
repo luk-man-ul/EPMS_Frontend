@@ -9,7 +9,7 @@ import TicketProblemDescription from './components/TicketProblemDescription'
 import TicketDiscussionThread from './components/TicketDiscussionThread'
 import TicketSolutionLogs from './components/TicketSolutionLogs'
 import TicketStatusTimeline from './components/TicketStatusTimeline'
-import TicketAttachments from './components/TicketAttachments'
+import Attachments from '../../../../components/shared/Attachments'
 
 const TicketDetailPage = () => {
   const { ticketId } = useParams()
@@ -480,9 +480,7 @@ const TicketDetailPage = () => {
           <TicketStatusTimeline 
             statusHistory={ticket.statusHistory || []}
           />
-          <TicketAttachments 
-            attachments={[]}
-          />
+          <Attachments entityType="ticket" entityId={ticketId!} />
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { useToast } from '../../../../context/ToastContext'
 import ConfirmationModal from '../../../../components/shared/ConfirmationModal'
 import TicketStatusTimeline from '../../../admin/tickets/detail/components/TicketStatusTimeline'
 import { getAllowedTransitions, formatStatus as formatStatusEnum, type TicketStatus } from '../../../../types/ticketWorkflow'
+import Attachments from '../../../../components/shared/Attachments'
 
 const typeConfig: Record<string, { icon: string; color: string; bg: string }> = {
   BUG:         { icon: '🐛', color: '#dc2626', bg: '#fef2f2' },
@@ -269,6 +270,9 @@ const TicketDetailPage = () => {
               <TicketStatusTimeline statusHistory={ticket.statusHistory} />
             </div>
           )}
+
+          {/* Attachments */}
+          <Attachments entityType="ticket" entityId={ticketId!} />
         </div>
 
         {/* RIGHT */}
