@@ -235,16 +235,9 @@ export const navigationConfig: NavigationConfig = {
         },
         {
           id: 'wfh-approvals',
-          label: 'WFH Approvals',
-          path: '/app/wfh/approvals',
+          label: 'WFH Requests',
+          path: '/app/wfh/requests',
           icon: 'home',
-          roles: ['TEAM_LEAD'],
-        },
-        {
-          id: 'wfh-all',
-          label: 'All WFH Requests',
-          path: '/app/wfh/all',
-          icon: 'laptop',
           roles: ['TEAM_LEAD'],
         },
         {
@@ -256,16 +249,9 @@ export const navigationConfig: NavigationConfig = {
         },
         {
           id: 'admin-wfh-approvals',
-          label: 'WFH Approvals',
-          path: '/admin/wfh/approvals',
+          label: 'WFH Requests',
+          path: '/admin/wfh/requests',
           icon: 'home',
-          roles: ['ADMIN'],
-        },
-        {
-          id: 'admin-wfh-all',
-          label: 'All WFH Requests',
-          path: '/admin/wfh/all',
-          icon: 'laptop',
           roles: ['ADMIN'],
         },
         {

@@ -1,88 +1,99 @@
 import { useState, useEffect, useMemo } from 'react'
-import { getPendingApprovals, getSelfWorkMetrics } from '../../../utils/api'
-import type { Task } from '../../../types/task'
+import api, { getSelfWorkMetrics, approveSelfWork, rejectSelfWork } from '../../../utils/api'
 import type { SelfWorkMetrics } from '../../../types/task'
-import { Button, LoadingSpinner, ErrorMessage } from '../../../components/ui'
+import { Button, Card, Select, LoadingSpinner, Modal, Input } from '../../../components/ui'
+import { useToast } from '../../../context/ToastContext'
 import StatsCards from './components/StatsCards'
-import WorkApprovalFilters from './components/WorkApprovalFilters'
-import WorkApprovalTable from './components/WorkApprovalTable'
+
+const statusConfig: Record<string, { color: string; bg: string; label: string }> = {
+  PROPOSED: { color: '#92400e', bg: '#fef3c7', label: 'Pending' },
+  TODO:      { color: '#065f46', bg: '#d1fae5', label: 'Approved' },
+  IN_PROGRESS: { color: '#065f46', bg: '#d1fae5', label: 'Approved' },
+  REVIEW:    { color: '#065f46', bg: '#d1fae5', label: 'Approved' },
+  COMPLETED: { color: '#065f46', bg: '#d1fae5', label: 'Approved' },
+  REJECTED:  { color: '#991b1b', bg: '#fee2e2', label: 'Rejected' },
+  CANCELLED: { color: '#6b7280', bg: '#f3f4f6', label: 'Cancelled' },
+};
+
+const formatDate = (dateString: string) =>
+  new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
 const WorkApprovalPage = () => {
-  const [projectFilter, setProjectFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [tasks, setTasks] = useState<Task[]>([])
+  const { showToast } = useToast()
+
+  const [tasks, setTasks] = useState<any[]>([])
   const [metrics, setMetrics] = useState<SelfWorkMetrics | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState('')
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [showRejectModal, setShowRejectModal] = useState<string | null>(null)
+  const [rejectReason, setRejectReason] = useState('')
 
-  // Fetch data from backend
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [statusFilter])
 
   const fetchData = async () => {
     try {
       setLoading(true)
-      setError(null)
-      const [tasksData, metricsData] = await Promise.all([
-        getPendingApprovals(),
-        getSelfWorkMetrics()
+      const params: any = { type: 'SELF_WORK' }
+      if (statusFilter) params.status = statusFilter
+
+      const [tasksRes, metricsData] = await Promise.all([
+        api.get('/tasks', { params }),
+        getSelfWorkMetrics(),
       ])
-      setTasks(tasksData)
+
+      setTasks(tasksRes.data.data || tasksRes.data || [])
       setMetrics(metricsData)
     } catch (err: any) {
       console.error('Error fetching work approvals:', err)
-      setError(err.response?.data?.message || 'Failed to load work approvals')
+      showToast('error', err.response?.data?.message || 'Failed to load work approvals')
     } finally {
       setLoading(false)
     }
   }
 
-  // Get unique projects
-  const projects = useMemo(() => {
-    const uniqueProjects = Array.from(new Set(tasks.map(t => t.project?.name).filter((name): name is string => Boolean(name))))
-    return ['all', ...uniqueProjects]
-  }, [tasks])
-
-  // Transform tasks to approval format
-  const approvals = useMemo(() => {
-    return tasks.map(task => ({
-      id: task.id,
-      employeeName: task.creator ? `${task.creator.firstName} ${task.creator.lastName}` : 'Unknown',
-      project: task.project?.name || 'Unknown Project',
-      workTitle: task.title,
-      submittedDate: task.createdAt.toString(),
-      estimatedTime: task.estimatedHrs ? `${task.estimatedHrs} hours` : 'N/A',
-      status: (task.status === 'PROPOSED' ? 'pending' : 
-              task.status === 'REJECTED' ? 'rejected' : 
-              'approved') as 'pending' | 'approved' | 'rejected',
-      description: task.description || '',
-      reason: '',
-      expectedOutcome: '',
-      attachment: '',
-    }))
-  }, [tasks])
-
-  // Filter approvals
-  const filteredApprovals = useMemo(() => {
-    return approvals.filter(approval => {
-      const matchesProject = projectFilter === 'all' || approval.project === projectFilter
-      const matchesStatus = statusFilter === 'all' || approval.status === statusFilter
-      return matchesProject && matchesStatus
-    })
-  }, [approvals, projectFilter, statusFilter])
-
-  // Calculate stats from metrics
-  const stats = useMemo(() => {
-    if (!metrics) {
-      return {
-        totalPending: 0,
-        totalApproved: 0,
-        totalRejected: 0,
-        avgProcessingTime: '0 hrs',
-      }
+  const handleApprove = async (taskId: string) => {
+    try {
+      setActionLoading(taskId)
+      await approveSelfWork(taskId)
+      showToast('success', 'Self-work task approved successfully')
+      await fetchData()
+    } catch (err: any) {
+      showToast('error', err.response?.data?.message || 'Failed to approve task')
+    } finally {
+      setActionLoading(null)
     }
-    
+  }
+
+  const handleRejectClick = (taskId: string) => {
+    setShowRejectModal(taskId)
+    setRejectReason('')
+  }
+
+  const handleRejectConfirm = async () => {
+    if (!showRejectModal) return
+    if (!rejectReason.trim()) {
+      showToast('error', 'Please provide a rejection reason')
+      return
+    }
+    try {
+      setActionLoading(showRejectModal)
+      await rejectSelfWork(showRejectModal, rejectReason)
+      showToast('success', 'Self-work task rejected')
+      setShowRejectModal(null)
+      setRejectReason('')
+      await fetchData()
+    } catch (err: any) {
+      showToast('error', err.response?.data?.message || 'Failed to reject task')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const stats = useMemo(() => {
+    if (!metrics) return { totalPending: 0, totalApproved: 0, totalRejected: 0, avgProcessingTime: '0 hrs' }
     return {
       totalPending: metrics.pendingCount,
       totalApproved: metrics.totalApproved,
@@ -91,56 +102,13 @@ const WorkApprovalPage = () => {
     }
   }, [metrics])
 
-  // Loading state
-  if (loading) {
-    return (
-      <div style={{ padding: '24px' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '400px',
-        }}>
-          <LoadingSpinner size="lg" text="Loading work approvals..." />
-        </div>
-      </div>
-    )
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div style={{ padding: '24px' }}>
-        <ErrorMessage
-          message={error}
-          type="page"
-          onDismiss={() => setError(null)}
-        />
-        <div style={{ textAlign: 'center', marginTop: '16px' }}>
-          <Button onClick={fetchData} variant="danger">
-            Try Again
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div style={{ padding: '24px' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{
-          fontSize: '28px',
-          fontWeight: 700,
-          color: '#1a1a1a',
-          marginBottom: '8px',
-        }}>
+      <div style={{ marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1a1a1a', marginBottom: '8px' }}>
           Self-Work Approval
         </h1>
-        <p style={{
-          fontSize: '14px',
-          color: '#666666',
-        }}>
+        <p style={{ fontSize: '14px', color: '#666666' }}>
           Review and approve employee-submitted personal work
         </p>
       </div>
@@ -154,16 +122,142 @@ const WorkApprovalPage = () => {
       />
 
       {/* Filters */}
-      <WorkApprovalFilters
-        projectFilter={projectFilter}
-        statusFilter={statusFilter}
-        projects={projects}
-        onProjectChange={setProjectFilter}
-        onStatusChange={setStatusFilter}
-      />
+      <Card padding="md">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          <Select
+            label="Status"
+            value={statusFilter}
+            onChange={(value) => setStatusFilter(value as string)}
+            options={[
+              { value: '', label: 'All Statuses' },
+              { value: 'PROPOSED', label: 'Pending' },
+              { value: 'TODO', label: 'Approved' },
+              { value: 'REJECTED', label: 'Rejected' },
+            ]}
+          />
+        </div>
+      </Card>
 
       {/* Table */}
-      <WorkApprovalTable approvals={filteredApprovals} onRefresh={fetchData} />
+      <Card padding="none">
+        {loading ? (
+          <div style={{ padding: '48px' }}>
+            <LoadingSpinner text="Loading work approvals..." />
+          </div>
+        ) : tasks.length === 0 ? (
+          <div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}>
+            No work submissions found
+          </div>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e5e5' }}>
+                {['Employee', 'Project', 'Work Title', 'Est. Hours', 'Status', 'Submitted', 'Actions'].map((h) => (
+                  <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px', fontWeight: 600, color: '#374151' }}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {tasks.map((task) => {
+                const s = statusConfig[task.status] || statusConfig.PROPOSED;
+                const isPending = task.status === 'PROPOSED';
+                return (
+                  <tr key={task.id} style={{ borderBottom: '1px solid #e5e5e5' }}>
+                    <td style={{ padding: '14px 16px', fontSize: '14px', color: '#1f2937' }}>
+                      <div style={{ fontWeight: 500 }}>
+                        {task.creator?.firstName} {task.creator?.lastName}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+                        {task.creator?.email}
+                      </div>
+                    </td>
+                    <td style={{ padding: '14px 16px', fontSize: '14px', color: '#6b7280' }}>
+                      {task.project?.name || '—'}
+                    </td>
+                    <td style={{ padding: '14px 16px', fontSize: '14px', color: '#1f2937', maxWidth: '260px' }}>
+                      {task.title}
+                    </td>
+                    <td style={{ padding: '14px 16px', fontSize: '14px', color: '#6b7280' }}>
+                      {task.estimatedHrs ? `${task.estimatedHrs}h` : '—'}
+                    </td>
+                    <td style={{ padding: '14px 16px' }}>
+                      <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, color: s.color, background: s.bg }}>
+                        {s.label}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 16px', fontSize: '13px', color: '#6b7280' }}>
+                      {formatDate(task.createdAt)}
+                    </td>
+                    <td style={{ padding: '14px 16px' }}>
+                      {isPending ? (
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => handleApprove(task.id)}
+                            loading={actionLoading === task.id}
+                            disabled={actionLoading === task.id}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleRejectClick(task.id)}
+                            disabled={actionLoading === task.id}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '13px', color: '#6b7280' }}>
+                          {task.approvedBy
+                            ? `By ${task.approvedBy.firstName} ${task.approvedBy.lastName}`
+                            : '—'}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </Card>
+
+      {/* Reject Modal */}
+      <Modal
+        isOpen={!!showRejectModal}
+        onClose={() => { setShowRejectModal(null); setRejectReason(''); }}
+        title="Reject Self-Work Task"
+        size="md"
+        footer={
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+            <Button variant="secondary" onClick={() => { setShowRejectModal(null); setRejectReason(''); }}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleRejectConfirm}
+              loading={actionLoading !== null}
+              disabled={actionLoading !== null || !rejectReason.trim()}
+            >
+              Reject
+            </Button>
+          </div>
+        }
+      >
+        <Input
+          type="textarea"
+          label="Rejection Reason"
+          value={rejectReason}
+          onChange={(value) => setRejectReason(value)}
+          placeholder="Please provide a reason for rejection..."
+          rows={4}
+        />
+      </Modal>
     </div>
   )
 }

@@ -25,8 +25,7 @@ import AttendanceDashboardPage from '../pages/admin/attendance/AttendanceDashboa
 import LeaveApprovalManagementPage from '../pages/shared/leave/LeaveApprovalManagementPage'
 
 // WFH Pages
-import WfhApprovalPage from '../pages/shared/wfh/WfhApprovalPage'
-import AllWfhRequestsPage from '../pages/shared/wfh/AllWfhRequestsPage'
+import WfhManagementPage from '../pages/shared/wfh/WfhManagementPage'
 
 // Chat
 import ChatPage from '../pages/chat/ChatPage'
@@ -67,9 +66,10 @@ const AdminRoutes = () => (
       <Route path="leave/approvals" element={<LeaveApprovalManagementPage />} />
 
       {/* WFH Routes */}
-      <Route path="wfh" element={<WfhApprovalPage />} />
-      <Route path="wfh/approvals" element={<WfhApprovalPage />} />
-      <Route path="wfh/all" element={<AllWfhRequestsPage />} />
+      <Route path="wfh" element={<WfhManagementPage />} />
+      <Route path="wfh/requests" element={<WfhManagementPage />} />
+      <Route path="wfh/approvals" element={<RedirectRoute from="/admin/wfh/approvals" to="/admin/wfh/requests" />} />
+      <Route path="wfh/all" element={<RedirectRoute from="/admin/wfh/all" to="/admin/wfh/requests" />} />
       
       {/* Chat */}
       <Route path="chat" element={<ChatPage />} />

@@ -29,8 +29,7 @@ import LeaveApprovalManagementPage from '../pages/shared/leave/LeaveApprovalMana
 // WFH Pages
 import WfhRequestPage from '../pages/shared/wfh/WfhRequestPage'
 import MyWfhPage from '../pages/shared/wfh/MyWfhPage'
-import WfhApprovalPage from '../pages/shared/wfh/WfhApprovalPage'
-import AllWfhRequestsPage from '../pages/shared/wfh/AllWfhRequestsPage'
+import WfhManagementPage from '../pages/shared/wfh/WfhManagementPage'
 
 // Attendance & Leave - Team Lead Pages
 import TeamAttendancePage from '../pages/TeamLead/attendance/TeamAttendancePage'
@@ -107,21 +106,16 @@ const AppWorkspaceRoutes = () => {
         <Route path="wfh" element={<MyWfhPage />} />
         <Route path="wfh/request" element={<WfhRequestPage />} />
         <Route
-          path="wfh/approvals"
+          path="wfh/requests"
           element={
             <ProtectedRoute requiredRoles={['TEAM_LEAD', 'ADMIN']}>
-              <WfhApprovalPage />
+              <WfhManagementPage />
             </ProtectedRoute>
           }
         />
-        <Route
-          path="wfh/all"
-          element={
-            <ProtectedRoute requiredRoles={['TEAM_LEAD', 'ADMIN']}>
-              <AllWfhRequestsPage />
-            </ProtectedRoute>
-          }
-        />
+        {/* Legacy redirects for old WFH routes */}
+        <Route path="wfh/approvals" element={<RedirectRoute from="/app/wfh/approvals" to="/app/wfh/requests" />} />
+        <Route path="wfh/all" element={<RedirectRoute from="/app/wfh/all" to="/app/wfh/requests" />} />
 
         {/* Chat */}
         <Route path="chat" element={<ChatPage />} />
