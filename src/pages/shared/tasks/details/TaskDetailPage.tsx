@@ -4,6 +4,7 @@ import api from '../../../../utils/api'
 import { TaskStatus, formatEnumLabel } from '../../../../types/enums'
 import { useToast } from '../../../../context/ToastContext'
 import TaskTypeBadge from '../../../../components/shared/TaskTypeBadge'
+import TaskAttachments from '../../../../components/shared/TaskAttachments'
 
 const priorityConfig: Record<string, { color: string; bg: string; dot: string }> = {
   LOW:    { color: '#16a34a', bg: '#f0fdf4', dot: '#16a34a' },
@@ -261,6 +262,9 @@ const TaskDetailPage = () => {
             </button>
             <p style={{ color: '#bbb', fontSize: 13, marginTop: 16, marginBottom: 0 }}>No comments yet.</p>
           </div>
+
+          {/* Attachments */}
+          <TaskAttachments taskId={taskId!} />
         </div>
 
         {/* RIGHT */}
