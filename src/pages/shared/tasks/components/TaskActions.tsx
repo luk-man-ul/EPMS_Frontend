@@ -118,11 +118,12 @@ const DropdownItem = ({ label, onClick, danger }: ItemProps) => {
     <div
       onClick={onClick}
       style={{
-        padding: '10px 14px',
+        padding: '10px 16px',
         cursor: 'pointer',
         fontSize: '14px',
         color: danger ? '#dc2626' : '#1a1a1a',
         transition: 'background 0.15s ease',
+        whiteSpace: 'nowrap',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.backgroundColor = '#f5f5f5'
@@ -153,13 +154,13 @@ const threeDotButtonStyle: React.CSSProperties = {
 
 const dropdownStyle: React.CSSProperties = {
   position: 'absolute',
-  top: '38px',
-  right: 0,
+  right: '60%',
+  bottom: 35,
   background: '#fff',
   border: '1px solid #e5e5e5',
   borderRadius: '10px',
-  boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
-  width: 160,
+  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+  minWidth: '160px',
   zIndex: 9999,
 }
 

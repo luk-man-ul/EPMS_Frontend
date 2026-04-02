@@ -165,14 +165,14 @@ const threeDotButtonStyle: React.CSSProperties = {
 
 const dropdownStyle: React.CSSProperties = {
   position: 'absolute',
-  right: 0,
-  top: '42px',
+  right: '60%',
+  bottom: 35,
   background: '#fff',
   border: '1px solid #e5e5e5',
   borderRadius: '8px',
-  boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
+  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
   minWidth: '150px',
-  zIndex: 1000,
+  zIndex: 9999,
 }
 
 export default TicketActions

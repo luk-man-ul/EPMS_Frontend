@@ -31,7 +31,6 @@ const TaskDetailPage = () => {
   const [task, setTask] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [newComment, setNewComment] = useState('')
-  const [newHours, setNewHours] = useState('')
   const [accessDenied, setAccessDenied] = useState(false)
   const [toastShown, setToastShown] = useState(false)
   const [updatingStatus, setUpdatingStatus] = useState(false)
@@ -104,7 +103,6 @@ const TaskDetailPage = () => {
     </div>
   )
 
-  const totalHours = task.timeLogs?.reduce((acc: number, log: any) => acc + log.hours, 0) || 0
   const priority = priorityConfig[task.priority] || priorityConfig.MEDIUM
   const statusStyle = statusConfig[task.status] || statusConfig.TODO
   const assigneeName = task.assignee ? `${task.assignee.firstName} ${task.assignee.lastName}` : 'Unassigned'
@@ -212,39 +210,6 @@ const TaskDetailPage = () => {
                 })}
               </div>
             )}
-          </div>
-
-          {/* Time Logs */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '24px 28px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Time Logs</div>
-              <span style={{ fontSize: 22, fontWeight: 700, color: '#1a1a1a' }}>{totalHours}h <span style={{ fontSize: 12, fontWeight: 400, color: '#999' }}>total</span></span>
-            </div>
-
-            {task.timeLogs?.length > 0 && (
-              <div style={{ marginBottom: 16 }}>
-                {task.timeLogs.map((log: any) => (
-                  <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f5f5f5', fontSize: 13, color: '#555' }}>
-                    <span style={{ fontWeight: 500 }}>⏱ {log.hours}h</span>
-                    {log.description && <span style={{ color: '#999', fontSize: 12 }}>{log.description}</span>}
-                    <span style={{ color: '#bbb', fontSize: 12 }}>{new Date(log.createdAt).toLocaleDateString()}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <input
-                type="number"
-                placeholder="Hours"
-                value={newHours}
-                onChange={(e) => setNewHours(e.target.value)}
-                style={{ flex: 1, padding: '9px 12px', borderRadius: 10, border: '1px solid #e5e5e5', fontSize: 13, outline: 'none', background: '#fafafa' }}
-              />
-              <button style={{ padding: '9px 16px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                + Add Log
-              </button>
-            </div>
           </div>
 
           {/* Comments */}

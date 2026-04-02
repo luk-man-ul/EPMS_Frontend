@@ -10,7 +10,7 @@ interface Props {
 
 const TicketTable = ({ tickets, loading, onEdit, onDelete }: Props) => {
   return (
-    <div style={{ overflow: 'visible' }}>
+    <div style={{ overflow: 'visible', position: 'relative' }}>
       <table
         style={{
           width: '100%',
