@@ -26,6 +26,7 @@ import LeaveApprovalManagementPage from '../pages/shared/leave/LeaveApprovalMana
 
 // WFH Pages
 import WfhApprovalPage from '../pages/shared/wfh/WfhApprovalPage'
+import AllWfhRequestsPage from '../pages/shared/wfh/AllWfhRequestsPage'
 
 // Chat
 import ChatPage from '../pages/chat/ChatPage'
@@ -68,6 +69,7 @@ const AdminRoutes = () => (
       {/* WFH Routes */}
       <Route path="wfh" element={<WfhApprovalPage />} />
       <Route path="wfh/approvals" element={<WfhApprovalPage />} />
+      <Route path="wfh/all" element={<AllWfhRequestsPage />} />
       
       {/* Chat */}
       <Route path="chat" element={<ChatPage />} />

@@ -241,6 +241,13 @@ export const navigationConfig: NavigationConfig = {
           roles: ['TEAM_LEAD'],
         },
         {
+          id: 'wfh-all',
+          label: 'All WFH Requests',
+          path: '/app/wfh/all',
+          icon: 'laptop',
+          roles: ['TEAM_LEAD'],
+        },
+        {
           id: 'admin-leave-approvals',
           label: 'Leave Approvals',
           path: LEAVE_ROUTES.APPROVALS,
@@ -252,6 +259,13 @@ export const navigationConfig: NavigationConfig = {
           label: 'WFH Approvals',
           path: '/admin/wfh/approvals',
           icon: 'home',
+          roles: ['ADMIN'],
+        },
+        {
+          id: 'admin-wfh-all',
+          label: 'All WFH Requests',
+          path: '/admin/wfh/all',
+          icon: 'laptop',
           roles: ['ADMIN'],
         },
         {

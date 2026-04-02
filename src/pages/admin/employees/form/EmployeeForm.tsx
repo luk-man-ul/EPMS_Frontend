@@ -29,6 +29,7 @@ const EmployeeForm = ({
     phone: employee?.phone || '',
     department: employee?.department || '',
     profilePhoto: employee?.profilePhoto || '',
+    workMode: (employee?.workMode || 'ON_SITE') as 'ON_SITE' | 'WFH',
   })
 
   const [selectedSkills, setSelectedSkills] = useState<string[]>(
@@ -150,6 +151,7 @@ const EmployeeForm = ({
             phone: formData.phone,
             department: formData.department,
             profilePhoto: profilePhotoUrl,
+            workMode: formData.workMode,
             skillIds: selectedSkills,
           }
         : { ...formData, profilePhoto: profilePhotoUrl, skillIds: selectedSkills }
@@ -202,6 +204,30 @@ const EmployeeForm = ({
 
         <Input label="Phone" name="phone" value={formData.phone} onChange={handleChange} error={errors.phone} />
         <Input label="Department" name="department" value={formData.department} onChange={handleChange} />
+      </div>
+
+      {/* Work Mode */}
+      <div style={{ marginTop: 16 }}>
+        <label style={{ fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 4 }}>
+          Work Mode
+        </label>
+        <select
+          value={formData.workMode}
+          onChange={(e) => setFormData({ ...formData, workMode: e.target.value as 'ON_SITE' | 'WFH' })}
+          style={{
+            width: '100%',
+            padding: '8px 10px',
+            borderRadius: 8,
+            border: '1px solid #ddd',
+            fontSize: 14,
+            background: '#fff',
+            outline: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          <option value="ON_SITE">On Site</option>
+          <option value="WFH">Work From Home</option>
+        </select>
       </div>
 
       {/* Profile Photo Upload */}

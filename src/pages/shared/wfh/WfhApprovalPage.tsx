@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../../utils/api';
 import { Button, Card, LoadingSpinner } from '../../../components/ui';
+import { useToast } from '../../../context/ToastContext';
 
 const formatDate = (dateString: string) =>
   new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -9,6 +10,7 @@ const WfhApprovalPage = () => {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchPending();
@@ -30,10 +32,12 @@ const WfhApprovalPage = () => {
     try {
       setActionLoading(id);
       await api.patch(`/wfh-requests/${id}/status`, { status });
-      setRequests((prev) => prev.filter((r) => r.id !== id));
+      showToast('success', `WFH request ${status === 'APPROVED' ? 'approved' : 'rejected'} successfully`);
+      // Refresh the pending list so the actioned item disappears cleanly
+      await fetchPending();
     } catch (err: any) {
       console.error(`Error ${status.toLowerCase()} WFH request:`, err);
-      alert(err.response?.data?.message || `Failed to ${status.toLowerCase()} request`);
+      showToast('error', err.response?.data?.message || `Failed to ${status.toLowerCase()} request`);
     } finally {
       setActionLoading(null);
     }
