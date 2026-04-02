@@ -165,24 +165,10 @@ export const navigationConfig: NavigationConfig = {
           roles: ['EMPLOYEE', 'TEAM_LEAD'],
         },
         {
-          id: 'leave-request',
-          label: 'Request Leave',
-          path: APP_LEAVE_ROUTES.REQUEST,
-          icon: 'umbrella',
-          roles: ['EMPLOYEE', 'TEAM_LEAD'],
-        },
-        {
           id: 'leave-history',
           label: 'My Leave',
           path: APP_LEAVE_ROUTES.HISTORY,
           icon: 'clipboard',
-          roles: ['EMPLOYEE', 'TEAM_LEAD'],
-        },
-        {
-          id: 'wfh-request',
-          label: 'Request WFH',
-          path: '/app/wfh/request',
-          icon: 'home',
           roles: ['EMPLOYEE', 'TEAM_LEAD'],
         },
         {

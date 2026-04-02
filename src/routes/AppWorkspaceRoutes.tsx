@@ -22,12 +22,10 @@ import CreateTaskPage from '../pages/TeamLead/tasks/create/CreateTaskPage'
 // Attendance & Leave - Shared Pages
 import CheckInPage from '../pages/shared/attendance/CheckInPage'
 import MyAttendancePage from '../pages/shared/attendance/MyAttendancePage'
-import LeaveRequestPage from '../pages/shared/leave/LeaveRequestPage'
 import MyLeavePage from '../pages/shared/leave/MyLeavePage'
 import LeaveApprovalManagementPage from '../pages/shared/leave/LeaveApprovalManagementPage'
 
 // WFH Pages
-import WfhRequestPage from '../pages/shared/wfh/WfhRequestPage'
 import MyWfhPage from '../pages/shared/wfh/MyWfhPage'
 import WfhManagementPage from '../pages/shared/wfh/WfhManagementPage'
 
@@ -91,8 +89,8 @@ const AppWorkspaceRoutes = () => {
 
         {/* Leave Routes */}
         <Route path="leave" element={<MyLeavePage />} />
-        <Route path="leave/request" element={<LeaveRequestPage />} />
         <Route path="leave/history" element={<MyLeavePage />} />
+        <Route path="leave/request" element={<RedirectRoute from="/app/leave/request" to="/app/leave" />} />
         <Route 
           path="leave/approvals" 
           element={
@@ -104,7 +102,7 @@ const AppWorkspaceRoutes = () => {
 
         {/* WFH Routes */}
         <Route path="wfh" element={<MyWfhPage />} />
-        <Route path="wfh/request" element={<WfhRequestPage />} />
+        <Route path="wfh/request" element={<RedirectRoute from="/app/wfh/request" to="/app/wfh" />} />
         <Route
           path="wfh/requests"
           element={

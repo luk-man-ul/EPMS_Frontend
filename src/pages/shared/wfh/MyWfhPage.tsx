@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../../../utils/api';
-import { Card, LoadingSpinner } from '../../../components/ui';
+import WfhRequestForm from './components/WfhRequestForm';
+import { Button, Card, LoadingSpinner, Modal } from '../../../components/ui';
+import { useToast } from '../../../context/ToastContext';
 
 const statusConfig: Record<string, { color: string; bg: string; label: string }> = {
   PENDING:  { color: '#92400e', bg: '#fef3c7', label: 'Pending' },
@@ -12,8 +14,10 @@ const formatDate = (dateString: string) =>
   new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
 const MyWfhPage = () => {
+  const { showToast } = useToast();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     fetchRequests();
@@ -25,7 +29,7 @@ const MyWfhPage = () => {
       const response = await api.get('/wfh-requests/my');
       setRequests(response.data);
     } catch (err: any) {
-      console.error('Error fetching WFH requests:', err);
+      showToast('error', err.response?.data?.message || 'Failed to fetch WFH requests');
     } finally {
       setLoading(false);
     }
@@ -33,15 +37,22 @@ const MyWfhPage = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>
-          My WFH Requests
-        </h1>
-        <p style={{ fontSize: '14px', color: '#666666' }}>
-          View all your Work From Home requests and their approval status
-        </p>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+        <div>
+          <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>
+            My WFH Requests
+          </h1>
+          <p style={{ fontSize: '14px', color: '#666666' }}>
+            View all your Work From Home requests and their approval status
+          </p>
+        </div>
+        <Button variant="primary" onClick={() => setShowModal(true)}>
+          + Request WFH
+        </Button>
       </div>
 
+      {/* Table */}
       {loading ? (
         <Card>
           <LoadingSpinner text="Loading WFH requests..." />
@@ -93,6 +104,19 @@ const MyWfhPage = () => {
           </table>
         </Card>
       )}
+
+      {/* Request WFH Modal */}
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Request Work From Home"
+        size="md"
+      >
+        <WfhRequestForm
+          onSuccess={fetchRequests}
+          onClose={() => setShowModal(false)}
+        />
+      </Modal>
     </div>
   );
 };
