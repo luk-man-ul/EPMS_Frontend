@@ -13,6 +13,11 @@ export function MessageBubble({ message, isOwnMessage, onEdit, onDelete }: Messa
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
   const [showActions, setShowActions] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const isEditWindowOpen = (Date.now() - new Date(message.createdAt).getTime()) < 15 * 60 * 1000;
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -29,8 +34,17 @@ export function MessageBubble({ message, isOwnMessage, onEdit, onDelete }: Messa
 
   const handleEditSave = () => {
     const trimmed = editContent.trim();
-    if (trimmed && trimmed !== message.content && onEdit) {
-      onEdit(message.id, trimmed);
+    if (!trimmed) {
+      setEditError('Message cannot be empty');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      if (trimmed !== message.content && onEdit) {
+        onEdit(message.id, trimmed);
+      }
+    } finally {
+      setIsSaving(false);
     }
     setIsEditing(false);
     setShowActions(false);
@@ -39,14 +53,12 @@ export function MessageBubble({ message, isOwnMessage, onEdit, onDelete }: Messa
   const handleEditCancel = () => {
     setEditContent(message.content);
     setIsEditing(false);
+    setIsSaving(false);
     setShowActions(false);
   };
 
   const handleDelete = () => {
-    if (window.confirm('Delete this message?') && onDelete) {
-      onDelete(message.id);
-    }
-    setShowActions(false);
+    setShowDeleteConfirm(true);
   };
 
   // Deleted message — show placeholder, no actions
@@ -94,9 +106,9 @@ export function MessageBubble({ message, isOwnMessage, onEdit, onDelete }: Messa
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <textarea
                 value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
+                onChange={(e) => { setEditContent(e.target.value); setEditError(null); }}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleEditSave(); }
+                  if (e.key === 'Enter' && !e.shiftKey && !isSaving) { e.preventDefault(); handleEditSave(); }
                   if (e.key === 'Escape') handleEditCancel();
                 }}
                 autoFocus
@@ -115,6 +127,9 @@ export function MessageBubble({ message, isOwnMessage, onEdit, onDelete }: Messa
                   boxSizing: 'border-box',
                 }}
               />
+              {editError && (
+                <span style={{ fontSize: 11, color: '#dc2626' }}>{editError}</span>
+              )}
               <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                 <button
                   onClick={handleEditCancel}
@@ -124,7 +139,8 @@ export function MessageBubble({ message, isOwnMessage, onEdit, onDelete }: Messa
                 </button>
                 <button
                   onClick={handleEditSave}
-                  style={{ padding: '3px 10px', borderRadius: 5, border: 'none', background: '#1a1a1a', color: '#fff', cursor: 'pointer', fontSize: 12 }}
+                  disabled={isSaving}
+                  style={{ padding: '3px 10px', borderRadius: 5, border: 'none', background: '#1a1a1a', color: '#fff', cursor: isSaving ? 'not-allowed' : 'pointer', fontSize: 12 }}
                 >
                   Save
                 </button>
@@ -147,21 +163,41 @@ export function MessageBubble({ message, isOwnMessage, onEdit, onDelete }: Messa
 
         {/* Action buttons — only for own messages, shown on hover */}
         {isOwnMessage && showActions && !isEditing && (
-          <div style={{ display: 'flex', gap: 4, marginTop: 4, justifyContent: 'flex-end' }}>
-            <button
-              onClick={() => { setIsEditing(true); setEditContent(message.content); }}
-              title="Edit"
-              style={{ padding: '2px 8px', borderRadius: 4, border: '1px solid #e5e5e5', background: '#fff', cursor: 'pointer', fontSize: 11, color: '#374151' }}
-            >
-              ✏️ Edit
-            </button>
-            <button
-              onClick={handleDelete}
-              title="Delete"
-              style={{ padding: '2px 8px', borderRadius: 4, border: '1px solid #fecaca', background: '#fff5f5', cursor: 'pointer', fontSize: 11, color: '#dc2626' }}
-            >
-              🗑️ Delete
-            </button>
+          <div style={{ display: 'flex', gap: 4, marginTop: 4, justifyContent: 'flex-end', alignItems: 'center' }}>
+            {isEditWindowOpen && (
+              <button
+                onClick={() => { setIsEditing(true); setEditContent(message.content); }}
+                title="Edit"
+                style={{ padding: '2px 8px', borderRadius: 4, border: '1px solid #e5e5e5', background: '#fff', cursor: 'pointer', fontSize: 11, color: '#374151' }}
+              >
+                ✏️ Edit
+              </button>
+            )}
+            {showDeleteConfirm ? (
+              <>
+                <span style={{ fontSize: 11, color: '#374151' }}>Delete this message?</span>
+                <button
+                  onClick={() => { if (onDelete) onDelete(message.id); setShowDeleteConfirm(false); setShowActions(false); }}
+                  style={{ padding: '2px 8px', borderRadius: 4, border: 'none', background: '#dc2626', color: '#fff', cursor: 'pointer', fontSize: 11 }}
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  style={{ padding: '2px 8px', borderRadius: 4, border: '1px solid #ddd', background: '#f5f5f5', cursor: 'pointer', fontSize: 11, color: '#374151' }}
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleDelete}
+                title="Delete"
+                style={{ padding: '2px 8px', borderRadius: 4, border: '1px solid #fecaca', background: '#fff5f5', cursor: 'pointer', fontSize: 11, color: '#dc2626' }}
+              >
+                🗑️ Delete
+              </button>
+            )}
           </div>
         )}
       </div>

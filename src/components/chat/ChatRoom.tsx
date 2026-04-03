@@ -44,16 +44,18 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
 
       // Listen for edited messages
       socketService.onMessageEdited((updatedMessage: ChatMessage) => {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === updatedMessage.id ? updatedMessage : m))
-        );
+        setMessages((prev) => {
+          if (!prev.some((m) => m.id === updatedMessage.id)) return prev;
+          return prev.map((m) => (m.id === updatedMessage.id ? updatedMessage : m));
+        });
       });
 
       // Listen for deleted messages
       socketService.onMessageDeleted(({ messageId }: { messageId: string }) => {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === messageId ? { ...m, isDeleted: true } : m))
-        );
+        setMessages((prev) => {
+          if (!prev.some((m) => m.id === messageId)) return prev;
+          return prev.map((m) => (m.id === messageId ? { ...m, isDeleted: true } : m));
+        });
       });
 
       // Listen for typing indicators
@@ -115,13 +117,35 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
 
   const handleEditMessage = (messageId: string, newContent: string) => {
     if (user) {
-      socketService.editMessage(messageId, newContent, user.id);
+      let snapshot: ChatMessage[] = [];
+      setMessages((prev) => {
+        snapshot = prev;
+        return prev.map((m) =>
+          m.id === messageId ? { ...m, content: newContent } : m
+        );
+      });
+      try {
+        socketService.editMessage(messageId, newContent, user.id);
+      } catch {
+        setMessages(snapshot);
+      }
     }
   };
 
   const handleDeleteMessage = (messageId: string) => {
     if (user) {
-      socketService.deleteMessage(messageId, user.id);
+      let snapshot: ChatMessage[] = [];
+      setMessages((prev) => {
+        snapshot = prev;
+        return prev.map((m) =>
+          m.id === messageId ? { ...m, isDeleted: true } : m
+        );
+      });
+      try {
+        socketService.deleteMessage(messageId, user.id);
+      } catch {
+        setMessages(snapshot);
+      }
     }
   };
 
