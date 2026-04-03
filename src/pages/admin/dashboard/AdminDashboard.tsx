@@ -79,7 +79,9 @@ const AdminDashboard = () => {
       
       // Count attendance
       attendanceRecords.forEach((record: any) => {
-        const dateStr = record.date?.split('T')[0] || record.createdAt?.split('T')[0]
+        const dateStr = record.checkIn
+          ? new Date(record.checkIn).toISOString().split('T')[0]
+          : null
         if (dateStr && attendanceByDate[dateStr]) {
           attendanceByDate[dateStr].present++
         }
