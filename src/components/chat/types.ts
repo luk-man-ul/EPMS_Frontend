@@ -32,6 +32,9 @@ export interface ChatMessage {
   roomId: string;
   senderId: string;
   content: string;
+  isDeleted?: boolean;
+  isEdited?: boolean;
+  updatedAt?: string;
   sender: {
     id: string;
     firstName: string;

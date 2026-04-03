@@ -60,12 +60,28 @@ class SocketService {
     this.socket?.emit('sendMessage', { roomId, content, userId });
   }
 
+  editMessage(messageId: string, content: string, userId: string) {
+    this.socket?.emit('editMessage', { messageId, content, userId });
+  }
+
+  deleteMessage(messageId: string, userId: string) {
+    this.socket?.emit('deleteMessage', { messageId, userId });
+  }
+
   sendTyping(roomId: string, userId: string, isTyping: boolean) {
     this.socket?.emit('typing', { roomId, userId, isTyping });
   }
 
   onReceiveMessage(callback: (message: any) => void) {
     this.socket?.on('receiveMessage', callback);
+  }
+
+  onMessageEdited(callback: (message: any) => void) {
+    this.socket?.on('messageEdited', callback);
+  }
+
+  onMessageDeleted(callback: (data: { messageId: string }) => void) {
+    this.socket?.on('messageDeleted', callback);
   }
 
   onTypingIndicator(callback: (data: any) => void) {
@@ -82,6 +98,14 @@ class SocketService {
 
   offReceiveMessage() {
     this.socket?.off('receiveMessage');
+  }
+
+  offMessageEdited() {
+    this.socket?.off('messageEdited');
+  }
+
+  offMessageDeleted() {
+    this.socket?.off('messageDeleted');
   }
 
   offTypingIndicator() {

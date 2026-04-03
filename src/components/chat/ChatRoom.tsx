@@ -42,6 +42,20 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
         scrollToBottom();
       });
 
+      // Listen for edited messages
+      socketService.onMessageEdited((updatedMessage: ChatMessage) => {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === updatedMessage.id ? updatedMessage : m))
+        );
+      });
+
+      // Listen for deleted messages
+      socketService.onMessageDeleted(({ messageId }: { messageId: string }) => {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === messageId ? { ...m, isDeleted: true } : m))
+        );
+      });
+
       // Listen for typing indicators
       socketService.onTypingIndicator((data: any) => {
         if (data.isTyping) {
@@ -74,6 +88,8 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
         socketService.leaveRoom(roomId, user.id);
       }
       socketService.offReceiveMessage();
+      socketService.offMessageEdited();
+      socketService.offMessageDeleted();
       socketService.offTypingIndicator();
     };
   }, [roomId, user]);
@@ -94,6 +110,18 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
   const handleSendMessage = (content: string) => {
     if (user) {
       socketService.sendMessage(roomId, content, user.id);
+    }
+  };
+
+  const handleEditMessage = (messageId: string, newContent: string) => {
+    if (user) {
+      socketService.editMessage(messageId, newContent, user.id);
+    }
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    if (user) {
+      socketService.deleteMessage(messageId, user.id);
     }
   };
 
@@ -144,6 +172,8 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
               key={message.id}
               message={message}
               isOwnMessage={message.senderId === user?.id}
+              onEdit={handleEditMessage}
+              onDelete={handleDeleteMessage}
             />
           ))
         )}
