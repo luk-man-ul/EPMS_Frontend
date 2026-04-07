@@ -14,7 +14,7 @@ interface GroupedAttendance {
   lastCheckOut?: string | null;
   sessions: AttendanceSession[];
   totalHours: number;
-  status?: string;
+  status: string;
   user?: {
     firstName: string;
     lastName: string;
@@ -84,24 +84,7 @@ const AttendanceTable = ({ data, showUserColumn = false }: AttendanceTableProps)
                 </td>
 
                 <td style={{ padding: '16px' }}>
-                  {record.status ? (
-                    <AttendanceStatusBadge status={record.status as any} />
-                  ) : record.sessions?.some((s: any) => !s.checkOut) ? (
-                    // Today: active open session
-                    <span style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, backgroundColor: '#f0f9ff', color: '#0369a1', border: '1px solid #e5e5e5' }}>
-                      In Progress
-                    </span>
-                  ) : record.sessions?.length > 0 ? (
-                    // Today: all sessions closed, not yet finalized
-                    <span style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, backgroundColor: '#f0fdf4', color: '#15803d', border: '1px solid #e5e5e5' }}>
-                      Completed
-                    </span>
-                  ) : (
-                    // Today: no sessions at all
-                    <span style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, backgroundColor: '#f5f5f5', color: '#999', border: '1px solid #e5e5e5' }}>
-                      Not Started
-                    </span>
-                  )}
+                  <AttendanceStatusBadge status={(record.status ?? 'ABSENT') as any} />
                 </td>
 
                 <td style={{ padding: '16px', fontSize: '14px', color: '#666666' }}>
