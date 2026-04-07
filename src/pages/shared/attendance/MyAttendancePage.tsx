@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../../utils/api';
-import { LoadingSpinner, Card } from '../../../components/ui';
+import { LoadingSpinner } from '../../../components/ui';
 import AttendanceTable from './components/AttendanceTable';
 import AttendanceFilters from './components/AttendanceFilters';
 
@@ -9,9 +9,7 @@ const MyAttendancePage = () => {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<any>({});
 
-  useEffect(() => {
-    fetchAttendance();
-  }, [filters]);
+  useEffect(() => { fetchAttendance(); }, [filters]);
 
   const fetchAttendance = async () => {
     try {
@@ -20,9 +18,6 @@ const MyAttendancePage = () => {
       if (filters.startDate) params.append('startDate', filters.startDate);
       if (filters.endDate) params.append('endDate', filters.endDate);
       if (filters.status) params.append('status', filters.status);
-
-      // /attendance/my returns paginated grouped session data
-      // The backend already groups by date and calculates totalHours
       const response = await api.get(`/attendance/my?${params.toString()}`);
       const data = response.data.data || response.data;
       setAttendance(Array.isArray(data) ? data : []);
@@ -34,27 +29,31 @@ const MyAttendancePage = () => {
   };
 
   return (
-    <div style={{ padding: '24px' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>
-          My Attendance
-        </h1>
-        <p style={{ fontSize: '14px', color: '#666666' }}>
-          View your attendance history and records
-        </p>
-      </div>
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '32px 24px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
 
-      <AttendanceFilters filters={filters} onFilterChange={setFilters} showUserFilter={false} />
+        {/* Header */}
+        <div style={{ marginBottom: '28px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
+            My Attendance
+          </h1>
+          <p style={{ fontSize: '14px', color: '#6b7280' }}>
+            View your attendance history and daily records
+          </p>
+        </div>
 
-      {loading ? (
-        <Card>
-          <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+        {/* Filters */}
+        <AttendanceFilters filters={filters} onFilterChange={setFilters} showUserFilter={false} />
+
+        {/* Table */}
+        {loading ? (
+          <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #f3f4f6', padding: '60px 24px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
             <LoadingSpinner size="lg" text="Loading attendance records..." />
           </div>
-        </Card>
-      ) : (
-        <AttendanceTable data={attendance} showUserColumn={false} />
-      )}
+        ) : (
+          <AttendanceTable data={attendance} showUserColumn={false} />
+        )}
+      </div>
     </div>
   );
 };

@@ -12,6 +12,29 @@ interface AttendanceFiltersProps {
   users?: Array<{ id: string; firstName: string; lastName: string }>;
 }
 
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '11px',
+  fontWeight: 600,
+  color: '#6b7280',
+  marginBottom: '6px',
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '8px 12px',
+  border: '1px solid #e5e7eb',
+  borderRadius: '8px',
+  fontSize: '13px',
+  fontFamily: 'inherit',
+  color: '#111827',
+  background: '#fff',
+  outline: 'none',
+  boxSizing: 'border-box',
+};
+
 const AttendanceFilters = ({
   filters,
   onFilterChange,
@@ -19,184 +42,91 @@ const AttendanceFilters = ({
   users = [],
 }: AttendanceFiltersProps) => {
   const handleChange = (field: string, value: string) => {
-    onFilterChange({
-      ...filters,
-      [field]: value || undefined,
-    });
+    onFilterChange({ ...filters, [field]: value || undefined });
   };
 
   const statusOptions = getEnumOptions(AttendanceStatus);
+  const cols = showUserFilter ? 4 : 3;
 
   return (
-    <div
-      style={{
-        background: '#ffffff',
-        borderRadius: '12px',
-        border: '1px solid #e5e5e5',
-        padding: '20px',
-        marginBottom: '20px',
-      }}
-    >
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: showUserFilter ? 'repeat(auto-fit, minmax(200px, 1fr))' : 'repeat(3, 1fr)',
-          gap: '16px',
-        }}
-      >
+    <div style={{
+      background: '#fff',
+      borderRadius: '16px',
+      border: '1px solid #f3f4f6',
+      padding: '20px 24px',
+      marginBottom: '20px',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+    }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${cols}, 1fr)`,
+        gap: '16px',
+        alignItems: 'end',
+      }}>
         <div>
-          <label
-            style={{
-              display: 'block',
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#666666',
-              marginBottom: '8px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-            }}
-          >
-            Start Date
-          </label>
+          <label style={labelStyle}>Start Date</label>
           <input
             type="date"
             value={filters.startDate || ''}
             onChange={(e) => handleChange('startDate', e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #e5e5e5',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontFamily: 'inherit',
-            }}
+            style={inputStyle}
           />
         </div>
 
         <div>
-          <label
-            style={{
-              display: 'block',
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#666666',
-              marginBottom: '8px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-            }}
-          >
-            End Date
-          </label>
+          <label style={labelStyle}>End Date</label>
           <input
             type="date"
             value={filters.endDate || ''}
             onChange={(e) => handleChange('endDate', e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #e5e5e5',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontFamily: 'inherit',
-            }}
+            style={inputStyle}
           />
         </div>
 
         <div>
-          <label
-            style={{
-              display: 'block',
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#666666',
-              marginBottom: '8px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-            }}
-          >
-            Status
-          </label>
+          <label style={labelStyle}>Status</label>
           <select
             value={filters.status || ''}
             onChange={(e) => handleChange('status', e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #e5e5e5',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontFamily: 'inherit',
-              background: '#ffffff',
-            }}
+            style={inputStyle}
           >
             <option value="">All Statuses</option>
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
+            {statusOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
         </div>
 
         {showUserFilter && (
           <div>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '13px',
-                fontWeight: 600,
-                color: '#666666',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
-              Employee
-            </label>
+            <label style={labelStyle}>Employee</label>
             <select
               value={filters.userId || ''}
               onChange={(e) => handleChange('userId', e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #e5e5e5',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontFamily: 'inherit',
-                background: '#ffffff',
-              }}
+              style={inputStyle}
             >
               <option value="">All Employees</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.firstName} {user.lastName}
-                </option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>
               ))}
             </select>
           </div>
         )}
       </div>
 
-      <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
+      <div style={{ marginTop: '16px' }}>
         <button
-          onClick={() =>
-            onFilterChange({
-              startDate: undefined,
-              endDate: undefined,
-              status: undefined,
-              userId: undefined,
-            })
-          }
+          onClick={() => onFilterChange({ startDate: undefined, endDate: undefined, status: undefined, userId: undefined })}
           style={{
-            padding: '10px 20px',
+            padding: '8px 18px',
             background: '#f3f4f6',
-            color: '#1a1a1a',
+            color: '#374151',
             border: 'none',
             borderRadius: '8px',
-            fontSize: '14px',
+            fontSize: '13px',
             fontWeight: 500,
             cursor: 'pointer',
-            transition: 'all 0.2s ease',
+            transition: 'background 0.15s',
           }}
           onMouseEnter={(e) => (e.currentTarget.style.background = '#e5e7eb')}
           onMouseLeave={(e) => (e.currentTarget.style.background = '#f3f4f6')}

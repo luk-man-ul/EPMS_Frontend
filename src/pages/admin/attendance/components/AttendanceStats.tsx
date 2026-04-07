@@ -9,6 +9,13 @@ interface Stats {
   todayAttendance: number;
 }
 
+interface StatCard {
+  label: string;
+  value: string | number;
+  accent: string;
+  icon: string;
+}
+
 const AttendanceStats = () => {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,38 +27,58 @@ const AttendanceStats = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const items = stats
-    ? [
-        { label: 'Total Employees', value: stats.totalEmployees, color: '#1a1a1a' },
-        { label: 'Present Today', value: stats.presentToday, color: '#15803d' },
-        { label: 'Absent', value: stats.absentToday, color: '#dc2626' },
-        { label: 'Late Check-ins', value: stats.lateCheckIns, color: '#d97706' },
-        { label: 'Attendance Rate', value: `${stats.todayAttendance}%`, color: '#1a1a1a' },
-      ]
-    : [];
+  const cards: StatCard[] = stats ? [
+    { label: 'Total Employees', value: stats.totalEmployees, accent: '#6366f1', icon: '👥' },
+    { label: 'Present Today',   value: stats.presentToday,   accent: '#16a34a', icon: '✅' },
+    { label: 'Absent Today',    value: stats.absentToday,    accent: '#dc2626', icon: '❌' },
+    { label: 'Late Check-ins',  value: stats.lateCheckIns,   accent: '#d97706', icon: '⏰' },
+    { label: 'Attendance Rate', value: `${stats.todayAttendance}%`, accent: '#0891b2', icon: '📊' },
+  ] : [];
+
+  if (loading) {
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} style={{ background: '#f3f4f6', borderRadius: '16px', height: '96px', animation: 'pulse 1.5s infinite' }} />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-      gap: '16px',
-      marginBottom: '24px',
-    }}>
-      {loading
-        ? Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} style={{ background: '#f5f5f5', borderRadius: '12px', padding: '20px', height: '80px' }} />
-          ))
-        : items.map((stat) => (
-            <div
-              key={stat.label}
-              style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '20px', transition: 'all 0.2s ease' }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#d4d4d4'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e5e5e5'; e.currentTarget.style.boxShadow = 'none'; }}
-            >
-              <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>{stat.label}</div>
-              <div style={{ fontSize: '28px', fontWeight: 600, color: stat.color, letterSpacing: '-0.02em' }}>{stat.value}</div>
-            </div>
-          ))}
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+      {cards.map((card) => (
+        <div
+          key={card.label}
+          style={{
+            background: '#fff',
+            border: '1px solid #f3f4f6',
+            borderRadius: '16px',
+            padding: '20px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            transition: 'box-shadow 0.15s, transform 0.15s',
+            cursor: 'default',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+            (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-1px)';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
+            (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              {card.label}
+            </span>
+            <span style={{ fontSize: '18px' }}>{card.icon}</span>
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: card.accent, letterSpacing: '-0.02em' }}>
+            {card.value}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
