@@ -80,17 +80,18 @@ const AttendanceTable = ({ data, showUserColumn = false }: AttendanceTableProps)
                 <td style={{ padding: '16px' }}>
                   {record.status ? (
                     <AttendanceStatusBadge status={record.status as any} />
+                  ) : record.sessions?.some((s: any) => !s.checkOut) ? (
+                    <span style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, backgroundColor: '#f0f9ff', color: '#0369a1', border: '1px solid #e5e5e5' }}>
+                      In Progress
+                    </span>
+                  ) : record.sessions?.length > 0 ? (
+                    <span style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, backgroundColor: '#fef3c7', color: '#d97706', border: '1px solid #e5e5e5' }}>
+                      Checked In
+                    </span>
                   ) : (
-                    // Before finalization: show live session state
-                    record.sessions?.some((s) => !s.checkOut) ? (
-                      <span style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, backgroundColor: '#f0f9ff', color: '#0369a1', border: '1px solid #e5e5e5' }}>
-                        In Progress
-                      </span>
-                    ) : (
-                      <span style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, backgroundColor: '#f5f5f5', color: '#666', border: '1px solid #e5e5e5' }}>
-                        Pending
-                      </span>
-                    )
+                    <span style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, backgroundColor: '#f5f5f5', color: '#999', border: '1px solid #e5e5e5' }}>
+                      —
+                    </span>
                   )}
                 </td>
 
