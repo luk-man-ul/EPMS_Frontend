@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../../../../utils/api';
 import AttendanceStatusBadge from '../../../shared/attendance/components/AttendanceStatusBadge';
+import { formatTime, todayLocalDateStr } from '../../../../utils/date.util';
 
 interface Session {
   id: string;
@@ -19,17 +20,12 @@ interface AttendanceRecord {
   user?: { firstName: string; lastName: string; email: string; department?: string };
 }
 
-const formatTime = (dateString: string | null) => {
-  if (!dateString) return '--:--';
-  return new Date(dateString).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-};
-
 const AttendanceTable = () => {
   const [data, setData] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayLocalDateStr();
     api.get(`/attendance?startDate=${today}&endDate=${today}&limit=100`)
       .then((res) => setData(res.data.data || []))
       .catch((err) => console.error('Failed to load attendance', err))

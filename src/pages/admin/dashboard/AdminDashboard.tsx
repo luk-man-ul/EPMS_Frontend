@@ -8,6 +8,7 @@ import { TaskStatusChart, AttendanceTrendChart, ProjectProgressChart, TicketStat
 import { ActivityFeed } from '../../../components/activity'
 import { LoadingSpinner, ErrorMessage, Card } from '../../../components/ui'
 import api from '../../../utils/api'
+import { todayLocalDateStr, daysAgoLocalDateStr } from '../../../utils/date.util'
 
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true)
@@ -36,8 +37,8 @@ const AdminDashboard = () => {
         api.get('/projects').catch(() => ({ data: { data: [] } })),
         api.get('/attendance', {
           params: {
-            startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            endDate: new Date().toISOString().split('T')[0],
+            startDate: daysAgoLocalDateStr(6),
+            endDate: todayLocalDateStr(),
           }
         }).catch(() => ({ data: { data: [] } })),
         api.get('/tickets').catch(() => ({ data: { data: [] } })),
@@ -72,9 +73,7 @@ const AdminDashboard = () => {
 
       // Initialize last 7 days using local date strings
       for (let i = 0; i < 7; i++) {
-        const date = new Date()
-        date.setDate(date.getDate() - (6 - i))
-        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+        const dateStr = daysAgoLocalDateStr(6 - i)
         attendanceByDate[dateStr] = { present: 0, absent: 0 }
       }
 

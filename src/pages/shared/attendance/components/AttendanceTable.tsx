@@ -1,4 +1,5 @@
 import AttendanceStatusBadge from './AttendanceStatusBadge';
+import { formatISTDate, formatTime } from '../../../../utils/date.util';
 
 interface AttendanceSession {
   id: string;
@@ -27,15 +28,6 @@ interface AttendanceTableProps {
   showUserColumn?: boolean;
 }
 
-const formatTime = (dateString: string | null | undefined) => {
-  if (!dateString) return '—';
-  return new Date(dateString).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-};
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-};
-
 const AttendanceTable = ({ data, showUserColumn = false }: AttendanceTableProps) => {
   return (
     <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e5e5e5', overflow: 'hidden' }}>
@@ -59,7 +51,7 @@ const AttendanceTable = ({ data, showUserColumn = false }: AttendanceTableProps)
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
                 <td style={{ padding: '16px', fontSize: '14px', color: '#1a1a1a', fontWeight: 500 }}>
-                  {formatDate(record.date)}
+                  {formatISTDate(record.date)}
                 </td>
 
                 {showUserColumn && record.user && (
