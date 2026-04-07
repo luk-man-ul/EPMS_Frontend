@@ -40,6 +40,10 @@ const EmployeeForm = ({
   const [newSkill, setNewSkill] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  // ── Confirm password (create mode only) ──
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const passwordsMatch = !confirmPassword || formData.password === confirmPassword
+
   /* -------------------- PHOTO STATE -------------------- */
 
   const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -114,6 +118,7 @@ const EmployeeForm = ({
     if (!employee) {
       if (!formData.password.trim()) e.password = 'Password is required'
       else if (formData.password.length < 6) e.password = 'Password must be at least 6 characters'
+      if (confirmPassword && formData.password !== confirmPassword) e.confirmPassword = 'Passwords do not match'
     }
     if (formData.phone && !/^\+?[\d\s\-()]{7,15}$/.test(formData.phone)) e.phone = 'Enter a valid phone number'
     return e
@@ -200,6 +205,31 @@ const EmployeeForm = ({
 
         {!employee && (
           <Input label="Password" name="password" type="password" value={formData.password} onChange={handleChange} error={errors.password} />
+        )}
+
+        {/* Confirm Password — create mode only, never sent to backend */}
+        {!employee && (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ fontSize: 13, marginBottom: 4, fontWeight: 500 }}>Confirm Password</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Re-enter password"
+              style={{
+                padding: '8px 10px',
+                borderRadius: 8,
+                border: `1px solid ${confirmPassword && !passwordsMatch ? '#dc2626' : confirmPassword && passwordsMatch ? '#16a34a' : '#ddd'}`,
+                fontSize: 14,
+                outline: 'none',
+              }}
+            />
+            {confirmPassword && (
+              <span style={{ fontSize: 11, marginTop: 4, color: passwordsMatch ? '#16a34a' : '#dc2626' }}>
+                {passwordsMatch ? '✓ Passwords match' : '✗ Passwords do not match'}
+              </span>
+            )}
+          </div>
         )}
 
         <Input label="Phone" name="phone" value={formData.phone} onChange={handleChange} error={errors.phone} />
@@ -432,15 +462,15 @@ const EmployeeForm = ({
 
         <button
           onClick={handleSubmit}
-          disabled={photoUploading}
+          disabled={photoUploading || (!employee && !!confirmPassword && !passwordsMatch)}
           style={{
             padding: '8px 18px',
             borderRadius: 8,
             border: 'none',
             background: '#1a1a1a',
             color: '#fff',
-            cursor: photoUploading ? 'not-allowed' : 'pointer',
-            opacity: photoUploading ? 0.6 : 1,
+            cursor: (photoUploading || (!employee && !!confirmPassword && !passwordsMatch)) ? 'not-allowed' : 'pointer',
+            opacity: (photoUploading || (!employee && !!confirmPassword && !passwordsMatch)) ? 0.5 : 1,
           }}
         >
           {photoUploading ? 'Uploading...' : employee ? 'Save Changes' : 'Create Employee'}
