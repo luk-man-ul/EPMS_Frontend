@@ -16,90 +16,27 @@ const MyAttendancePage = () => {
   const fetchAttendance = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/attendance/my');
-      
-      // Backend returns paginated session data
-      const sessions = response.data.data || response.data;
-      
-      // Group sessions by date
-      const grouped = groupSessionsByDate(sessions);
-      
-      // Apply client-side filtering
-      let filteredData = grouped;
-      
-      if (filters.startDate) {
-        filteredData = filteredData.filter((record: any) => {
-          const recordDate = new Date(record.date);
-          const filterDate = new Date(filters.startDate);
-          return recordDate >= filterDate;
-        });
-      }
-      
-      if (filters.endDate) {
-        filteredData = filteredData.filter((record: any) => {
-          const recordDate = new Date(record.date);
-          const filterDate = new Date(filters.endDate);
-          return recordDate <= filterDate;
-        });
-      }
-      
-      setAttendance(filteredData);
+      const params = new URLSearchParams();
+      if (filters.startDate) params.append('startDate', filters.startDate);
+      if (filters.endDate) params.append('endDate', filters.endDate);
+      if (filters.status) params.append('status', filters.status);
+
+      // /attendance/my returns paginated grouped session data
+      // The backend already groups by date and calculates totalHours
+      const response = await api.get(`/attendance/my?${params.toString()}`);
+      const data = response.data.data || response.data;
+      setAttendance(Array.isArray(data) ? data : []);
     } catch (err: any) {
       console.error('Error fetching attendance:', err);
-      alert(err.response?.data?.message || 'Failed to fetch attendance records');
     } finally {
       setLoading(false);
     }
   };
 
-  const groupSessionsByDate = (sessions: any[]) => {
-    const grouped = new Map<string, any>();
-
-    sessions.forEach((session) => {
-      const date = new Date(session.checkIn).toISOString().split('T')[0];
-
-      if (!grouped.has(date)) {
-        grouped.set(date, {
-          userId: session.userId,
-          user: session.user,
-          date,
-          sessions: [],
-          totalHours: 0,
-        });
-      }
-
-      const group = grouped.get(date);
-      group.sessions.push(session);
-
-      // Calculate hours if session is complete
-      if (session.checkOut) {
-        const hours = (new Date(session.checkOut).getTime() - new Date(session.checkIn).getTime()) / (1000 * 60 * 60);
-        group.totalHours += hours;
-      }
-    });
-
-    // Convert map to array and round total hours
-    return Array.from(grouped.values()).map((group) => ({
-      ...group,
-      totalHours: Math.round(group.totalHours * 100) / 100,
-    }));
-  };
-
-  const handleFilterChange = (newFilters: any) => {
-    setFilters(newFilters);
-  };
-
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: '24px' }}>
-        <h1
-          style={{
-            fontSize: '28px',
-            fontWeight: 600,
-            color: '#1a1a1a',
-            marginBottom: '8px',
-          }}
-        >
+        <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>
           My Attendance
         </h1>
         <p style={{ fontSize: '14px', color: '#666666' }}>
@@ -107,11 +44,7 @@ const MyAttendancePage = () => {
         </p>
       </div>
 
-      <AttendanceFilters
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        showUserFilter={false}
-      />
+      <AttendanceFilters filters={filters} onFilterChange={setFilters} showUserFilter={false} />
 
       {loading ? (
         <Card>

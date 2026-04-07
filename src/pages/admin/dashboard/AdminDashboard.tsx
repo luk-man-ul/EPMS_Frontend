@@ -65,28 +65,32 @@ const AdminDashboard = () => {
       }))
       setProjectData(projectChartData)
 
-      // Process attendance data
+      // Process attendance data — read from Attendance table (includes ABSENT rows)
+      // Each record has: { date: 'YYYY-MM-DD', status: 'PRESENT'|'LATE'|'WFH'|'HALF_DAY'|'ABSENT' }
       const attendanceRecords = attendanceRes.data.data || []
       const attendanceByDate: any = {}
-      
-      // Initialize last 7 days
+
+      // Initialize last 7 days using local date strings
       for (let i = 0; i < 7; i++) {
         const date = new Date()
         date.setDate(date.getDate() - (6 - i))
-        const dateStr = date.toISOString().split('T')[0]
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
         attendanceByDate[dateStr] = { present: 0, absent: 0 }
       }
-      
-      // Count attendance
+
+      // Count by status — present bucket includes PRESENT, LATE, WFH, HALF_DAY
       attendanceRecords.forEach((record: any) => {
-        const dateStr = record.date
-        if (dateStr && attendanceByDate[dateStr]) {
+        const dateStr: string = record.date
+        if (!dateStr || !attendanceByDate[dateStr]) return
+        if (record.status === 'ABSENT') {
+          attendanceByDate[dateStr].absent++
+        } else {
           attendanceByDate[dateStr].present++
         }
       })
-      
+
       const attendanceChartData = Object.keys(attendanceByDate).map(date => ({
-        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        date: new Date(date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         present: attendanceByDate[date].present,
         absent: attendanceByDate[date].absent,
       }))
