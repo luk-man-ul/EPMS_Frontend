@@ -42,7 +42,8 @@ const EmployeeForm = ({
 
   // ── Confirm password (create mode only) ──
   const [confirmPassword, setConfirmPassword] = useState('')
-  const passwordsMatch = !confirmPassword || formData.password === confirmPassword
+  const passwordsMatch = formData.password.length > 0 && confirmPassword.length > 0 && formData.password === confirmPassword
+  const createModeInvalid = !employee && (!formData.password || !confirmPassword || formData.password !== confirmPassword)
 
   /* -------------------- PHOTO STATE -------------------- */
 
@@ -118,7 +119,8 @@ const EmployeeForm = ({
     if (!employee) {
       if (!formData.password.trim()) e.password = 'Password is required'
       else if (formData.password.length < 6) e.password = 'Password must be at least 6 characters'
-      if (confirmPassword && formData.password !== confirmPassword) e.confirmPassword = 'Passwords do not match'
+      if (!confirmPassword.trim()) e.confirmPassword = 'Confirm password is required'
+      else if (formData.password !== confirmPassword) e.confirmPassword = 'Passwords do not match'
     }
     if (formData.phone && !/^\+?[\d\s\-()]{7,15}$/.test(formData.phone)) e.phone = 'Enter a valid phone number'
     return e
@@ -228,6 +230,9 @@ const EmployeeForm = ({
               <span style={{ fontSize: 11, marginTop: 4, color: passwordsMatch ? '#16a34a' : '#dc2626' }}>
                 {passwordsMatch ? '✓ Passwords match' : '✗ Passwords do not match'}
               </span>
+            )}
+            {!confirmPassword && errors.confirmPassword && (
+              <span style={{ fontSize: 11, marginTop: 4, color: '#dc2626' }}>{errors.confirmPassword}</span>
             )}
           </div>
         )}
@@ -462,15 +467,15 @@ const EmployeeForm = ({
 
         <button
           onClick={handleSubmit}
-          disabled={photoUploading || (!employee && !!confirmPassword && !passwordsMatch)}
+          disabled={photoUploading || createModeInvalid}
           style={{
             padding: '8px 18px',
             borderRadius: 8,
             border: 'none',
             background: '#1a1a1a',
             color: '#fff',
-            cursor: (photoUploading || (!employee && !!confirmPassword && !passwordsMatch)) ? 'not-allowed' : 'pointer',
-            opacity: (photoUploading || (!employee && !!confirmPassword && !passwordsMatch)) ? 0.5 : 1,
+            cursor: (photoUploading || createModeInvalid) ? 'not-allowed' : 'pointer',
+            opacity: (photoUploading || createModeInvalid) ? 0.5 : 1,
           }}
         >
           {photoUploading ? 'Uploading...' : employee ? 'Save Changes' : 'Create Employee'}
