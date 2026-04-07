@@ -63,14 +63,20 @@ const AttendanceTable = ({ data, showUserColumn = false }: AttendanceTableProps)
                   </td>
                 )}
 
-                {/* First check-in — prefer firstCheckIn field, fall back to first session */}
+                {/* First check-in — prefer firstCheckIn field, fall back to first session (ascending order) */}
                 <td style={{ padding: '16px', fontSize: '14px', color: '#1a1a1a', fontFamily: 'monospace' }}>
-                  {formatTime(record.firstCheckIn ?? record.sessions?.[0]?.checkIn)}
+                  {formatTime(
+                    record.firstCheckIn ??
+                    [...(record.sessions ?? [])].sort((a, b) => new Date(a.checkIn).getTime() - new Date(b.checkIn).getTime())[0]?.checkIn
+                  )}
                 </td>
 
-                {/* Last check-out — prefer lastCheckOut field, fall back to last completed session */}
+                {/* Last check-out — prefer lastCheckOut field, fall back to last completed session (ascending order) */}
                 <td style={{ padding: '16px', fontSize: '14px', color: '#1a1a1a', fontFamily: 'monospace' }}>
-                  {formatTime(record.lastCheckOut ?? record.sessions?.filter((s) => s.checkOut).at(-1)?.checkOut)}
+                  {formatTime(
+                    record.lastCheckOut ??
+                    [...(record.sessions ?? [])].sort((a, b) => new Date(a.checkIn).getTime() - new Date(b.checkIn).getTime()).filter((s) => s.checkOut).at(-1)?.checkOut
+                  )}
                 </td>
 
                 <td style={{ padding: '16px', fontSize: '16px', color: '#10b981', fontWeight: 600 }}>
