@@ -1,89 +1,121 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import api from '../../../utils/api';
 import { LoadingSpinner } from '../../../components/ui';
 import AttendanceTable from '../../shared/attendance/components/AttendanceTable';
 import AttendanceFilters from '../../shared/attendance/components/AttendanceFilters';
 import { todayLocalDateStr, formatISTDate } from '../../../utils/date.util';
 
-interface Statistics {
-  totalRecords: number;
-  averageHours: number;
-  presentCount: number;
-  lateCount: number;
-  halfDayCount: number;
-  wfhCount: number;
-  absentCount: number;
-}
-
-// ── Derive the context label shown above the stat cards ──────────────────────
+// ── Context label ────────────────────────────────────────────────────────────
 function buildContextLabel(
   filters: any,
   employees: Array<{ id: string; firstName: string; lastName: string }>,
 ): string {
   const today = todayLocalDateStr();
-
-  const employeeName = filters.userId
-    ? (() => {
-        const emp = employees.find((e) => e.id === filters.userId);
-        return emp ? `${emp.firstName} ${emp.lastName}` : 'Employee';
-      })()
-    : null;
-
-  const scope = employeeName ?? 'Company';
-
+  const emp = filters.userId ? employees.find((e) => e.id === filters.userId) : null;
+  const scope = emp ? `${emp.firstName} ${emp.lastName}` : 'Company';
   const hasRange = filters.startDate && filters.endDate;
-  const isToday =
-    !hasRange ||
-    (filters.startDate === today && filters.endDate === today);
-
+  const isToday = !hasRange || (filters.startDate === today && filters.endDate === today);
   if (isToday) return `${scope} — Today`;
-
-  const from = formatISTDate(filters.startDate);
-  const to = formatISTDate(filters.endDate);
-  return `${scope} — ${from} to ${to}`;
+  return `${scope} — ${formatISTDate(filters.startDate)} to ${formatISTDate(filters.endDate)}`;
 }
 
+// ── Resolve effective date params (4-mode logic) ─────────────────────────────
+function resolveEffectiveDates(f: any): { startDate: string; endDate: string } {
+  const today = todayLocalDateStr();
+  if (!f.startDate && !f.endDate) return { startDate: today, endDate: today };
+  return { startDate: f.startDate, endDate: f.endDate };
+}
+
+// ── Stat card definitions ────────────────────────────────────────────────────
+// All counts are derived from record.status which the backend already computes.
+// "Onsite" = PRESENT or LATE or HALF_DAY (checked in, not WFH).
+// "On Leave" = LEAVE status.
+// "Absent" = ABSENT status.
+interface StatCard {
+  label: string;
+  tooltip: string;
+  value: number | string;
+  accent: string;
+  bg: string;
+  icon: string;
+}
+
+function buildStatCards(data: any[]): StatCard[] {
+  const count = (pred: (r: any) => boolean) => data.filter(pred).length;
+
+  const present   = count((r) => ['PRESENT', 'LATE', 'HALF_DAY', 'WFH'].includes(r.status));
+  const onsite    = count((r) => ['PRESENT', 'LATE', 'HALF_DAY'].includes(r.status));
+  const wfh       = count((r) => r.status === 'WFH');
+  const late      = count((r) => r.status === 'LATE');
+  const halfDay   = count((r) => r.status === 'HALF_DAY');
+  const onLeave   = count((r) => r.status === 'LEAVE');
+  const absent    = count((r) => r.status === 'ABSENT');
+
+  return [
+    {
+      label: 'Present',
+      tooltip: 'Employees who checked in today (includes onsite, WFH, late, half-day)',
+      value: present,
+      accent: '#16a34a', bg: '#f0fdf4', icon: '✅',
+    },
+    {
+      label: 'Onsite',
+      tooltip: 'Employees who checked in from the office (not WFH)',
+      value: onsite,
+      accent: '#0891b2', bg: '#f0f9ff', icon: '🏢',
+    },
+    {
+      label: 'WFH',
+      tooltip: 'Employees working from home with an approved WFH request',
+      value: wfh,
+      accent: '#6d28d9', bg: '#f5f3ff', icon: '🏠',
+    },
+    {
+      label: 'Late (>10:30)',
+      tooltip: 'Employees whose first check-in was after 10:30 AM IST',
+      value: late,
+      accent: '#c2410c', bg: '#fff7ed', icon: '⏰',
+    },
+    {
+      label: 'Half Day',
+      tooltip: 'Employees who checked in after 12:30 PM or worked less than 4 hours',
+      value: halfDay,
+      accent: '#a16207', bg: '#fefce8', icon: '🌓',
+    },
+    {
+      label: 'On Leave',
+      tooltip: 'Employees with an approved leave request and no check-in',
+      value: onLeave,
+      accent: '#1d4ed8', bg: '#eff6ff', icon: '🏖️',
+    },
+    {
+      label: 'Absent',
+      tooltip: 'Employees with no check-in and no approved leave',
+      value: absent,
+      accent: '#b91c1c', bg: '#fef2f2', icon: '❌',
+    },
+  ];
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
 const AttendanceDashboardPage = () => {
   const [attendance, setAttendance] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  // ── NEW: employee list for the dropdown ──────────────────────────────────
   const [employees, setEmployees] = useState<Array<{ id: string; firstName: string; lastName: string }>>([]);
   const [filters, setFilters] = useState<any>({ page: 1, limit: 20 });
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20, totalPages: 0 });
-  const [statistics, setStatistics] = useState<Statistics>({
-    totalRecords: 0, averageHours: 0, presentCount: 0,
-    lateCount: 0, halfDayCount: 0, wfhCount: 0, absentCount: 0,
-  });
 
-  // ── Load employee list once for the dropdown ─────────────────────────────
+  // Load employee list once for the dropdown
   useEffect(() => {
     api.get('/users')
-      .then((res) => {
-        const list = (res.data || []).map((u: any) => ({
-          id: u.id,
-          firstName: u.firstName,
-          lastName: u.lastName,
-        }));
-        setEmployees(list);
-      })
-      .catch(() => {}); // non-critical — dropdown just stays empty
+      .then((res) => setEmployees(
+        (res.data || []).map((u: any) => ({ id: u.id, firstName: u.firstName, lastName: u.lastName }))
+      ))
+      .catch(() => {});
   }, []);
 
+  // Re-fetch whenever ANY filter changes
   useEffect(() => { fetchAttendance(); }, [filters]);
-
-  // ── Resolve effective date params based on mode ──────────────────────────
-  const resolveEffectiveDates = (f: any) => {
-    const today = todayLocalDateStr();
-    // Mode: Employee Today — employee selected but no date range → default to today
-    if (f.userId && !f.startDate && !f.endDate) {
-      return { startDate: today, endDate: today };
-    }
-    // Mode: Company Today — no employee, no date → default to today
-    if (!f.userId && !f.startDate && !f.endDate) {
-      return { startDate: today, endDate: today };
-    }
-    return { startDate: f.startDate, endDate: f.endDate };
-  };
 
   const fetchAttendance = async () => {
     try {
@@ -95,8 +127,8 @@ const AttendanceDashboardPage = () => {
       if (endDate)        params.append('endDate',   endDate);
       if (filters.status) params.append('status',    filters.status);
       if (filters.userId) params.append('userId',    filters.userId);
-      params.append('page',  filters.page.toString());
-      params.append('limit', filters.limit.toString());
+      params.append('page',  String(filters.page  ?? 1));
+      params.append('limit', String(filters.limit ?? 20));
 
       const response = await api.get(`/attendance?${params.toString()}`);
       const data: any[] = response.data.data || [];
@@ -104,49 +136,31 @@ const AttendanceDashboardPage = () => {
 
       if (response.data.total !== undefined) {
         setPagination({
-          total: response.data.total, page: response.data.page,
-          limit: response.data.limit, totalPages: response.data.totalPages,
+          total: response.data.total,
+          page:  response.data.page,
+          limit: response.data.limit,
+          totalPages: response.data.totalPages,
         });
       }
-
-      const totalHours = data.reduce((sum, r) => sum + (r.totalHours || 0), 0);
-      setStatistics({
-        totalRecords:  data.length,
-        averageHours:  data.length > 0 ? totalHours / data.length : 0,
-        presentCount:  data.filter((r) => r.status === 'PRESENT').length,
-        lateCount:     data.filter((r) => r.status === 'LATE').length,
-        halfDayCount:  data.filter((r) => r.status === 'HALF_DAY').length,
-        wfhCount:      data.filter((r) => r.status === 'WFH').length,
-        absentCount:   data.filter((r) => r.status === 'ABSENT').length,
-      });
     } catch (err: any) {
       console.error('Error fetching attendance:', err);
-      // ── Data safety: reset to zeros on error ──
       setAttendance([]);
-      setStatistics({ totalRecords: 0, averageHours: 0, presentCount: 0, lateCount: 0, halfDayCount: 0, wfhCount: 0, absentCount: 0 });
+      setPagination({ total: 0, page: 1, limit: 20, totalPages: 0 });
     } finally {
       setLoading(false);
     }
   };
 
-  const statCards = [
-    { label: 'Present',   value: statistics.presentCount,                  accent: '#16a34a', bg: '#f0fdf4', icon: '✅' },
-    { label: 'Late',      value: statistics.lateCount,                     accent: '#c2410c', bg: '#fff7ed', icon: '⏰' },
-    { label: 'WFH',       value: statistics.wfhCount,                      accent: '#6d28d9', bg: '#f5f3ff', icon: '🏠' },
-    { label: 'Half Day',  value: statistics.halfDayCount,                  accent: '#a16207', bg: '#fefce8', icon: '🌓' },
-    { label: 'Absent',    value: statistics.absentCount,                   accent: '#b91c1c', bg: '#fef2f2', icon: '❌' },
-    { label: 'Avg Hours', value: `${statistics.averageHours.toFixed(1)}h`, accent: '#0891b2', bg: '#f0f9ff', icon: '⏱️' },
-    { label: 'Records',   value: statistics.totalRecords,                  accent: '#374151', bg: '#f9fafb', icon: '📋' },
-  ];
-
-  // ── Context label (Step 6) ───────────────────────────────────────────────
-  const contextLabel = buildContextLabel(filters, employees);
+  // ── Stats derived from the same data the table uses (useMemo) ────────────
+  const statCards = useMemo(() => buildStatCards(attendance), [attendance]);
+  const contextLabel = useMemo(() => buildContextLabel(filters, employees), [filters, employees]);
 
   return (
     <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '32px 24px' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
 
-        <div style={{ marginBottom: '28px' }}>
+        {/* Header */}
+        <div style={{ marginBottom: '20px' }}>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
             Attendance Dashboard
           </h1>
@@ -155,33 +169,28 @@ const AttendanceDashboardPage = () => {
           </p>
         </div>
 
-        {/* ── Context indicator label ── */}
+        {/* Context indicator */}
         <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '6px',
-          background: '#eff6ff',
-          border: '1px solid #bfdbfe',
-          borderRadius: '8px',
-          padding: '6px 14px',
-          marginBottom: '16px',
-          fontSize: '13px',
-          fontWeight: 600,
-          color: '#1d4ed8',
+          display: 'inline-flex', alignItems: 'center', gap: '6px',
+          background: '#eff6ff', border: '1px solid #bfdbfe',
+          borderRadius: '8px', padding: '6px 14px',
+          marginBottom: '20px', fontSize: '13px', fontWeight: 600, color: '#1d4ed8',
         }}>
           📍 {contextLabel}
         </div>
 
         {/* Stat Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '14px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(148px, 1fr))', gap: '12px', marginBottom: '24px' }}>
           {statCards.map((card) => (
             <div
               key={card.label}
+              title={card.tooltip}
               style={{
-                background: card.bg, borderRadius: '16px', padding: '18px 20px',
+                background: card.bg, borderRadius: '16px', padding: '16px 18px',
                 border: '1px solid transparent',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                 transition: 'transform 0.15s, box-shadow 0.15s',
+                cursor: 'default',
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
@@ -193,10 +202,10 @@ const AttendanceDashboardPage = () => {
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: card.accent, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: card.accent, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1.3 }}>
                   {card.label}
                 </span>
-                <span style={{ fontSize: '16px' }}>{card.icon}</span>
+                <span style={{ fontSize: '15px' }}>{card.icon}</span>
               </div>
               <div style={{ fontSize: '26px', fontWeight: 700, color: card.accent, letterSpacing: '-0.02em' }}>
                 {card.value}
@@ -205,7 +214,7 @@ const AttendanceDashboardPage = () => {
           ))}
         </div>
 
-        {/* Filters — now passes employee list for the dropdown */}
+        {/* Filters */}
         <AttendanceFilters
           filters={filters}
           onFilterChange={(f) => setFilters({ ...f, page: 1, limit: 20 })}
