@@ -4,13 +4,13 @@ import { ProjectStatus, formatEnumLabel } from '../../../../types/enums'
 interface EmployeeOption {
   id: string
   name: string
+  role?: string
 }
 
 interface ProjectFilterValues {
   status?: string
   ownerId?: string
   memberId?: string
-  startDate?: string
   endDate?: string
 }
 
@@ -21,8 +21,14 @@ interface Props {
 }
 
 const ProjectFilters = ({ employees, filters, onFilterChange }: Props) => {
+  const teamLeads = employees.filter((emp) => emp.role === 'TEAM_LEAD')
+
   const handleChange = (key: keyof ProjectFilterValues, value: string) => {
     onFilterChange({ [key]: value })
+  }
+
+  const handleClear = () => {
+    onFilterChange({ __clear: true })
   }
 
   return (
@@ -49,14 +55,14 @@ const ProjectFilters = ({ employees, filters, onFilterChange }: Props) => {
         ))}
       </select>
 
-      {/* Team Lead / Owner Filter */}
+      {/* Team Lead / Owner Filter — only TEAM_LEAD users */}
       <select
         style={selectStyle}
         value={filters.ownerId || ''}
         onChange={(e) => handleChange('ownerId', e.target.value)}
       >
         <option value="">All Team Leads</option>
-        {employees.map((emp) => (
+        {teamLeads.map((emp) => (
           <option key={emp.id} value={emp.id}>
             {emp.name}
           </option>
@@ -77,19 +83,9 @@ const ProjectFilters = ({ employees, filters, onFilterChange }: Props) => {
         ))}
       </select>
 
-      {/* Start Date */}
+      {/* Deadline Date */}
       <input
         type="date"
-        placeholder="Start Date"
-        style={selectStyle}
-        value={filters.startDate || ''}
-        onChange={(e) => handleChange('startDate', e.target.value)}
-      />
-
-      {/* End Date */}
-      <input
-        type="date"
-        placeholder="End Date"
         style={selectStyle}
         value={filters.endDate || ''}
         onChange={(e) => handleChange('endDate', e.target.value)}
@@ -98,7 +94,7 @@ const ProjectFilters = ({ employees, filters, onFilterChange }: Props) => {
       {/* Clear Button */}
       <button
         style={clearButtonStyle}
-        onClick={() => onFilterChange({ __clear: true })}
+        onClick={handleClear}
       >
         Clear
       </button>

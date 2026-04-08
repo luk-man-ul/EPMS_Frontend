@@ -12,13 +12,13 @@ import SearchBar from '../../../components/shared/SearchBar'
 interface EmployeeOption {
   id: string
   name: string
+  role?: string
 }
 
 interface ProjectFilterValues {
   status?: string
   ownerId?: string
   memberId?: string
-  startDate?: string
   endDate?: string
 }
 
@@ -75,6 +75,7 @@ const ProjectsPage = () => {
         employeeData.map((emp: any) => ({
           id: emp.id,
           name: `${emp.firstName} ${emp.lastName}`,
+          role: emp.role,
         }))
       )
     } catch (err) {
@@ -188,16 +189,7 @@ const ProjectsPage = () => {
       }
     }
 
-    // Start date filter
-    if (filters.startDate && project.startDate) {
-      const projectStart = new Date(project.startDate)
-      const filterStart = new Date(filters.startDate)
-      if (projectStart < filterStart) {
-        return false
-      }
-    }
-
-    // End date filter
+    // Deadline filter
     if (filters.endDate && project.endDate) {
       const projectEnd = new Date(project.endDate)
       const filterEnd = new Date(filters.endDate)
