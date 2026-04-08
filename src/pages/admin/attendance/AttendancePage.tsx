@@ -9,6 +9,7 @@ type ViewType = 'daily' | 'monthly' | 'calendar'
 
 const AttendancePage = () => {
   const [activeView, setActiveView] = useState<ViewType>('daily')
+  const [filters, setFilters] = useState({ startDate: '', endDate: '', userId: '' })
 
   return (
     <div style={{ padding: '32px', maxWidth: '1600px', margin: '0 auto' }}>
@@ -120,7 +121,77 @@ const AttendancePage = () => {
       {/* Content */}
       {activeView === 'daily' && (
         <>
-          <AttendanceStats />
+          {/* Date Filter Bar */}
+          <div style={{
+            backgroundColor: '#fff',
+            borderRadius: '12px',
+            border: '1px solid #e5e5e5',
+            padding: '16px 24px',
+            marginBottom: '24px',
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'center'
+          }}>
+            <label style={{ fontSize: '14px', fontWeight: 500, color: '#666' }}>
+              Start Date:
+            </label>
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={(e) => setFilters((prev) => ({ ...prev, startDate: e.target.value }))}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid #e5e5e5',
+                fontSize: '14px',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            />
+            <label style={{ fontSize: '14px', fontWeight: 500, color: '#666' }}>
+              End Date:
+            </label>
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={(e) => setFilters((prev) => ({ ...prev, endDate: e.target.value }))}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid #e5e5e5',
+                fontSize: '14px',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            />
+            <button
+              onClick={() => setFilters({ startDate: '', endDate: '', userId: '' })}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: '1px solid #e5e5e5',
+                backgroundColor: '#fff',
+                color: '#666',
+                fontSize: '14px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                marginLeft: 'auto',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#fafafa'
+                e.currentTarget.style.color = '#1a1a1a'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#fff'
+                e.currentTarget.style.color = '#666'
+              }}
+            >
+              Clear Filters
+            </button>
+          </div>
+
+          <AttendanceStats filters={filters} />
           <LeaveRequests />
           <div
             style={{

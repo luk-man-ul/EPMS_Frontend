@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react';
 import api from '../../../../utils/api';
 
-interface Stats {
+interface AttendanceStatsResponse {
   totalEmployees: number;
-  presentToday: number;
-  absentToday: number;
-  lateCheckIns: number;
-  todayAttendance: number;
+  present: number;
+  onsite: number;
+  wfh: number;
+  late: number;
+  halfDay: number;
+  onLeave: number;
+  absent: number;
+  meta?: {
+    mode: string;
+    totalDays: number;
+    avgAttendance: number;
+  };
 }
 
 interface StatCard {
@@ -16,30 +24,64 @@ interface StatCard {
   icon: string;
 }
 
-const AttendanceStats = () => {
-  const [stats, setStats] = useState<Stats | null>(null);
+interface AttendanceStatsProps {
+  filters?: {
+    startDate?: string;
+    endDate?: string;
+    userId?: string;
+  };
+}
+
+const AttendanceStats = ({ filters = {} }: AttendanceStatsProps) => {
+  const [stats, setStats] = useState<AttendanceStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/admin/dashboard')
+    setLoading(true);
+
+    // Build params — only include defined values
+    const params: Record<string, string> = {};
+    if (filters.startDate) params.startDate = filters.startDate;
+    if (filters.endDate)   params.endDate   = filters.endDate;
+    if (filters.userId)    params.userId    = filters.userId;
+
+    api.get('/attendance/stats', { params })
       .then((res) => setStats(res.data))
-      .catch((err) => console.error('Failed to load attendance stats', err))
+      .catch((err) => {
+        console.error('Failed to load attendance stats', err);
+        setStats(null);
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [filters.startDate, filters.endDate, filters.userId]);
+
+  // Attendance rate display:
+  // - Range mode: use meta.avgAttendance (already a %)
+  // - Single-day: compute from present / totalEmployees
+  const attendanceRateDisplay = (): string => {
+    if (!stats) return '—';
+    if (stats.meta?.avgAttendance !== undefined) {
+      return `${stats.meta.avgAttendance}%`;
+    }
+    if (stats.totalEmployees > 0) {
+      const rate = Math.round((stats.present / stats.totalEmployees) * 100);
+      return `${rate}%`;
+    }
+    return '—';
+  };
 
   const cards: StatCard[] = stats ? [
-    { label: 'Total Employees', value: stats.totalEmployees, accent: '#6366f1', icon: '👥' },
-    { label: 'Present Today',   value: stats.presentToday,   accent: '#16a34a', icon: '✅' },
-    { label: 'Absent Today',    value: stats.absentToday,    accent: '#dc2626', icon: '❌' },
-    { label: 'Late Check-ins',  value: stats.lateCheckIns,   accent: '#d97706', icon: '⏰' },
-    { label: 'Attendance Rate', value: `${stats.todayAttendance}%`, accent: '#0891b2', icon: '📊' },
+    { label: 'Total Employees', value: stats.totalEmployees,      accent: '#6366f1', icon: '👥' },
+    { label: 'Present Today',   value: stats.present,             accent: '#16a34a', icon: '✅' },
+    { label: 'Absent Today',    value: stats.absent,              accent: '#dc2626', icon: '❌' },
+    { label: 'Late Check-ins',  value: stats.late,                accent: '#d97706', icon: '⏰' },
+    { label: 'Attendance Rate', value: attendanceRateDisplay(),   accent: '#0891b2', icon: '📊' },
   ] : [];
 
   if (loading) {
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} style={{ background: '#f3f4f6', borderRadius: '16px', height: '96px', animation: 'pulse 1.5s infinite' }} />
+          <div key={i} style={{ background: '#f3f4f6', borderRadius: '16px', height: '96px' }} />
         ))}
       </div>
     );
