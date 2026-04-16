@@ -31,6 +31,8 @@ export function Sidebar({
 
   // Notify parent when expansion state changes
   const handleExpandChange = (expanded: boolean) => {
+    // Disable hover expansion on mobile
+    if (window.innerWidth <= 768) return
     setIsExpanded(expanded)
     if (onExpandChange) {
       onExpandChange(expanded)

@@ -1,31 +1,90 @@
-import { useState } from 'react'
-import { notificationsData } from './data/notificationsData'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import api from '../../../utils/api'
 import NotificationFilters from './components/NotificationFilters'
 import NotificationItem from './components/NotificationItem'
 import NotificationStats from './components/NotificationStats'
 import type { NotificationType, Notification } from './types/notification.types'
 
+// Map API notification type to local NotificationType
+const mapType = (apiType: string): NotificationType => {
+  if (apiType === 'TASK_ASSIGNED' || apiType === 'TASK_APPROVED' || apiType === 'TASK_REJECTED') return 'TASK_ASSIGNED'
+  if (apiType === 'TICKET_UPDATED') return 'TICKET_UPDATE'
+  if (apiType === 'WORK_APPROVAL_REQUESTED' || apiType === 'LEAVE_APPROVED' || apiType === 'LEAVE_REJECTED') return 'APPROVAL_REQUEST'
+  return 'SYSTEM_ALERT'
+}
+
+// Map API notification to local Notification shape
+const mapNotification = (n: any): Notification => ({
+  id: n.id,
+  type: mapType(n.type),
+  priority: 'MEDIUM',
+  title: n.title,
+  message: n.message,
+  timestamp: new Date(n.createdAt).toLocaleString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  }),
+  isRead: n.isRead,
+  actionUrl: n.metadata?.taskId
+    ? `/admin/tasks/${n.metadata.taskId}`
+    : n.metadata?.ticketId
+    ? `/admin/tickets/${n.metadata.ticketId}`
+    : n.metadata?.projectId
+    ? `/admin/projects/${n.metadata.projectId}`
+    : n.metadata?.leaveId
+    ? `/admin/leave`
+    : undefined,
+  metadata: n.metadata,
+})
+
 const NotificationsPage = () => {
-  const [notifications, setNotifications] = useState<Notification[]>(notificationsData)
+  const navigate = useNavigate()
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState<NotificationType | 'ALL'>('ALL')
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications(notifications.map(n => 
-      n.id === id ? { ...n, isRead: true } : n
-    ))
+  useEffect(() => {
+    fetchNotifications()
+  }, [])
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true)
+      const response = await api.get('/notifications')
+      const raw = response.data.notifications || []
+      setNotifications(raw.map(mapNotification))
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleMarkAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, isRead: true })))
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await api.patch(`/notifications/${id}/read`)
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
+    } catch (err) {
+      console.error('Failed to mark as read:', err)
+    }
+  }
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await api.patch('/notifications/read-all')
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+    } catch (err) {
+      console.error('Failed to mark all as read:', err)
+    }
   }
 
   const handleClearAll = () => {
-    setNotifications(notifications.filter(n => !n.isRead))
+    setNotifications(prev => prev.filter(n => !n.isRead))
   }
 
   const handleAction = (url: string) => {
-    // Navigate to the specified URL
-    // TODO: Implement navigation logic
+    navigate(url)
   }
 
   const filteredNotifications = activeFilter === 'ALL' 
@@ -108,6 +167,13 @@ const NotificationsPage = () => {
           </button>
         </div>
       </div>
+
+      {loading ? (
+        <div style={{ padding: '60px', textAlign: 'center', color: '#999', fontSize: '14px' }}>
+          Loading notifications...
+        </div>
+      ) : (
+        <>
 
       {/* Stats */}
       <NotificationStats
@@ -221,6 +287,8 @@ const NotificationsPage = () => {
           </div>
         )}
       </div>
+      </>
+      )}
     </div>
   )
 }

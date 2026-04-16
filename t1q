@@ -1,0 +1,541 @@
+[33mcommit 46b2becc6866bcae8a1101b916672366174c50af[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Wed Apr 8 15:47:32 2026 +0530
+
+    resets all filters including the date input in the projects section
+
+[33mcommit b9f3bd724364b0a0ce1b0f5537874458cf1ac2f2[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Wed Apr 8 12:38:39 2026 +0530
+
+    filter ,stats fix
+
+[33mcommit 0180532d87ed812666460a7542200377c1d17f19[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Wed Apr 8 00:02:58 2026 +0530
+
+    frontend logic intense
+
+[33mcommit 56567736bdc8cc737d250dcf3fb1ff5e930c9d34[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Tue Apr 7 23:19:09 2026 +0530
+
+    att logic
+
+[33mcommit 5227cfdf5b37926c8d4962ab274ef6b90286a013[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Tue Apr 7 22:29:46 2026 +0530
+
+    attendence dashboard
+
+[33mcommit 6532bd01587cd34892771003ab54399350476063[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Tue Apr 7 16:16:26 2026 +0530
+
+    password validation
+
+[33mcommit 82239cda6e113a303777f359dec82f2fd5262c8c[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Tue Apr 7 16:04:02 2026 +0530
+
+    password
+
+[33mcommit 70a11df6f127c70ea0f9cba2c140e15c406213bf[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Tue Apr 7 15:44:42 2026 +0530
+
+    ui fixes
+
+[33mcommit c77f2e7b1c7d58c13b17d28cad63e788cd93a4dd[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Tue Apr 7 14:54:16 2026 +0530
+
+    logic checkout cap
+
+[33mcommit ac601148c070530de6cc000faa3f5893c61145a6[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Tue Apr 7 14:12:46 2026 +0530
+
+    check in logic
+
+[33mcommit a9a1746db8a815634f609ee1a680fab1265a59ef[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Tue Apr 7 12:48:21 2026 +0530
+
+    attendence status fi
+
+[33mcommit bf6a77efd22f61657cf5a6c68dd1415f5f505d9b[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Tue Apr 7 12:29:58 2026 +0530
+
+    attendence mismatch
+
+[33mcommit df3efc4e46e840974f11df01c4530bac8ba4088b[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Tue Apr 7 12:19:38 2026 +0530
+
+    date format fix
+
+[33mcommit e783e99cb0668f4e863bac05e3be407ac680226a[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Tue Apr 7 12:05:24 2026 +0530
+
+    attendence integration
+
+[33mcommit 7778a60202a090af6f8d4dbf1457a74949b23c1a[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Fri Apr 3 12:41:20 2026 +0530
+
+    attendence chart fix
+
+[33mcommit aa8c0df407218653ce18a1e06938a9cdaca205e5[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Fri Apr 3 12:28:27 2026 +0530
+
+    attendence bug
+
+[33mcommit 270aff533b1b0ed1921fd9bb02b6f62945667eb5[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Fri Apr 3 12:00:08 2026 +0530
+
+    chat fixes
+
+[33mcommit 981384c97f80a6577834c38eea17eb77291debfb[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Fri Apr 3 11:26:23 2026 +0530
+
+    chat update and delete added
+
+[33mcommit 70996f4550970d2efc4e1ecdbbee0394260d1e43[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Fri Apr 3 00:53:44 2026 +0530
+
+    ui fix
+
+[33mcommit 501687afbf387881ce26b5e5c7de524b88c03224[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Thu Apr 2 23:26:44 2026 +0530
+
+    emp/tl workspace wfh and leave page merge
+
+[33mcommit 6ac65129c0e950d03206f95057e8ca86669c2cd3[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Thu Apr 2 18:22:55 2026 +0530
+
+    unified structure of aprroval in admin workspace
+
+[33mcommit 203e8632391883e3853eed841ff115e45be47d4b[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Thu Apr 2 17:28:26 2026 +0530
+
+    employee form workmode updated and request vanish fixed
+
+[33mcommit bbfc984526eef61f442d6384a35c7f50d77dfb72[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Thu Apr 2 13:22:04 2026 +0530
+
+    wfh and request
+
+[33mcommit 493dc4d73e010c7cb6f47b62b9321c5f3633aff8[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Thu Apr 2 11:52:35 2026 +0530
+
+    fully implemented file attachment in task and ticket
+
+[33mcommit 91b5c5d1a4ec0deadb5f5ef3320193bf0be29804[m
+Merge: 5631a42 ee6bef8
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Thu Apr 2 11:21:59 2026 +0530
+
+    Merge branch 'main' of https://github.com/luk-man-ul/EPMS_Frontend
+
+[33mcommit 5631a425e85d837b21d5c6121df75f89a31c60db[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Thu Apr 2 11:21:33 2026 +0530
+
+    file attachment
+
+[33mcommit ee6bef8c08616ff6b419468bd2674e5f2359a718[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Wed Apr 1 17:13:43 2026 +0530
+
+    time logs removed
+
+[33mcommit 4f0f850f65bd7ddd400d5ff3908fd1ae665f4c93[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Wed Apr 1 12:59:05 2026 +0530
+
+    task fixed(3)
+
+[33mcommit af9be96306008c3661e5ff475cc745a67bb7b296[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Wed Apr 1 12:54:17 2026 +0530
+
+    tasks section fixed(2)
+
+[33mcommit 51b8fb49057a18d70d46f680897eaa5ee1dafde1[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Wed Apr 1 12:49:50 2026 +0530
+
+    task section fixed
+
+[33mcommit b18aeccfe99be2d872e38ca019443cd63452beeb[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Wed Apr 1 12:38:59 2026 +0530
+
+    ticket fixed(2)
+
+[33mcommit 007507ce415dbcc46c7f7c218e2214aec3b8b56c[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Wed Apr 1 12:18:39 2026 +0530
+
+    ticket fixed
+
+[33mcommit 3ee74f2a93ac714f57c78d3fcc92c464de34fdb7[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Wed Apr 1 12:04:57 2026 +0530
+
+    all profile avatar done
+
+[33mcommit 3592f02f0e7d70f3b38ba83bd5eed4f615fbe4e0[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Tue Mar 31 12:05:35 2026 +0530
+
+    added a form validation to the form of add employee in the admin section
+
+[33mcommit 6648c1174075cb645eb67cd1d2a7c377693cf8a0[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Mon Mar 30 16:14:25 2026 +0530
+
+    button changed
+
+[33mcommit 763fb87ff5160201b569374be03b468aef501698[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Fri Mar 27 12:57:29 2026 +0530
+
+    logo changed
+
+[33mcommit b9ead7e80960c7db7050378bebefb931c0515344[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Fri Mar 27 12:44:49 2026 +0530
+
+    name changed to epms
+
+[33mcommit 11f5056161269e11e0f3306806dc43e6c095f896[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Fri Mar 27 11:38:32 2026 +0530
+
+    profile photo error 1
+
+[33mcommit 9db91af0c60a95e2d011a1afb1d83918fd3eebcb[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Fri Mar 27 10:42:29 2026 +0530
+
+    profile photo upload
+
+[33mcommit 43acee1446dde16c7dc089aa6e2aa7aba8ed5b84[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Thu Mar 26 12:12:12 2026 +0530
+
+    all done
+
+[33mcommit 9bac6905b2411dbc3eeff15d97030201b88e6d32[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Mon Mar 23 18:12:13 2026 +0530
+
+    fix: use api instance in employee pages
+
+[33mcommit af4b650a57f447d7777c2319a6a536fd986b8a37[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Sat Mar 21 12:49:56 2026 +0530
+
+    frontend connected to backend
+
+[33mcommit cc51089e4baf921201083b319d7969265384748f[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Tue Mar 17 17:05:54 2026 +0530
+
+    adds cards to the projects section of admin indicating total project completed etc. in the employee section dashboard fixed the card compression while opening the left sidebar
+
+[33mcommit ae40d834dd7b16232623f0ebf6cfdc01df66548d[m
+Merge: ec151b5 14ca7fa
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Tue Mar 17 14:31:59 2026 +0530
+
+    Merge branch 'main' of https://github.com/luk-man-ul/EPMS_Frontend
+
+[33mcommit ec151b52fcfde3018c587c9548b276ec184c227e[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Tue Mar 17 14:31:46 2026 +0530
+
+    admin task UI done
+
+[33mcommit 14ca7fa513447ec2999278d5c814ebd64698dec8[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Tue Mar 17 14:30:06 2026 +0530
+
+    chat admin permission fix
+
+[33mcommit ff1ba315ffe95ce7146be3d9f2eff25214412f5c[m
+Merge: 2e64f24 dfbe95b
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Tue Mar 17 13:11:04 2026 +0530
+
+    Merge branch 'main' of https://github.com/luk-man-ul/EPMS_Frontend
+
+[33mcommit 2e64f24900d060a48125b55946d60c8d2987d50b[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Tue Mar 17 13:10:41 2026 +0530
+
+    axios fix after login fixed
+
+[33mcommit dfbe95b03d0413cfed4d751403bb3d8c05875482[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Mon Mar 16 18:11:56 2026 +0530
+
+    searchbar done
+
+[33mcommit 75d31f2fa4504209470a3724b95665b6a8952d85[m
+Merge: 28ecd2f 883e390
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Mon Mar 16 18:01:42 2026 +0530
+
+    Merge branch 'main' of https://github.com/luk-man-ul/EPMS_Frontend
+
+[33mcommit 28ecd2f82614e9b9e392205b3547bdf0033db16f[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Mon Mar 16 18:01:08 2026 +0530
+
+    top search half done
+
+[33mcommit 883e390ce4d415ae30c9ba675ddbde53e6deceac[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Mon Mar 16 18:00:06 2026 +0530
+
+    logout fix
+
+[33mcommit bf7ca59f2be9ff544acafe57f8be9f6a52a71528[m
+Merge: 0f69f07 33452b9
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Mon Mar 16 17:25:01 2026 +0530
+
+    Merge branch 'main' of https://github.com/luk-man-ul/EPMS_Frontend
+
+[33mcommit 0f69f07d8a345d9300ed387ee51105efdedd1219[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Mon Mar 16 17:24:44 2026 +0530
+
+    login remember me
+
+[33mcommit 33452b9cc0e084cfdc686832c068b8dd8423605a[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Mon Mar 16 17:11:45 2026 +0530
+
+    projects section done + tickets UI done + task UI done
+
+[33mcommit 9942acf73cbe2cf6fe38f205c3f7c87ce98e63d7[m
+Merge: 1ed16be 5b30155
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Mon Mar 16 16:17:29 2026 +0530
+
+    Merge branch 'main' of https://github.com/luk-man-ul/EPMS_Frontend
+
+[33mcommit 1ed16be3fe895de4e2bf671e4d7e7595e783103f[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Mon Mar 16 16:17:08 2026 +0530
+
+    projects half done
+
+[33mcommit 5b301557458163e8d3369b285397a3b6e13c63e5[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Mon Mar 16 15:12:56 2026 +0530
+
+    sidebar optimization
+
+[33mcommit fdf2ac9ce8e605ce21995072fdb158aff10acd65[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Mon Mar 16 13:29:21 2026 +0530
+
+    sidebar/employee details updated.
+
+[33mcommit 2275e632098dbc928d27d87a83684c2b75d8a533[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Mon Mar 16 11:38:49 2026 +0530
+
+    chat scroll issue fixed
+
+[33mcommit f061b74ccfa6a9566d2e7dbd8d5908fda55517be[m
+Merge: cc20cb1 cb0b0e4
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Thu Mar 12 17:17:17 2026 +0530
+
+    Merge branch 'main' of https://github.com/luk-man-ul/EPMS_Frontend
+
+[33mcommit cc20cb11970c91d49e29386e26b097825a54e9b1[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Thu Mar 12 17:16:19 2026 +0530
+
+    second commit made by akshay
+
+[33mcommit cb0b0e41010fe45d408f69eb48f6042bea2f34b3[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Thu Mar 12 16:37:32 2026 +0530
+
+    merged sidebar timelog navigation
+
+[33mcommit 9e9392747db2774ba68b5e355e2d1404512a7117[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Thu Mar 12 15:36:14 2026 +0530
+
+    sidebar
+
+[33mcommit ea086a3304997d4c54d569c005b05f0797699206[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Thu Mar 12 12:17:05 2026 +0530
+
+    teamlead bugs fixed
+
+[33mcommit 60a8c7aee091e6697f49b0ea61e573e85bd1e416[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Wed Mar 11 11:13:46 2026 +0530
+
+    includes : css , docker , auth , layout , types etc
+
+[33mcommit 693a338d85e3dc981e5ec1bbe9bf1f0bad6b5576[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Wed Mar 11 11:11:28 2026 +0530
+
+    shared pages component applied
+
+[33mcommit f743d2c1a68dab6e9e151f38584e283c9d6139ef[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Wed Mar 11 11:10:22 2026 +0530
+
+    admin workspace component refactor applied
+
+[33mcommit f66b4d7561e9fe53662c00afdff66663152b366b[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Wed Mar 11 11:07:42 2026 +0530
+
+    Teamlead page components refactor applied
+
+[33mcommit b2cac276b39d798340d3939c97e1308075d4daca[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Wed Mar 11 11:02:26 2026 +0530
+
+    components refactor complete
+
+[33mcommit 6a85fed2a510e46489fc51bf76f2d9871c46a281[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Wed Mar 11 11:01:59 2026 +0530
+
+    components  refactor
+
+[33mcommit b9b4d536bbcb4389cf1c867302bf099c5a16425e[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Wed Mar 11 10:53:18 2026 +0530
+
+    chat room
+
+[33mcommit 52d1745a6930310848913c586ce0056b8ac8cbe2[m
+Merge: 940fcdf 1f177d4
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Fri Mar 6 14:19:30 2026 +0530
+
+    Merge branch 'main' of https://github.com/luk-man-ul/EPMS_Frontend
+
+[33mcommit 940fcdf724820f6dbb21e454fb8e9a62d9c19db0[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Fri Mar 6 14:19:08 2026 +0530
+
+    changes by me(Akshay)
+
+[33mcommit 1f177d48d5edd5617b2481065d930f938909540b[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Fri Mar 6 13:54:48 2026 +0530
+
+    sidebar
+
+[33mcommit c5ec65a77ec14d9313811b70a8e3dd0fd920a5a4[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Fri Mar 6 13:54:00 2026 +0530
+
+    Attendence and Leave mannagement
+
+[33mcommit a65389c840b6793d20abfe54fc1ae97379c13ae0[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Fri Mar 6 13:51:58 2026 +0530
+
+    routing of attendence created .
+
+[33mcommit 78b9d053d1428a1e962c195f65bca4dd0b30e7aa[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Thu Mar 5 10:45:42 2026 +0530
+
+    SELF WORK KIRO
+
+[33mcommit 5fd83b40432e935231094f245f54391a7f611258[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Wed Mar 4 11:01:21 2026 +0530
+
+    KIRO tickets Enhancements
+
+[33mcommit 2d6c4ae2ad79aff4c008fc9f6b0beaeddee0cafe[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Tue Mar 3 14:57:49 2026 +0530
+
+    admin teamlead - project and tickets updated
+
+[33mcommit 4aab6a6e8f5bc65887ed926cb4ec0f0543c8ee95[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Mon Mar 2 16:05:11 2026 +0530
+
+    curated fix using KIRO
+
+[33mcommit a12ac8ccc164c88cdf7594f416da6e5ad8fb87fa[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Sat Feb 28 21:03:52 2026 +0530
+
+    Till tickets (fixes remains)
+
+[33mcommit b02b41ec1722b279cdd532bfe8eb547da9e6d5e4[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Thu Feb 26 11:58:32 2026 +0530
+
+    backend integration completed (Project and Task).
+
+[33mcommit 963413b8616b1fe2b9c97c68f1ab8d51b2e0d891[m
+Author: S P LUKUMANUL HAKEEM <lukumanul.haqim@gmail.com>
+Date:   Wed Feb 25 13:42:43 2026 +0530
+
+    EPMS Frontend Backend Integrated work
+
+[33mcommit b6df86532adb042a99a4336c43e8fdf6d55af585[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Mon Feb 16 16:16:39 2026 +0530
+
+    TeamLead Done!
+
+[33mcommit 2f9e69347276e7a2cf1d7271eccf9f87db0de393[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Wed Feb 11 12:57:03 2026 +0530
+
+    teamlead projects done
+
+[33mcommit 89b965bb8abc8e43ac276c0d7c3a320d88838408[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Wed Feb 11 11:11:11 2026 +0530
+
+    admin complete
+
+[33mcommit 56189b6683f958d2705d54296efe97e689ab7060[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Tue Feb 10 16:44:12 2026 +0530
+
+    Admin Almost done
+
+[33mcommit e03b2a4eabda29b4c11c7c1e80befd62310aa796[m
+Author: Akshay Saji <akshaysaji1312@gmail.com>
+Date:   Tue Feb 10 16:36:32 2026 +0530
+
+    first commit

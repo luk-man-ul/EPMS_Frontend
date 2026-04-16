@@ -166,6 +166,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 150;
+  flex-shrink: 0;
 }
 
 .header-search {
@@ -313,7 +314,9 @@ body {
   /* Show mobile menu and close buttons */
   .mobile-menu-btn,
   .mobile-close-btn {
-    display: block !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
   }
 
   /* Show mobile overlay */
@@ -326,10 +329,20 @@ body {
     margin-left: 0;
   }
 
-  /* Adjust header for mobile */
+  /* Fix header on mobile so hamburger is always visible */
   .header {
     padding: 0 16px;
     height: 60px;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 149;
+  }
+
+  /* Push content below fixed header on mobile */
+  .main-collapsible {
+    padding-top: 60px;
   }
 
   .header-search {
@@ -451,7 +464,10 @@ body {
   max-width: 100%;
 }
 
-/* COLLAPSIBLE SIDEBAR STYLES */
+/* Mobile menu button — hidden on desktop, shown on mobile via media query */
+.mobile-menu-btn {
+  display: none;
+}
 .sidebar-collapsible {
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
@@ -496,6 +512,11 @@ body {
   
   .main-collapsible {
     margin-left: 0 !important;
+  }
+
+  /* Body scroll lock when sidebar open */
+  body.sidebar-open {
+    overflow: hidden !important;
   }
 }
 

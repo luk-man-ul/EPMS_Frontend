@@ -212,13 +212,13 @@ const AdminHeader = ({ onMenuClick }: AdminHeaderProps) => {
           onClick={onMenuClick}
           className="mobile-menu-btn"
           style={{
-            display: 'none',
             background: 'none',
             border: 'none',
             fontSize: '24px',
             cursor: 'pointer',
             padding: '4px',
             color: '#1a1a1a',
+            flexShrink: 0,
           }}
         >
           ☰
