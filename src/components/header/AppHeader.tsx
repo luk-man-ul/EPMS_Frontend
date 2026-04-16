@@ -21,7 +21,7 @@ const typeConfig = {
   employee:{ icon: '👤', label: 'People',   color: '#7c3aed' },
 }
 
-const AppHeader = () => {
+const AppHeader = ({ onMenuClick }: { onMenuClick?: () => void }) => {
   const navigate = useNavigate()
   const { user, logout: authLogout } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
@@ -202,8 +202,26 @@ const AppHeader = () => {
 
   return (
     <header className="header">
-      {/* Global Search */}
-      <div ref={searchRef} style={{ position: 'relative', flex: 1, maxWidth: 480 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, maxWidth: 520 }}>
+        {/* Mobile hamburger */}
+        <button
+          onClick={onMenuClick}
+          className="mobile-menu-btn"
+          style={{
+            background: 'none',
+            border: 'none',
+            fontSize: '24px',
+            cursor: 'pointer',
+            padding: '4px',
+            color: '#1a1a1a',
+            flexShrink: 0,
+          }}
+        >
+          ☰
+        </button>
+
+        {/* Global Search */}
+        <div ref={searchRef} style={{ position: 'relative', flex: 1 }}>
         <div style={{ position: 'relative' }}>
           <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, pointerEvents: 'none', color: '#aaa' }}>🔍</span>
           <input
@@ -306,6 +324,7 @@ const AppHeader = () => {
             })}
           </div>
         )}
+      </div>
       </div>
 
       <div className="header-actions">

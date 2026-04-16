@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from '../components/sidebar/Sidebar'
 import type { UserRole } from '../components/sidebar/navigation-config'
@@ -14,6 +14,15 @@ const AppLayout = () => {
   // Map user role to Sidebar UserRole type
   const userRole = (user?.role as UserRole) || 'EMPLOYEE'
 
+  useEffect(() => {
+    if (isMobileSidebarOpen) {
+      document.body.classList.add('sidebar-open')
+    } else {
+      document.body.classList.remove('sidebar-open')
+    }
+    return () => document.body.classList.remove('sidebar-open')
+  }, [isMobileSidebarOpen])
+
   return (
     <div className="layout">
       <Sidebar 
@@ -25,18 +34,7 @@ const AppLayout = () => {
       />
 
       <div className={`main main-collapsible ${isSidebarExpanded ? 'expanded' : ''}`}>
-        {/* Mobile menu button */}
-        <button
-          onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-          className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-md shadow-md"
-          aria-label="Toggle menu"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-
-        <AppHeader />
+        <AppHeader onMenuClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)} />
         <div className="content">
           <Outlet />
         </div>
@@ -46,7 +44,13 @@ const AppLayout = () => {
       {isMobileSidebarOpen && (
         <div
           onClick={() => setIsMobileSidebarOpen(false)}
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          className="mobile-overlay"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 190,
+          }}
         />
       )}
     </div>
