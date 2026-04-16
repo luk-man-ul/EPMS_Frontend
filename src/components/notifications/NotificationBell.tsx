@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card, Badge, LoadingSpinner, ErrorMessage } from '../ui';
 import api from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 import './NotificationBell.css';
 
 interface Notification {
@@ -14,6 +15,7 @@ interface Notification {
 }
 
 export function NotificationBell() {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -21,12 +23,19 @@ export function NotificationBell() {
   const [error, setError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch notifications on mount and every 30 seconds
+  // Re-fetch (and clear stale data) whenever the logged-in user changes
   useEffect(() => {
+    // Clear previous user's notifications immediately
+    setNotifications([]);
+    setUnreadCount(0);
+    setIsOpen(false);
+
+    if (!user?.id) return;
+
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user?.id]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
