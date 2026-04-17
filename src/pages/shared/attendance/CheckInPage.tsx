@@ -2,19 +2,26 @@ import { useState, useEffect, useRef } from 'react';
 import api from '../../../utils/api';
 import { Button, Card, ErrorMessage, Badge } from '../../../components/ui';
 
-// Live elapsed time hook — ticks every second
-const useLiveElapsed = (checkIn: string | null) => {
+// Live elapsed time hook — ticks every second, accounts for server/client clock offset
+const useLiveElapsed = (checkIn: string | null, serverNow: number) => {
   const [elapsed, setElapsed] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!checkIn) { setElapsed(0); return; }
 
-    const tick = () => setElapsed(Math.max(0, (Date.now() - new Date(checkIn).getTime()) / 3600000));
+    // Use server time as reference to avoid client clock skew
+    const checkInMs = new Date(checkIn).getTime();
+    const clientOffsetMs = Date.now() - serverNow; // how far client is behind/ahead of server
+
+    const tick = () => {
+      const serverNowMs = Date.now() - clientOffsetMs;
+      setElapsed(Math.max(0, (serverNowMs - checkInMs) / 3600000));
+    };
     tick();
     intervalRef.current = setInterval(tick, 1000);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [checkIn]);
+  }, [checkIn, serverNow]);
 
   return elapsed;
 };
@@ -34,6 +41,7 @@ const CheckInPage = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [todayData, setTodayData] = useState<any>(null);
   const [locationSupported, setLocationSupported] = useState(true);
+  const [serverNow, setServerNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -45,12 +53,14 @@ const CheckInPage = () => {
   const fetchTodayAttendance = async () => {
     try {
       const response = await api.get('/attendance/today', {
-        // Prevent caching
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache',
         },
       });
+      // Capture server time from response Date header to correct clock skew
+      const serverDate = response.headers['date'];
+      if (serverDate) setServerNow(new Date(serverDate).getTime());
       setTodayData({
         sessions: response.data.sessions || [],
         totalHours: response.data.totalHours || 0,
@@ -153,7 +163,7 @@ const CheckInPage = () => {
 
   const hasActiveSession = todayData?.sessions?.some((s: any) => !s.checkOut);
   const activeSession = todayData?.sessions?.find((s: any) => !s.checkOut) || null;
-  const liveElapsed = useLiveElapsed(activeSession?.checkIn ?? null);
+  const liveElapsed = useLiveElapsed(activeSession?.checkIn ?? null, serverNow);
 
   // Total = completed sessions hours + live elapsed for active session
   const completedHours = (todayData?.sessions || [])
