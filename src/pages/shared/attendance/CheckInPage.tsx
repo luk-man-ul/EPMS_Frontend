@@ -10,7 +10,7 @@ const useLiveElapsed = (checkIn: string | null) => {
   useEffect(() => {
     if (!checkIn) { setElapsed(0); return; }
 
-    const tick = () => setElapsed((Date.now() - new Date(checkIn).getTime()) / 3600000);
+    const tick = () => setElapsed(Math.max(0, (Date.now() - new Date(checkIn).getTime()) / 3600000));
     tick();
     intervalRef.current = setInterval(tick, 1000);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
@@ -161,7 +161,7 @@ const CheckInPage = () => {
     .reduce((acc: number, s: any) => {
       return acc + (new Date(s.checkOut).getTime() - new Date(s.checkIn).getTime()) / 3600000;
     }, 0);
-  const liveTotal = completedHours + (activeSession ? liveElapsed : 0);
+  const liveTotal = Math.max(0, completedHours + (activeSession ? liveElapsed : 0));
 
   return (
     <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }}>
