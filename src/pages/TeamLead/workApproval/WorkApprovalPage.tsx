@@ -149,10 +149,11 @@ const WorkApprovalPage = () => {
             No work submissions found
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
             <thead>
               <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e5e5' }}>
-                {['Employee', 'Project', 'Work Title', 'Est. Hours', 'Status', 'Submitted', 'Actions'].map((h) => (
+                {['Employee', 'Project', 'Work Title', 'Status', 'Submitted', 'Actions'].map((h) => (
                   <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px', fontWeight: 600, color: '#374151' }}>
                     {h}
                   </th>
@@ -176,21 +177,18 @@ const WorkApprovalPage = () => {
                     <td style={{ padding: '14px 16px', fontSize: '14px', color: '#6b7280' }}>
                       {task.project?.name || '—'}
                     </td>
-                    <td style={{ padding: '14px 16px', fontSize: '14px', color: '#1f2937', maxWidth: '260px' }}>
+                    <td style={{ padding: '14px 16px', fontSize: '14px', color: '#1f2937', maxWidth: '200px' }}>
                       {task.title}
-                    </td>
-                    <td style={{ padding: '14px 16px', fontSize: '14px', color: '#6b7280' }}>
-                      {task.estimatedHrs ? `${task.estimatedHrs}h` : '—'}
                     </td>
                     <td style={{ padding: '14px 16px' }}>
                       <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, color: s.color, background: s.bg }}>
                         {s.label}
                       </span>
                     </td>
-                    <td style={{ padding: '14px 16px', fontSize: '13px', color: '#6b7280' }}>
+                    <td style={{ padding: '14px 16px', fontSize: '13px', color: '#6b7280', whiteSpace: 'nowrap' }}>
                       {formatDate(task.createdAt)}
                     </td>
-                    <td style={{ padding: '14px 16px' }}>
+                    <td style={{ padding: '14px 16px', whiteSpace: 'nowrap' }}>
                       {isPending ? (
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <Button
@@ -224,6 +222,7 @@ const WorkApprovalPage = () => {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
 
