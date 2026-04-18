@@ -1,6 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../../../utils/api';
 import { Button, Card, ErrorMessage, Badge } from '../../../components/ui';
+
+// Live elapsed time hook — ticks every second, accounts for server/client clock offset
+const useLiveElapsed = (checkIn: string | null, serverNow: number) => {
+  const [elapsed, setElapsed] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!checkIn) { setElapsed(0); return; }
+
+    // Use server time as reference to avoid client clock skew
+    const checkInMs = new Date(checkIn).getTime();
+    const clientOffsetMs = Date.now() - serverNow; // how far client is behind/ahead of server
+
+    const tick = () => {
+      const serverNowMs = Date.now() - clientOffsetMs;
+      setElapsed(Math.max(0, (serverNowMs - checkInMs) / 3600000));
+    };
+    tick();
+    intervalRef.current = setInterval(tick, 1000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [checkIn, serverNow]);
+
+  return elapsed;
+};
+
+const formatElapsed = (hours: number) => {
+  const totalSecs = Math.floor(hours * 3600);
+  const h = Math.floor(totalSecs / 3600);
+  const m = Math.floor((totalSecs % 3600) / 60);
+  const s = totalSecs % 60;
+  if (h > 0) return `${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+  return `${m}m ${s.toString().padStart(2, '0')}s`;
+};
 
 const CheckInPage = () => {
   const [loading, setLoading] = useState(false);
@@ -8,6 +41,7 @@ const CheckInPage = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [todayData, setTodayData] = useState<any>(null);
   const [locationSupported, setLocationSupported] = useState(true);
+  const [serverNow, setServerNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -19,12 +53,14 @@ const CheckInPage = () => {
   const fetchTodayAttendance = async () => {
     try {
       const response = await api.get('/attendance/today', {
-        // Prevent caching
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache',
         },
       });
+      // Capture server time from response Date header to correct clock skew
+      const serverDate = response.headers['date'];
+      if (serverDate) setServerNow(new Date(serverDate).getTime());
       setTodayData({
         sessions: response.data.sessions || [],
         totalHours: response.data.totalHours || 0,
@@ -126,6 +162,16 @@ const CheckInPage = () => {
   };
 
   const hasActiveSession = todayData?.sessions?.some((s: any) => !s.checkOut);
+  const activeSession = todayData?.sessions?.find((s: any) => !s.checkOut) || null;
+  const liveElapsed = useLiveElapsed(activeSession?.checkIn ?? null, serverNow);
+
+  // Total = completed sessions hours + live elapsed for active session
+  const completedHours = (todayData?.sessions || [])
+    .filter((s: any) => s.checkOut)
+    .reduce((acc: number, s: any) => {
+      return acc + (new Date(s.checkOut).getTime() - new Date(s.checkIn).getTime()) / 3600000;
+    }, 0);
+  const liveTotal = Math.max(0, completedHours + (activeSession ? liveElapsed : 0));
 
   return (
     <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }}>
@@ -182,7 +228,7 @@ const CheckInPage = () => {
               Today's Sessions
             </h3>
             <div style={{ fontSize: '16px', fontWeight: 600, color: '#10b981' }}>
-              Total: {(todayData.totalHours || 0).toFixed(2)}h
+              Total: {activeSession ? formatElapsed(liveTotal) : `${(todayData.totalHours || 0).toFixed(2)}h`}
             </div>
           </div>
 
@@ -215,7 +261,9 @@ const CheckInPage = () => {
                 <div>
                   <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '2px' }}>Duration</div>
                   <div style={{ fontSize: '14px', fontWeight: 500, color: session.checkOut ? '#1f2937' : '#0369a1' }}>
-                    {calculateDuration(session.checkIn, session.checkOut)}
+                    {session.checkOut
+                      ? calculateDuration(session.checkIn, session.checkOut)
+                      : formatElapsed(liveElapsed)}
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
