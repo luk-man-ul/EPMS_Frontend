@@ -5,6 +5,7 @@ import { useAuth } from '../../../../context/AuthContext'
 import { useToast } from '../../../../context/ToastContext'
 import ConfirmationModal from '../../../../components/shared/ConfirmationModal'
 import TicketStatusTimeline from '../../../admin/tickets/detail/components/TicketStatusTimeline'
+import TicketDiscussionThread from '../../../admin/tickets/detail/components/TicketDiscussionThread'
 import { getAllowedTransitions, formatStatus as formatStatusEnum, type TicketStatus } from '../../../../types/ticketWorkflow'
 import Attachments from '../../../../components/shared/Attachments'
 
@@ -127,6 +128,12 @@ const TicketDetailPage = () => {
     } catch (err: any) {
       showToast('error', err.response?.data?.message || 'Failed to delete')
     } finally { setDeleting(false); setShowDeleteConfirm(false) }
+  }
+
+  const handleAddComment = async (content: string) => {
+    await api.post(`/comments/ticket/${ticketId}`, { content })
+    await fetchTicket()
+    showToast('success', 'Comment posted')
   }
 
   if (loading) return (
@@ -273,6 +280,12 @@ const TicketDetailPage = () => {
 
           {/* Attachments */}
           <Attachments entityType="ticket" entityId={ticketId!} />
+
+          {/* Discussion */}
+          <TicketDiscussionThread
+            comments={ticket.comments || []}
+            onAddComment={handleAddComment}
+          />
         </div>
 
         {/* RIGHT */}

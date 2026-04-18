@@ -5,6 +5,7 @@ import { TaskStatus, formatEnumLabel } from '../../../../types/enums'
 import { useToast } from '../../../../context/ToastContext'
 import TaskTypeBadge from '../../../../components/shared/TaskTypeBadge'
 import Attachments from '../../../../components/shared/Attachments'
+import TicketDiscussionThread from '../../../admin/tickets/detail/components/TicketDiscussionThread'
 
 const priorityConfig: Record<string, { color: string; bg: string; dot: string }> = {
   LOW:    { color: '#16a34a', bg: '#f0fdf4', dot: '#16a34a' },
@@ -30,7 +31,7 @@ const TaskDetailPage = () => {
 
   const [task, setTask] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [newComment, setNewComment] = useState('')
+  const [comments, setComments] = useState<any[]>([])
   const [accessDenied, setAccessDenied] = useState(false)
   const [toastShown, setToastShown] = useState(false)
   const [updatingStatus, setUpdatingStatus] = useState(false)
@@ -42,12 +43,22 @@ const TaskDetailPage = () => {
     try {
       const res = await api.get(`/tasks/${taskId}`)
       setTask(res.data)
+      // Fetch comments for this task
+      const commentsRes = await api.get(`/comments/task/${taskId}`)
+      setComments(commentsRes.data)
     } catch (err: any) {
       if (err.response?.status === 403) {
         setAccessDenied(true)
         if (!toastShown) { showToast('error', 'You are not authorized to view this task'); setToastShown(true) }
       } else if (err.response?.status === 404) { setTask(null) }
     } finally { setLoading(false) }
+  }
+
+  const handleAddComment = async (content: string) => {
+    await api.post(`/comments/task/${taskId}`, { content })
+    const commentsRes = await api.get(`/comments/task/${taskId}`)
+    setComments(commentsRes.data)
+    showToast('success', 'Comment posted')
   }
 
   useEffect(() => {
@@ -213,20 +224,10 @@ const TaskDetailPage = () => {
           </div>
 
           {/* Comments */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '24px 28px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>Comments</div>
-            <textarea
-              placeholder="Write a comment..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              rows={3}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #e5e5e5', fontSize: 13, fontFamily: 'inherit', resize: 'vertical', outline: 'none', background: '#fafafa', boxSizing: 'border-box', marginBottom: 8 }}
-            />
-            <button style={{ padding: '9px 18px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-              Add Comment
-            </button>
-            <p style={{ color: '#bbb', fontSize: 13, marginTop: 16, marginBottom: 0 }}>No comments yet.</p>
-          </div>
+          <TicketDiscussionThread
+            comments={comments}
+            onAddComment={handleAddComment}
+          />
 
           {/* Attachments */}
           <Attachments entityType="task" entityId={taskId!} />

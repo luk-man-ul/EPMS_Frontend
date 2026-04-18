@@ -5,6 +5,7 @@ import { useToast } from '../../../../context/ToastContext'
 import { useAuth } from '../../../../context/AuthContext'
 import EditTaskModal from '../components/EditTaskModal'
 import Attachments from '../../../../components/shared/Attachments'
+import TicketDiscussionThread from '../../../admin/tickets/detail/components/TicketDiscussionThread'
 
 const statusOptions = [
   { value: 'TODO', label: 'To Do' },
@@ -51,6 +52,7 @@ const TaskDetailPage = () => {
   const [accessDenied, setAccessDenied] = useState(false)
   const [toastShown, setToastShown] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
+  const [comments, setComments] = useState<any[]>([])
 
   useEffect(() => {
     if (accessDenied) return
@@ -58,6 +60,8 @@ const TaskDetailPage = () => {
       try {
         const res = await api.get(`/tasks/${taskId}`)
         setTask(res.data.data || res.data)
+        const commentsRes = await api.get(`/comments/task/${taskId}`)
+        setComments(commentsRes.data)
       } catch (err: any) {
         if (err.response?.status === 403) {
           setAccessDenied(true)
@@ -73,6 +77,13 @@ const TaskDetailPage = () => {
       const res = await api.get(`/tasks/${taskId}`)
       setTask(res.data.data || res.data)
     } catch {}
+  }
+
+  const handleAddComment = async (content: string) => {
+    await api.post(`/comments/task/${taskId}`, { content })
+    const commentsRes = await api.get(`/comments/task/${taskId}`)
+    setComments(commentsRes.data)
+    showToast('success', 'Comment posted')
   }
 
   const getAllowedStatusOptions = () => {
@@ -225,6 +236,12 @@ const TaskDetailPage = () => {
 
           {/* Attachments */}
           <Attachments entityType="task" entityId={taskId!} />
+
+          {/* Comments */}
+          <TicketDiscussionThread
+            comments={comments}
+            onAddComment={handleAddComment}
+          />
         </div>
 
         {/* RIGHT COLUMN */}

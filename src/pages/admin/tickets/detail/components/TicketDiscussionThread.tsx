@@ -1,13 +1,31 @@
 import { useState } from 'react'
-import type { TicketComment } from '../../../../../types/ticket'
+
+interface CommentAuthor {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+}
+
+export interface Comment {
+  id: string
+  entityType: string
+  entityId: string
+  authorId: string
+  content: string
+  isDeleted: boolean
+  author?: CommentAuthor
+  createdAt: string | Date
+}
 
 interface TicketDiscussionThreadProps {
-  comments: TicketComment[]
-  onAddComment?: (content: string, isAdminComment: boolean) => void
+  comments: Comment[]
+  onAddComment?: (content: string) => Promise<void>
 }
 
 const TicketDiscussionThread = ({ comments, onAddComment }: TicketDiscussionThreadProps) => {
   const [newComment, setNewComment] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const formatTimestamp = (date: string | Date) => {
     const d = new Date(date)
@@ -17,35 +35,43 @@ const TicketDiscussionThread = ({ comments, onAddComment }: TicketDiscussionThre
       year: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
     })
   }
 
-  const handleReply = (isAdminComment: boolean) => {
-    if (newComment.trim() && onAddComment) {
-      onAddComment(newComment, isAdminComment)
+  const handleSubmit = async () => {
+    if (!newComment.trim() || !onAddComment) return
+    try {
+      setSubmitting(true)
+      await onAddComment(newComment.trim())
       setNewComment('')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
+      handleSubmit()
     }
   }
 
   return (
-    <div style={{
-      background: '#fff',
-      border: '1px solid #e5e5e5',
-      borderRadius: '12px',
-      padding: '24px'
-    }}>
+    <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '24px' }}>
       <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a', marginBottom: '16px' }}>
         Discussion Thread ({comments.length})
       </h3>
 
-      {/* Reply Input */}
+      {/* Input */}
       {onAddComment && (
         <div style={{ marginBottom: '24px' }}>
           <textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Add to discussion..."
+            onKeyDown={handleKeyDown}
+            placeholder="Add to discussion... (Ctrl+Enter to submit)"
+            disabled={submitting}
             style={{
               width: '100%',
               padding: '12px',
@@ -56,129 +82,58 @@ const TicketDiscussionThread = ({ comments, onAddComment }: TicketDiscussionThre
               resize: 'vertical',
               minHeight: '80px',
               outline: 'none',
-              transition: 'all 0.15s ease'
+              transition: 'border-color 0.15s ease',
+              boxSizing: 'border-box',
+              background: submitting ? '#fafafa' : '#fff',
             }}
-            onFocus={(e) => e.currentTarget.style.borderColor = '#1a1a1a'}
-            onBlur={(e) => e.currentTarget.style.borderColor = '#e5e5e5'}
+            onFocus={(e) => { e.currentTarget.style.borderColor = '#1a1a1a' }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = '#e5e5e5' }}
           />
-          <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
             <button
-              onClick={() => handleReply(false)}
-              disabled={!newComment.trim()}
+              onClick={handleSubmit}
+              disabled={!newComment.trim() || submitting}
               style={{
-                padding: '8px 16px',
+                padding: '8px 20px',
                 borderRadius: '8px',
                 border: 'none',
-                backgroundColor: newComment.trim() ? '#1a1a1a' : '#e5e5e5',
-                color: '#fff',
+                backgroundColor: newComment.trim() && !submitting ? '#1a1a1a' : '#e5e5e5',
+                color: newComment.trim() && !submitting ? '#fff' : '#999',
                 fontWeight: 500,
-                cursor: newComment.trim() ? 'pointer' : 'not-allowed',
+                cursor: newComment.trim() && !submitting ? 'pointer' : 'not-allowed',
                 fontSize: '14px',
                 transition: 'all 0.2s ease',
               }}
-              onMouseEnter={(e) => {
-                if (newComment.trim()) e.currentTarget.style.backgroundColor = '#333'
-              }}
-              onMouseLeave={(e) => {
-                if (newComment.trim()) e.currentTarget.style.backgroundColor = '#1a1a1a'
-              }}
             >
-              Reply
-            </button>
-            <button
-              onClick={() => handleReply(true)}
-              disabled={!newComment.trim()}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '8px',
-                border: '1px solid #e5e5e5',
-                backgroundColor: '#fff',
-                color: '#1a1a1a',
-                fontWeight: 500,
-                cursor: newComment.trim() ? 'pointer' : 'not-allowed',
-                fontSize: '14px',
-                transition: 'all 0.15s ease',
-                opacity: newComment.trim() ? 1 : 0.5
-              }}
-              onMouseEnter={(e) => {
-                if (newComment.trim()) e.currentTarget.style.backgroundColor = '#fafafa'
-              }}
-              onMouseLeave={(e) => {
-                if (newComment.trim()) e.currentTarget.style.backgroundColor = '#fff'
-              }}
-            >
-              Add as Admin
+              {submitting ? 'Posting...' : 'Post Comment'}
             </button>
           </div>
         </div>
       )}
 
-      {/* Discussion List */}
+      {/* List */}
       {comments.length === 0 ? (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '32px', 
-          color: '#999',
-          fontSize: '14px',
-          background: '#fafafa',
-          borderRadius: '8px'
-        }}>
+        <div style={{ textAlign: 'center', padding: '32px', color: '#999', fontSize: '14px', background: '#fafafa', borderRadius: '8px' }}>
           No comments yet. Start the discussion!
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {comments.map(discussion => (
-          <div 
-            key={discussion.id} 
-            style={{ 
-              padding: '16px',
-              background: discussion.isAdminComment ? '#1a1a1a' : '#fafafa',
-              borderRadius: '8px',
-              border: discussion.isAdminComment ? '1px solid #1a1a1a' : 'none'
-            }}
-          >
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between',
-              marginBottom: '8px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ 
-                  fontSize: '14px', 
-                  fontWeight: 500, 
-                  color: discussion.isAdminComment ? '#fff' : '#1a1a1a' 
-                }}>
-                  {discussion.author ? `${discussion.author.firstName} ${discussion.author.lastName}` : 'Unknown'}
-                </div>
-                <span style={{
-                  padding: '2px 8px',
-                  borderRadius: '6px',
-                  fontSize: '11px',
-                  fontWeight: 500,
-                  backgroundColor: discussion.isAdminComment ? 'rgba(255,255,255,0.2)' : '#fff',
-                  color: discussion.isAdminComment ? '#fff' : '#666',
-                  border: discussion.isAdminComment ? 'none' : '1px solid #e5e5e5'
-                }}>
-                  {discussion.isAdminComment ? 'Admin' : 'User'}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {comments.map((comment) => (
+            <div key={comment.id} style={{ padding: '14px 16px', background: '#fafafa', borderRadius: '8px', border: '1px solid #f0f0f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: '#1a1a1a' }}>
+                  {comment.author ? `${comment.author.firstName} ${comment.author.lastName}` : 'Unknown'}
+                </span>
+                <span style={{ fontSize: '12px', color: '#999' }}>
+                  {formatTimestamp(comment.createdAt)}
                 </span>
               </div>
-              <div style={{ 
-                fontSize: '12px', 
-                color: discussion.isAdminComment ? '#ccc' : '#999' 
-              }}>
-                {formatTimestamp(discussion.createdAt)}
+              <div style={{ fontSize: '14px', color: '#444', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                {comment.content}
               </div>
             </div>
-            <div style={{ 
-              fontSize: '14px', 
-              color: discussion.isAdminComment ? '#fff' : '#666', 
-              lineHeight: '1.5' 
-            }}>
-              {discussion.content}
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
       )}
     </div>
   )

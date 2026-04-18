@@ -24,7 +24,6 @@ const TicketDetailPage = () => {
   const [updatingStatus, setUpdatingStatus] = useState(false)
   const [selectedStatus, setSelectedStatus] = useState('')
   const [resolution, setResolution] = useState('')
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -66,6 +65,14 @@ const TicketDetailPage = () => {
     navigate('/admin/tickets')
   }
 
+  const handleAddComment = async (content: string) => {
+    await api.post(`/comments/ticket/${ticketId}`, { content })
+    // Refresh ticket to get updated comments
+    const response = await api.get(`/tickets/${ticketId}`)
+    setTicket(response.data)
+    showToast('success', 'Comment posted')
+  }
+
   const handleAssignTicket = async (assignedToId: string) => {
     if (!ticketId) return
 
@@ -86,8 +93,7 @@ const TicketDetailPage = () => {
     }
   }
 
-  const handleStatusChange = async (newStatus: string) => {
-    if (!ticketId) return
+  const handleStatusChange = async (newStatus: string) => {    if (!ticketId) return
 
     // Validate resolution is provided when transitioning to RESOLVED
     if (newStatus === 'RESOLVED' && !resolution.trim()) {
@@ -469,6 +475,7 @@ const TicketDetailPage = () => {
           />
           <TicketDiscussionThread 
             comments={ticket.comments || []}
+            onAddComment={handleAddComment}
           />
           <TicketSolutionLogs 
             solutions={[]}
