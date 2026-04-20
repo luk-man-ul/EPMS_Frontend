@@ -168,10 +168,10 @@ const WorkApprovalPage = () => {
                   <tr key={task.id} style={{ borderBottom: '1px solid #e5e5e5' }}>
                     <td style={{ padding: '14px 16px', fontSize: '14px', color: '#1f2937' }}>
                       <div style={{ fontWeight: 500 }}>
-                        {task.creator?.firstName} {task.creator?.lastName}
+                        {task.assignee?.firstName} {task.assignee?.lastName}
                       </div>
                       <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
-                        {task.creator?.email}
+                        {task.assignee?.email}
                       </div>
                     </td>
                     <td style={{ padding: '14px 16px', fontSize: '14px', color: '#6b7280' }}>
