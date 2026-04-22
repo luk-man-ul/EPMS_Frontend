@@ -6,6 +6,7 @@ import { PendingApprovalsDashboard, SelfWorkMetricsDashboard } from '../../../co
 import { Card, LoadingSpinner, ErrorMessage } from '../../../components/ui'
 import { TaskStatusChart, AttendanceTrendChart, ProjectProgressChart } from '../../../components/charts'
 import { ActivityFeed } from '../../../components/activity'
+import { formatLocalDate } from '../../../utils/date.util'
 
 const TeamLeadDashboard = () => {
   const { user } = useAuth()
@@ -77,8 +78,8 @@ const TeamLeadDashboard = () => {
       try {
         const attendanceRes = await api.get('/attendance', {
           params: {
-            startDate: startDate.toISOString().split('T')[0],
-            endDate: endDate.toISOString().split('T')[0],
+            startDate: formatLocalDate(startDate),
+            endDate: formatLocalDate(endDate),
           }
         })
         
@@ -90,7 +91,7 @@ const TeamLeadDashboard = () => {
         for (let i = 0; i < 7; i++) {
           const date = new Date()
           date.setDate(date.getDate() - (6 - i))
-          const dateStr = date.toISOString().split('T')[0]
+          const dateStr = formatLocalDate(date)
           attendanceByDate[dateStr] = { present: 0, absent: 0 }
         }
         

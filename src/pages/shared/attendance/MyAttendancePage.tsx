@@ -3,11 +3,16 @@ import api from '../../../utils/api';
 import { LoadingSpinner } from '../../../components/ui';
 import AttendanceTable from './components/AttendanceTable';
 import AttendanceFilters from './components/AttendanceFilters';
+import { todayLocalDateStr, daysAgoLocalDateStr, formatISTDate } from '../../../utils/date.util';
 
 const MyAttendancePage = () => {
   const [attendance, setAttendance] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<any>({});
+  // Default: last 30 days so the employee sees meaningful history immediately
+  const [filters, setFilters] = useState<any>({
+    startDate: daysAgoLocalDateStr(30),
+    endDate: todayLocalDateStr(),
+  });
 
   useEffect(() => { fetchAttendance(); }, [filters]);
 
@@ -28,6 +33,17 @@ const MyAttendancePage = () => {
     }
   };
 
+  // Build a human-readable label for the current date range
+  const rangeLabel = (() => {
+    const today = todayLocalDateStr();
+    const { startDate, endDate } = filters;
+    if (!startDate && !endDate) return 'Today';
+    if (startDate === today && endDate === today) return 'Today';
+    if (!startDate) return `Up to ${formatISTDate(endDate)}`;
+    if (!endDate)   return `From ${formatISTDate(startDate)}`;
+    return `${formatISTDate(startDate)} — ${formatISTDate(endDate)}`;
+  })();
+
   return (
     <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '32px 24px' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -44,6 +60,16 @@ const MyAttendancePage = () => {
 
         {/* Filters */}
         <AttendanceFilters filters={filters} onFilterChange={setFilters} showUserFilter={false} />
+
+        {/* Date range context — tells the employee exactly what they're looking at */}
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '6px',
+          background: '#f0fdf4', border: '1px solid #bbf7d0',
+          borderRadius: '8px', padding: '6px 14px',
+          marginBottom: '16px', fontSize: '13px', fontWeight: 600, color: '#15803d',
+        }}>
+          📅 Showing: {rangeLabel}
+        </div>
 
         {/* Table */}
         {loading ? (

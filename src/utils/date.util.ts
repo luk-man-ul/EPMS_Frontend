@@ -9,6 +9,23 @@
  */
 
 /**
+ * Format a Date object as YYYY-MM-DD using the browser's LOCAL timezone.
+ *
+ * NEVER use date.toISOString().split('T')[0] — that returns the UTC date,
+ * which shifts one day backward for IST users after 18:30 UTC (midnight IST).
+ *
+ * Use this whenever you need to convert a Date → YYYY-MM-DD string for
+ * API params, filter values, or date comparisons.
+ */
+export function formatLocalDate(date: Date): string {
+  return (
+    `${date.getFullYear()}-` +
+    `${String(date.getMonth() + 1).padStart(2, '0')}-` +
+    `${String(date.getDate()).padStart(2, '0')}`
+  );
+}
+
+/**
  * Format a YYYY-MM-DD date string for display.
  * Uses T12:00:00 anchor to prevent UTC-to-local day shift.
  */

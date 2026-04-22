@@ -199,8 +199,8 @@ const ProjectTasksTab = ({ project, onTaskCreated }: Props) => {
                     {/* ASSIGNEE */}
                     <div style={{ fontSize: 12, color: '#555' }}>
                       Assigned to:{' '}
-                      {task.assignedTo
-                        ? `${task.assignedTo.firstName} ${task.assignedTo.lastName}`
+                      {task.assignee
+                        ? `${task.assignee.firstName} ${task.assignee.lastName}`
                         : 'Unassigned'}
                     </div>
 

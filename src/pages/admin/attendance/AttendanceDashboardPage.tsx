@@ -5,6 +5,19 @@ import AttendanceTable from '../../shared/attendance/components/AttendanceTable'
 import AttendanceFilters from '../../shared/attendance/components/AttendanceFilters';
 import { todayLocalDateStr, formatISTDate } from '../../../utils/date.util';
 
+// ── Stats API response shape ─────────────────────────────────────────────────
+interface AttendanceStatsResponse {
+  totalEmployees: number;
+  present: number;
+  onsite: number;
+  wfh: number;
+  late: number;
+  halfDay: number;
+  onLeave: number;
+  absent: number;
+  meta?: { mode: string; totalDays: number; avgAttendance: number };
+}
+
 // ── Context label ────────────────────────────────────────────────────────────
 function buildContextLabel(
   filters: any,
@@ -19,18 +32,14 @@ function buildContextLabel(
   return `${scope} — ${formatISTDate(filters.startDate)} to ${formatISTDate(filters.endDate)}`;
 }
 
-// ── Resolve effective date params (4-mode logic) ─────────────────────────────
+// ── Resolve effective date params ────────────────────────────────────────────
 function resolveEffectiveDates(f: any): { startDate: string; endDate: string } {
   const today = todayLocalDateStr();
   if (!f.startDate && !f.endDate) return { startDate: today, endDate: today };
   return { startDate: f.startDate, endDate: f.endDate };
 }
 
-// ── Stat card definitions ────────────────────────────────────────────────────
-// All counts are derived from record.status which the backend already computes.
-// "Onsite" = PRESENT or LATE or HALF_DAY (checked in, not WFH).
-// "On Leave" = LEAVE status.
-// "Absent" = ABSENT status.
+// ── Stat card shape ──────────────────────────────────────────────────────────
 interface StatCard {
   label: string;
   tooltip: string;
@@ -40,59 +49,62 @@ interface StatCard {
   icon: string;
 }
 
-function buildStatCards(data: any[]): StatCard[] {
-  const count = (pred: (r: any) => boolean) => data.filter(pred).length;
-
-  const present   = count((r) => ['PRESENT', 'LATE', 'HALF_DAY', 'WFH'].includes(r.status));
-  const onsite    = count((r) => ['PRESENT', 'LATE', 'HALF_DAY'].includes(r.status));
-  const wfh       = count((r) => r.status === 'WFH');
-  const late      = count((r) => r.status === 'LATE');
-  const halfDay   = count((r) => r.status === 'HALF_DAY');
-  const onLeave   = count((r) => r.status === 'LEAVE');
-  const absent    = count((r) => r.status === 'ABSENT');
+// Build stat cards from the /attendance/stats API response (full dataset, not paginated)
+function buildStatCardsFromApi(stats: AttendanceStatsResponse): StatCard[] {
+  const attendanceRate = stats.meta?.avgAttendance !== undefined
+    ? `${stats.meta.avgAttendance}%`
+    : stats.totalEmployees > 0
+      ? `${Math.round((stats.present / stats.totalEmployees) * 100)}%`
+      : '—';
 
   return [
     {
       label: 'Present',
-      tooltip: 'Employees who checked in today (includes onsite, WFH, late, half-day)',
-      value: present,
+      tooltip: 'Employees who checked in (includes onsite, WFH, late, half-day)',
+      value: stats.present,
       accent: '#16a34a', bg: '#f0fdf4', icon: '✅',
     },
     {
       label: 'Onsite',
       tooltip: 'Employees who checked in from the office (not WFH)',
-      value: onsite,
+      value: stats.onsite,
       accent: '#0891b2', bg: '#f0f9ff', icon: '🏢',
     },
     {
       label: 'WFH',
       tooltip: 'Employees working from home with an approved WFH request',
-      value: wfh,
+      value: stats.wfh,
       accent: '#6d28d9', bg: '#f5f3ff', icon: '🏠',
     },
     {
-      label: 'Late (>10:30)',
-      tooltip: 'Employees whose first check-in was after 10:30 AM IST',
-      value: late,
+      label: 'Late (>11:00)',
+      tooltip: 'Employees whose first check-in was after 11:00 AM IST',
+      value: stats.late,
       accent: '#c2410c', bg: '#fff7ed', icon: '⏰',
     },
     {
       label: 'Half Day',
-      tooltip: 'Employees who checked in after 12:30 PM or worked less than 4 hours',
-      value: halfDay,
+      tooltip: 'Employees who worked less than 4 hours (all sessions closed)',
+      value: stats.halfDay,
       accent: '#a16207', bg: '#fefce8', icon: '🌓',
     },
     {
       label: 'On Leave',
       tooltip: 'Employees with an approved leave request and no check-in',
-      value: onLeave,
+      value: stats.onLeave,
       accent: '#1d4ed8', bg: '#eff6ff', icon: '🏖️',
     },
     {
       label: 'Absent',
       tooltip: 'Employees with no check-in and no approved leave',
-      value: absent,
+      value: stats.absent,
       accent: '#b91c1c', bg: '#fef2f2', icon: '❌',
+    },
+    {
+      label: 'Attendance Rate',
+      tooltip: 'Percentage of employees present out of total active employees',
+      value: attendanceRate,
+      accent: '#0891b2', bg: '#f0f9ff', icon: '📊',
     },
   ];
 }
@@ -101,8 +113,18 @@ function buildStatCards(data: any[]): StatCard[] {
 const AttendanceDashboardPage = () => {
   const [attendance, setAttendance] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<AttendanceStatsResponse | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [employees, setEmployees] = useState<Array<{ id: string; firstName: string; lastName: string }>>([]);
-  const [filters, setFilters] = useState<any>({ page: 1, limit: 20 });
+  // Initialize with today's date so stats/table always have a defined range on first load.
+  // resolveEffectiveDates() also guards against empty dates, but explicit init avoids
+  // a flash of "no date" in the context label and filter inputs.
+  const [filters, setFilters] = useState<any>({
+    startDate: todayLocalDateStr(),
+    endDate: todayLocalDateStr(),
+    page: 1,
+    limit: 20,
+  });
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20, totalPages: 0 });
 
   // Load employee list once for the dropdown
@@ -114,8 +136,11 @@ const AttendanceDashboardPage = () => {
       .catch(() => {});
   }, []);
 
-  // Re-fetch whenever ANY filter changes
-  useEffect(() => { fetchAttendance(); }, [filters]);
+  // Re-fetch table + stats whenever filters change
+  useEffect(() => {
+    fetchAttendance();
+    fetchStats();
+  }, [filters]);
 
   const fetchAttendance = async () => {
     try {
@@ -151,8 +176,36 @@ const AttendanceDashboardPage = () => {
     }
   };
 
-  // ── Stats derived from the same data the table uses (useMemo) ────────────
-  const statCards = useMemo(() => buildStatCards(attendance), [attendance]);
+  // Fetch stats from the dedicated /attendance/stats endpoint.
+  // This covers the FULL dataset (not just the current page), so the
+  // numbers are always accurate regardless of pagination.
+  const fetchStats = async () => {
+    try {
+      setStatsLoading(true);
+      const { startDate, endDate } = resolveEffectiveDates(filters);
+
+      const params: Record<string, string> = {};
+      if (startDate)      params.startDate = startDate;
+      if (endDate)        params.endDate   = endDate;
+      if (filters.userId) params.userId    = filters.userId;
+      // Note: status filter is intentionally excluded from stats — stats always
+      // reflect the full picture for the date range, not a filtered subset.
+
+      const response = await api.get('/attendance/stats', { params });
+      setStats(response.data);
+    } catch (err: any) {
+      console.error('Error fetching attendance stats:', err);
+      setStats(null);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  // Stat cards come from the API response, not from paginated table data
+  const statCards = useMemo(
+    () => (stats ? buildStatCardsFromApi(stats) : []),
+    [stats],
+  );
   const contextLabel = useMemo(() => buildContextLabel(filters, employees), [filters, employees]);
 
   return (
@@ -179,9 +232,13 @@ const AttendanceDashboardPage = () => {
           📍 {contextLabel}
         </div>
 
-        {/* Stat Cards */}
+        {/* Stat Cards — sourced from /attendance/stats (full dataset) */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(148px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-          {statCards.map((card) => (
+          {statsLoading
+            ? Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} style={{ background: '#f3f4f6', borderRadius: '16px', height: '88px' }} />
+              ))
+            : statCards.map((card) => (
             <div
               key={card.label}
               title={card.tooltip}

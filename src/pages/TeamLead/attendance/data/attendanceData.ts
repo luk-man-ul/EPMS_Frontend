@@ -1,4 +1,5 @@
 import type { AttendanceRecord } from '../types/attendance.types'
+import { formatLocalDate } from '../../../../utils/date.util'
 
 export const teamMembers = [
   { id: 'EMP-001', name: 'Sarah Johnson' },
@@ -19,7 +20,7 @@ export const generateAttendanceData = (): AttendanceRecord[] => {
   // Generate data for the past 15 days
   for (let day = 1; day <= 15; day++) {
     const date = new Date(currentYear, currentMonth, day)
-    const dateString = date.toISOString().split('T')[0]
+    const dateString = formatLocalDate(date)
     
     teamMembers.forEach((member, index) => {
       // Create varied attendance patterns

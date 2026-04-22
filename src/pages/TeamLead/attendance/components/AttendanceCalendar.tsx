@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { AttendanceRecord } from '../types/attendance.types'
+import { formatLocalDate } from '../../../../utils/date.util'
 
 type AttendanceCalendarProps = {
   attendanceData: AttendanceRecord[]
@@ -33,7 +34,7 @@ const AttendanceCalendar = ({ attendanceData, onDateSelect }: AttendanceCalendar
   }
 
   const getDateStatus = (date: Date) => {
-    const dateString = date.toISOString().split('T')[0]
+    const dateString = formatLocalDate(date)
     const dayRecords = attendanceData.filter(r => r.date === dateString)
     
     if (dayRecords.length === 0) return null
@@ -200,7 +201,7 @@ const AttendanceCalendar = ({ attendanceData, onDateSelect }: AttendanceCalendar
           return (
             <button
               key={index}
-              onClick={() => !isFuture && onDateSelect(date.toISOString().split('T')[0])}
+              onClick={() => !isFuture && onDateSelect(formatLocalDate(date))}
               disabled={isFuture}
               style={{
                 padding: '12px',
