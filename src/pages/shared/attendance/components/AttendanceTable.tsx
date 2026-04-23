@@ -52,7 +52,7 @@ const td: React.CSSProperties = {
 
 const AttendanceTable = ({ data, showUserColumn = false }: AttendanceTableProps) => {
   const navigate = useNavigate()
-  const headers = ['Date', ...(showUserColumn ? ['Employee'] : []), 'First In', 'Last Out', 'Hours', 'Status', 'Sessions'];
+  const headers = ['Date', ...(showUserColumn ? ['Employee'] : []), 'First In', 'Last Out', 'Hours', 'Status'];
 
   return (
     <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #f3f4f6', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
@@ -123,36 +123,6 @@ const AttendanceTable = ({ data, showUserColumn = false }: AttendanceTableProps)
                   {/* Status */}
                   <td style={td}>
                     <AttendanceStatusBadge status={(record.status ?? 'ABSENT') as any} />
-                  </td>
-
-                  {/* Sessions */}
-                  <td style={td}>
-                    <div
-                      style={{ display: 'flex', flexDirection: 'column', gap: '4px', cursor: 'pointer' }}
-                      onClick={() => navigate('/admin/attendance/employee-detail', { state: record })}
-                    >
-                      {record.sessions?.length > 0 ? record.sessions.map((session) => (
-                        <div
-                          key={session.id}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            padding: '3px 8px',
-                            borderRadius: '6px',
-                            fontSize: '11px',
-                            fontWeight: 500,
-                            background: session.checkOut ? '#f3f4f6' : '#dbeafe',
-                            color: session.checkOut ? '#374151' : '#1d4ed8',
-                            fontFamily: 'monospace',
-                          }}
-                        >
-                          {formatTime(session.checkIn)}
-                          <span style={{ color: '#9ca3af', fontFamily: 'sans-serif' }}>→</span>
-                          {session.checkOut ? formatTime(session.checkOut) : <span style={{ color: '#1d4ed8' }}>Active</span>}
-                        </div>
-                      )) : <span style={{ color: '#d1d5db' }}>—</span>}
-                    </div>
                   </td>
                 </tr>
               );
