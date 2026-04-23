@@ -153,6 +153,25 @@ const EmployeeDetail = () => {
             }
           />
           <InfoRow icon={<ShieldCheck size={14} />} label="Status" value={employee.status} />
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <span style={{ color: '#9ca3af', marginTop: 2, flexShrink: 0 }}><Briefcase size={14} /></span>
+            <div>
+              <div style={{ fontSize: 11, color: '#9ca3af', fontWeight: 500, marginBottom: 2 }}>Work Mode</div>
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '3px 10px',
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 600,
+                background: employee.workMode === 'WFH' ? '#dbeafe' : '#dcfce7',
+                color: employee.workMode === 'WFH' ? '#1e40af' : '#15803d',
+              }}>
+                {employee.workMode === 'WFH' ? '🏠 Work From Home' : '🏢 On-Site'}
+              </span>
+            </div>
+          </div>
         </InfoCard>
       </div>
 

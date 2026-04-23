@@ -27,6 +27,7 @@ export interface Employee {
   joinedAt?: string
   lastLoginAt?: string
   status: EmployeeStatus
+  workMode?: 'ON_SITE' | 'WFH'
   roles: EmployeeRole[]
 }
 
