@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../../utils/api';
 import { LoadingSpinner } from '../../../components/ui';
 import AttendanceTable from '../../shared/attendance/components/AttendanceTable';
@@ -111,6 +112,7 @@ function buildStatCardsFromApi(stats: AttendanceStatsResponse): StatCard[] {
 
 // ── Component ────────────────────────────────────────────────────────────────
 const AttendanceDashboardPage = () => {
+  const navigate = useNavigate()
   const [attendance, setAttendance] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<AttendanceStatsResponse | null>(null);
@@ -286,7 +288,11 @@ const AttendanceDashboardPage = () => {
           </div>
         ) : (
           <>
-            <AttendanceTable data={attendance} showUserColumn={true} />
+            <AttendanceTable
+                data={attendance}
+                showUserColumn={true}
+                onRowClick={(record) => navigate('/admin/attendance/employee-detail', { state: record })}
+              />
 
             {pagination.totalPages > 1 && (
               <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px' }}>

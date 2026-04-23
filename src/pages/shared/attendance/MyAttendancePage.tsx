@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../../utils/api';
 import { LoadingSpinner } from '../../../components/ui';
 import AttendanceTable from './components/AttendanceTable';
@@ -6,6 +7,7 @@ import AttendanceFilters from './components/AttendanceFilters';
 import { todayLocalDateStr, daysAgoLocalDateStr, formatISTDate } from '../../../utils/date.util';
 
 const MyAttendancePage = () => {
+  const navigate = useNavigate()
   const [attendance, setAttendance] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   // Default: last 30 days so the employee sees meaningful history immediately
@@ -77,7 +79,11 @@ const MyAttendancePage = () => {
             <LoadingSpinner size="lg" text="Loading attendance records..." />
           </div>
         ) : (
-          <AttendanceTable data={attendance} showUserColumn={false} />
+          <AttendanceTable
+            data={attendance}
+            showUserColumn={false}
+            onRowClick={(record) => navigate('/app/attendance/session-detail', { state: record })}
+          />
         )}
       </div>
     </div>

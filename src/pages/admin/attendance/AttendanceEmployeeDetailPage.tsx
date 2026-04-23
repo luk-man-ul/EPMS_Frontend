@@ -70,8 +70,8 @@ const AttendanceEmployeeDetailPage = () => {
     return (
       <div style={{ padding: '32px', textAlign: 'center' }}>
         <p style={{ color: '#6b7280', marginBottom: '16px' }}>No data found.</p>
-        <button onClick={() => navigate('/admin/attendance')} style={backBtnStyle}>
-          ← Back to Attendance
+        <button onClick={() => navigate(backPath)} style={backBtnStyle}>
+          ← {backLabel}
         </button>
       </div>
     )
@@ -85,8 +85,8 @@ const AttendanceEmployeeDetailPage = () => {
   return (
     <div style={{ padding: '32px', maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-      <button onClick={() => navigate('/admin/attendance')} style={backBtnStyle}>
-        <ArrowLeft size={16} /> Back to Attendance
+      <button onClick={() => navigate(backPath)} style={backBtnStyle}>
+        <ArrowLeft size={16} /> {backLabel}
       </button>
 
       {/* Hero */}
