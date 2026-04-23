@@ -73,8 +73,9 @@ const AttendanceTable = ({ data, showUserColumn = false }: AttendanceTableProps)
               return (
                 <tr
                   key={`${record.userId}-${record.date}`}
-                  style={{ transition: 'background 0.15s' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#f9fafb')}
+                  style={{ transition: 'background 0.15s', cursor: 'pointer' }}
+                  onClick={() => navigate('/admin/attendance/employee-detail', { state: record })}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#f0f9ff')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                 >
                   {/* Date */}
@@ -86,11 +87,8 @@ const AttendanceTable = ({ data, showUserColumn = false }: AttendanceTableProps)
                   {showUserColumn && (
                     <td style={td}>
                       {record.user ? (
-                        <div
-                          onClick={() => navigate('/admin/attendance/employee-detail', { state: record })}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <div style={{ fontWeight: 500, color: '#111827', textDecoration: 'underline', textDecorationColor: '#d1d5db' }}>
+                        <div>
+                          <div style={{ fontWeight: 500, color: '#111827' }}>
                             {record.user.firstName} {record.user.lastName}
                           </div>
                           {record.user.department && (
