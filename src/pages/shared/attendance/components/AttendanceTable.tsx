@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom'
 import AttendanceStatusBadge from './AttendanceStatusBadge';
 import { formatISTDate, formatTime } from '../../../../utils/date.util';
 
@@ -27,6 +26,7 @@ interface GroupedAttendance {
 interface AttendanceTableProps {
   data: GroupedAttendance[];
   showUserColumn?: boolean;
+  onRowClick?: (record: GroupedAttendance) => void;
 }
 
 const th: React.CSSProperties = {
@@ -50,8 +50,7 @@ const td: React.CSSProperties = {
   verticalAlign: 'middle',
 };
 
-const AttendanceTable = ({ data, showUserColumn = false }: AttendanceTableProps) => {
-  const navigate = useNavigate()
+const AttendanceTable = ({ data, showUserColumn = false, onRowClick }: AttendanceTableProps) => {
   const headers = ['Date', ...(showUserColumn ? ['Employee'] : []), 'First In', 'Last Out', 'Hours', 'Status'];
 
   return (
@@ -73,9 +72,9 @@ const AttendanceTable = ({ data, showUserColumn = false }: AttendanceTableProps)
               return (
                 <tr
                   key={`${record.userId}-${record.date}`}
-                  style={{ transition: 'background 0.15s', cursor: 'pointer' }}
-                  onClick={() => navigate('/admin/attendance/employee-detail', { state: record })}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#f0f9ff')}
+                  style={{ transition: 'background 0.15s', cursor: onRowClick ? 'pointer' : 'default' }}
+                  onClick={() => onRowClick?.(record)}
+                  onMouseEnter={(e) => { if (onRowClick) e.currentTarget.style.background = '#f0f9ff' }}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                 >
                   {/* Date */}

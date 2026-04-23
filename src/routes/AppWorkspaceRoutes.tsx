@@ -22,6 +22,7 @@ import CreateTaskPage from '../pages/TeamLead/tasks/create/CreateTaskPage'
 // Attendance & Leave - Shared Pages
 import CheckInPage from '../pages/shared/attendance/CheckInPage'
 import MyAttendancePage from '../pages/shared/attendance/MyAttendancePage'
+import AttendanceEmployeeDetailPage from '../pages/admin/attendance/AttendanceEmployeeDetailPage'
 import MyLeavePage from '../pages/shared/leave/MyLeavePage'
 import LeaveApprovalManagementPage from '../pages/shared/leave/LeaveApprovalManagementPage'
 
@@ -78,6 +79,7 @@ const AppWorkspaceRoutes = () => {
         <Route path="attendance" element={<MyAttendancePage />} />
         <Route path="attendance/check-in" element={<CheckInPage />} />
         <Route path="attendance/history" element={<MyAttendancePage />} />
+        <Route path="attendance/session-detail" element={<AttendanceEmployeeDetailPage />} />
         <Route 
           path="attendance/team" 
           element={

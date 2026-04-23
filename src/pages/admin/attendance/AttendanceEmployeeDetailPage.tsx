@@ -32,12 +32,16 @@ const AttendanceEmployeeDetailPage = () => {
   const location = useLocation()
   const record = location.state as RecordState | null
 
+  // Go back to the right page depending on who's viewing
+  const backPath = location.pathname.startsWith('/app') ? '/app/attendance/history' : '/admin/attendance'
+  const backLabel = location.pathname.startsWith('/app') ? 'Back to My Attendance' : 'Back to Attendance'
+
   if (!record) {
     return (
       <div style={{ padding: '32px', textAlign: 'center' }}>
         <p style={{ color: '#6b7280', marginBottom: '16px' }}>No data found.</p>
-        <button onClick={() => navigate('/admin/attendance')} style={backBtnStyle}>
-          ← Back to Attendance
+        <button onClick={() => navigate(backPath)} style={backBtnStyle}>
+          ← {backLabel}
         </button>
       </div>
     )
@@ -51,8 +55,8 @@ const AttendanceEmployeeDetailPage = () => {
   return (
     <div style={{ padding: '32px', maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-      <button onClick={() => navigate('/admin/attendance')} style={backBtnStyle}>
-        <ArrowLeft size={16} /> Back to Attendance
+      <button onClick={() => navigate(backPath)} style={backBtnStyle}>
+        <ArrowLeft size={16} /> {backLabel}
       </button>
 
       {/* Hero */}
