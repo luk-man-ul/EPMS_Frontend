@@ -1,25 +1,34 @@
+import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { formatISTDate, formatTime } from '../../../utils/date.util'
 import AttendanceStatusBadge from '../../shared/attendance/components/AttendanceStatusBadge'
+import api from '../../../utils/api'
 
 interface Session {
   id: string
   checkIn: string
   checkOut: string | null
+  duration: number | null
 }
 
 interface RecordState {
   userId: string
-  date: string
-  sessions: Session[]
+  date: string          // YYYY-MM-DD — already IST-safe from backend
   totalHours: number
   status: string
   user?: { firstName: string; lastName: string; email: string; department?: string }
 }
 
-const sessionDuration = (s: Session): string => {
+const formatDuration = (s: Session): string => {
   if (!s.checkOut) return 'Active'
+  // Use backend-provided duration when available; fall back to client calculation
+  if (s.duration !== null) {
+    const h = Math.floor(s.duration)
+    const m = Math.round((s.duration - h) * 60)
+    if (h > 0) return `${h}h ${m}m`
+    return `${m}m`
+  }
   const ms = new Date(s.checkOut).getTime() - new Date(s.checkIn).getTime()
   const h = Math.floor(ms / 3600000)
   const m = Math.floor((ms % 3600000) / 60000)
@@ -31,6 +40,31 @@ const AttendanceEmployeeDetailPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const record = location.state as RecordState | null
+
+  // Sessions fetched from the dedicated API — works for today AND past dates.
+  // record.sessions (from the main attendance list) is always [] for past days,
+  // so we never rely on it here.
+  const [sessions, setSessions] = useState<Session[]>([])
+  const [sessionsLoading, setSessionsLoading] = useState(false)
+
+  useEffect(() => {
+    if (!record?.userId || !record?.date) return
+
+    setSessionsLoading(true)
+    setSessions([])
+
+    // record.date is already YYYY-MM-DD (set by toISTDateString on the backend)
+    api
+      .get('/attendance/sessions', {
+        params: { userId: record.userId, date: record.date },
+      })
+      .then((res) => setSessions(Array.isArray(res.data) ? res.data : []))
+      .catch((err) => {
+        console.error('Failed to fetch sessions:', err)
+        setSessions([])
+      })
+      .finally(() => setSessionsLoading(false))
+  }, [record?.userId, record?.date])
 
   if (!record) {
     return (
@@ -92,14 +126,22 @@ const AttendanceEmployeeDetailPage = () => {
       {/* Sessions */}
       <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e5e7eb', padding: '24px' }}>
         <h2 style={{ fontSize: '15px', fontWeight: 600, color: '#111827', margin: '0 0 20px', paddingBottom: '14px', borderBottom: '1px solid #f3f4f6' }}>
-          Sessions — {record.sessions.length} session{record.sessions.length !== 1 ? 's' : ''}
+          {sessionsLoading
+            ? 'Sessions — loading…'
+            : `Sessions — ${sessions.length} session${sessions.length !== 1 ? 's' : ''}`}
         </h2>
 
-        {record.sessions.length === 0 ? (
+        {sessionsLoading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {[1, 2].map((i) => (
+              <div key={i} style={{ height: '72px', borderRadius: '12px', background: '#f3f4f6', animation: 'pulse 1.5s ease-in-out infinite' }} />
+            ))}
+          </div>
+        ) : sessions.length === 0 ? (
           <p style={{ color: '#9ca3af', fontSize: '14px' }}>No sessions recorded for this day.</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {record.sessions.map((session, idx) => {
+            {sessions.map((session, idx) => {
               const isActive = !session.checkOut
               return (
                 <div key={session.id} style={{
@@ -136,7 +178,7 @@ const AttendanceEmployeeDetailPage = () => {
                   <div>
                     <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '2px' }}>Duration</div>
                     <div style={{ fontSize: '14px', fontWeight: 600, color: isActive ? '#3b82f6' : '#16a34a' }}>
-                      {sessionDuration(session)}
+                      {formatDuration(session)}
                     </div>
                   </div>
                 </div>
