@@ -79,25 +79,26 @@ const CheckInPage = () => {
     setError(null);
     setSuccess(null);
 
-    // Check if geolocation is supported
     if (!navigator.geolocation) {
       setError('Geolocation is not supported by your browser');
       setLoading(false);
       return;
     }
 
-    // Get user's current location
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
 
         try {
-          await api.post('/attendance/check-in', {
+          const checkInResponse = await api.post('/attendance/check-in', {
             latitude,
             longitude,
           });
+          // Capture server time immediately from check-in response
+          const serverDate = checkInResponse.headers['date'];
+          if (serverDate) setServerNow(new Date(serverDate).getTime());
+
           setSuccess('Successfully checked in!');
-          // Force refresh to get updated state
           setTimeout(async () => {
             await fetchTodayAttendance();
             setSuccess(null);
