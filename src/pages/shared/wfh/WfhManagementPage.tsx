@@ -91,6 +91,7 @@ const WfhManagementPage = () => {
       </Card>
 
       {/* Table */}
+      <div style={{ marginTop: '16px' }}>
       <Card padding="none">
         {loading ? (
           <div style={{ padding: '48px' }}>
@@ -177,6 +178,7 @@ const WfhManagementPage = () => {
           </table>
         )}
       </Card>
+      </div>
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
