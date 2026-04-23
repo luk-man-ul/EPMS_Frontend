@@ -22,6 +22,7 @@ import WorkApprovalDetailPage from '../pages/TeamLead/workApproval/detail/WorkAp
 
 // Attendance & Leave - Admin Pages
 import AttendanceDashboardPage from '../pages/admin/attendance/AttendanceDashboardPage'
+import AttendanceEmployeeDetailPage from '../pages/admin/attendance/AttendanceEmployeeDetailPage'
 import LeaveApprovalManagementPage from '../pages/shared/leave/LeaveApprovalManagementPage'
 
 // WFH Pages
@@ -60,6 +61,7 @@ const AdminRoutes = () => (
       {/* Attendance Routes */}
       <Route path="attendance" element={<AttendanceDashboardPage />} />
       <Route path="attendance/reports" element={<AttendanceDashboardPage />} />
+      <Route path="attendance/employee-detail" element={<AttendanceEmployeeDetailPage />} />
       
       {/* Leave Routes */}
       <Route path="leave" element={<LeaveApprovalManagementPage />} />

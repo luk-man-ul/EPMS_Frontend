@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import AttendanceStatusBadge from './AttendanceStatusBadge';
 import { formatISTDate, formatTime } from '../../../../utils/date.util';
 
@@ -50,6 +51,7 @@ const td: React.CSSProperties = {
 };
 
 const AttendanceTable = ({ data, showUserColumn = false }: AttendanceTableProps) => {
+  const navigate = useNavigate()
   const headers = ['Date', ...(showUserColumn ? ['Employee'] : []), 'First In', 'Last Out', 'Hours', 'Status', 'Sessions'];
 
   return (
@@ -84,8 +86,11 @@ const AttendanceTable = ({ data, showUserColumn = false }: AttendanceTableProps)
                   {showUserColumn && (
                     <td style={td}>
                       {record.user ? (
-                        <>
-                          <div style={{ fontWeight: 500, color: '#111827' }}>
+                        <div
+                          onClick={() => navigate('/admin/attendance/employee-detail', { state: record })}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <div style={{ fontWeight: 500, color: '#111827', textDecoration: 'underline', textDecorationColor: '#d1d5db' }}>
                             {record.user.firstName} {record.user.lastName}
                           </div>
                           {record.user.department && (
@@ -93,7 +98,7 @@ const AttendanceTable = ({ data, showUserColumn = false }: AttendanceTableProps)
                               {record.user.department}
                             </div>
                           )}
-                        </>
+                        </div>
                       ) : '—'}
                     </td>
                   )}
@@ -122,7 +127,10 @@ const AttendanceTable = ({ data, showUserColumn = false }: AttendanceTableProps)
 
                   {/* Sessions */}
                   <td style={td}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div
+                      style={{ display: 'flex', flexDirection: 'column', gap: '4px', cursor: 'pointer' }}
+                      onClick={() => navigate('/admin/attendance/employee-detail', { state: record })}
+                    >
                       {record.sessions?.length > 0 ? record.sessions.map((session) => (
                         <div
                           key={session.id}
