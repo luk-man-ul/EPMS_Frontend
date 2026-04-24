@@ -96,9 +96,19 @@ const CheckInPage = () => {
           });
           // Capture server time immediately from check-in response
           const serverDate = checkInResponse.headers['date'];
-          if (serverDate) setServerNow(new Date(serverDate).getTime());
+          const serverTime = serverDate ? new Date(serverDate).getTime() : Date.now();
+          setServerNow(serverTime);
+
+          // Optimistically add a fake active session immediately so the timer
+          // starts right away without waiting for fetchTodayAttendance
+          const optimisticCheckIn = new Date(serverTime).toISOString();
+          setTodayData((prev: any) => ({
+            sessions: [...(prev?.sessions || []), { id: '__optimistic__', checkIn: optimisticCheckIn, checkOut: null }],
+            totalHours: prev?.totalHours || 0,
+          }));
 
           setSuccess('Successfully checked in!');
+          // Fetch real data in background to replace optimistic session
           setTimeout(async () => {
             await fetchTodayAttendance();
             setSuccess(null);
