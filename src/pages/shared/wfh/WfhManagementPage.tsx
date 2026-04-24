@@ -74,21 +74,59 @@ const WfhManagementPage = () => {
       </p>
 
       {/* Filters */}
-      <Card padding="md">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-          <Select
-            label="Status"
+      <div style={{
+        background: '#fff',
+        borderRadius: '12px',
+        border: '1px solid #e5e7eb',
+        padding: '16px 20px',
+        marginBottom: '16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        flexWrap: 'wrap',
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '180px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</label>
+          <select
             value={filters.status}
-            onChange={(value) => setStatusFilter(value as string)}
-            options={[
-              { value: '', label: 'All Statuses' },
-              { value: 'PENDING', label: 'Pending' },
-              { value: 'APPROVED', label: 'Approved' },
-              { value: 'REJECTED', label: 'Rejected' },
-            ]}
-          />
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb',
+              fontSize: '14px',
+              color: '#1a1a1a',
+              background: '#fff',
+              cursor: 'pointer',
+              outline: 'none',
+            }}
+          >
+            <option value="">All Statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
         </div>
-      </Card>
+
+        {filters.status && (
+          <button
+            onClick={() => setStatusFilter('')}
+            style={{
+              marginTop: '20px',
+              padding: '8px 14px',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb',
+              background: '#fff',
+              fontSize: '13px',
+              color: '#6b7280',
+              cursor: 'pointer',
+              fontWeight: 500,
+            }}
+          >
+            Clear
+          </button>
+        )}
+      </div>
 
       {/* Table */}
       <div style={{ marginTop: '16px' }}>
