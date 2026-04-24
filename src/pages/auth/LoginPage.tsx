@@ -74,8 +74,8 @@ const LoginPage = () => {
               <path d="M14 18h20M14 24h20M14 30h12" stroke="white" strokeWidth="3" strokeLinecap="round"/>
             </svg>
           </div>
-          <h1 className="brand-title">EPMS</h1>
-          <p className="brand-subtitle">Employee Project Management System</p>
+          <h1 className="brand-title">ERP</h1>
+          <p className="brand-subtitle">Enterprise Resource Planning</p>
           <p className="brand-tagline">Manage Projects, Teams, and Productivity in one place</p>
           
           <div className="brand-features">
