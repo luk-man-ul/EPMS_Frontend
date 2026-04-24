@@ -158,8 +158,12 @@ const CheckInPage = () => {
     if (!checkOut) return 'Running';
     const start = new Date(checkIn).getTime();
     const end = new Date(checkOut).getTime();
-    const hours = (end - start) / (1000 * 60 * 60);
-    return `${hours.toFixed(2)}h`;
+    const ms = end - start;
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    if (h === 0) return `${m}m`;
+    if (m === 0) return `${h}h`;
+    return `${h}h ${m}m`;
   };
 
   const hasActiveSession = todayData?.sessions?.some((s: any) => !s.checkOut);
@@ -229,7 +233,14 @@ const CheckInPage = () => {
               Today's Sessions
             </h3>
             <div style={{ fontSize: '16px', fontWeight: 600, color: '#10b981' }}>
-              Total: {activeSession ? formatElapsed(liveTotal) : `${(todayData.totalHours || 0).toFixed(2)}h`}
+              Total: {activeSession ? formatElapsed(liveTotal) : (() => {
+                const h = Math.floor(todayData.totalHours || 0);
+                const m = Math.round(((todayData.totalHours || 0) - h) * 60);
+                if (h === 0 && m === 0) return '0m';
+                if (h === 0) return `${m}m`;
+                if (m === 0) return `${h}h`;
+                return `${h}h ${m}m`;
+              })()}
             </div>
           </div>
 

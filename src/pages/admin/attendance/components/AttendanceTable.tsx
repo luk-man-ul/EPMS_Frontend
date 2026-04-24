@@ -81,7 +81,13 @@ const AttendanceTable = () => {
                 {formatTime(record.lastCheckOut)}
               </td>
               <td style={{ padding: '16px 20px', fontSize: '14px', fontWeight: 600, color: '#1a1a1a' }}>
-                {record.totalHours > 0 ? `${record.totalHours.toFixed(2)}h` : '—'}
+                {record.totalHours > 0 ? (() => {
+                  const h = Math.floor(record.totalHours);
+                  const m = Math.round((record.totalHours - h) * 60);
+                  if (h === 0) return `${m}m`;
+                  if (m === 0) return `${h}h`;
+                  return `${h}h ${m}m`;
+                })() : '—'}
               </td>
               <td style={{ padding: '16px 20px' }}>
                 <AttendanceStatusBadge status={record.status as any} />
