@@ -17,7 +17,7 @@ const WfhManagementPage = () => {
 
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ status: '', page: 1, limit: 10 });
+  const [filters, setFilters] = useState({ status: '', fromDate: '', toDate: '', page: 1, limit: 10 });
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, totalPages: 0 });
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -30,6 +30,8 @@ const WfhManagementPage = () => {
       setLoading(true);
       const params: any = { page: filters.page, limit: filters.limit };
       if (filters.status) params.status = filters.status;
+      if (filters.fromDate) params.fromDate = filters.fromDate;
+      if (filters.toDate) params.toDate = filters.toDate;
       const response = await api.get('/wfh-requests', { params });
       const data = response.data;
       setRequests(data.data || []);
@@ -64,6 +66,12 @@ const WfhManagementPage = () => {
     setFilters({ ...filters, status: value, page: 1 });
   };
 
+  const clearFilters = () => {
+    setFilters({ status: '', fromDate: '', toDate: '', page: 1, limit: 10 });
+  };
+
+  const hasActiveFilters = filters.status || filters.fromDate || filters.toDate;
+
   return (
     <div style={{ padding: '24px' }}>
       <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>
@@ -81,7 +89,7 @@ const WfhManagementPage = () => {
         padding: '16px 20px',
         marginBottom: '16px',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-end',
         gap: '12px',
         flexWrap: 'wrap',
       }}>
@@ -108,11 +116,48 @@ const WfhManagementPage = () => {
           </select>
         </div>
 
-        {filters.status && (
-          <button
-            onClick={() => setStatusFilter('')}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '160px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>From Date</label>
+          <input
+            type="date"
+            value={filters.fromDate}
+            onChange={(e) => setFilters({ ...filters, fromDate: e.target.value, page: 1 })}
             style={{
-              marginTop: '20px',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb',
+              fontSize: '14px',
+              color: '#1a1a1a',
+              background: '#fff',
+              cursor: 'pointer',
+              outline: 'none',
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '160px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>To Date</label>
+          <input
+            type="date"
+            value={filters.toDate}
+            onChange={(e) => setFilters({ ...filters, toDate: e.target.value, page: 1 })}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb',
+              fontSize: '14px',
+              color: '#1a1a1a',
+              background: '#fff',
+              cursor: 'pointer',
+              outline: 'none',
+            }}
+          />
+        </div>
+
+        {hasActiveFilters && (
+          <button
+            onClick={clearFilters}
+            style={{
               padding: '8px 14px',
               borderRadius: '8px',
               border: '1px solid #e5e7eb',
