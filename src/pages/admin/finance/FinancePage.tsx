@@ -2,11 +2,15 @@ import { useState } from 'react'
 import FinanceDashboard from './components/FinanceDashboard'
 import IncomeTable from './components/IncomeTable'
 import ExpenseTable from './components/ExpenseTable'
+import ProjectProfit from './components/ProjectProfit'
+import EmployeeCost from './components/EmployeeCost'
 
-type ViewType = 'dashboard' | 'income' | 'expenses'
+type ViewType = 'dashboard' | 'income' | 'expenses' | 'project-profit' | 'employee-cost'
 
 const FinancePage = () => {
   const [activeView, setActiveView] = useState<ViewType>('dashboard')
+  const [showRevenueForm, setShowRevenueForm] = useState(false)
+  const [showExpenseForm, setShowExpenseForm] = useState(false)
 
   return (
     <div style={{ padding: '32px', maxWidth: '1600px', margin: '0 auto' }}>
@@ -68,6 +72,7 @@ const FinancePage = () => {
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#333'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1a1a1a'}
+                onClick={() => setShowRevenueForm(true)}
               >
                 + Add Income
               </button>
@@ -88,6 +93,7 @@ const FinancePage = () => {
               }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#333'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1a1a1a'}
+              onClick={() => setShowExpenseForm(true)}
             >
               + Add Expense
             </button>
@@ -123,7 +129,9 @@ const FinancePage = () => {
           {[
             { id: 'dashboard' as ViewType, label: 'Dashboard' },
             { id: 'income' as ViewType, label: 'Income Management' },
-            { id: 'expenses' as ViewType, label: 'Expense Management' }
+            { id: 'expenses' as ViewType, label: 'Expense Management' },
+            { id: 'project-profit' as ViewType, label: 'Project Profit' },
+            { id: 'employee-cost' as ViewType, label: 'Employee Cost' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -159,6 +167,10 @@ const FinancePage = () => {
 
       {/* Content */}
       {activeView === 'dashboard' && <FinanceDashboard />}
+
+      {activeView === 'project-profit' && <ProjectProfit />}
+
+      {activeView === 'employee-cost' && <EmployeeCost />}
 
       {activeView === 'income' && (
         <>
@@ -223,7 +235,10 @@ const FinancePage = () => {
               overflow: 'hidden',
             }}
           >
-            <IncomeTable />
+            <IncomeTable
+                showForm={showRevenueForm}
+                onFormClose={() => setShowRevenueForm(false)}
+              />
           </div>
         </>
       )}
@@ -295,7 +310,10 @@ const FinancePage = () => {
               overflow: 'hidden',
             }}
           >
-            <ExpenseTable />
+            <ExpenseTable
+                showForm={showExpenseForm}
+                onFormClose={() => setShowExpenseForm(false)}
+              />
           </div>
         </>
       )}

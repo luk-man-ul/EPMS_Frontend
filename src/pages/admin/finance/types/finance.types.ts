@@ -13,6 +13,17 @@ export interface Income {
   createdAt: string
 }
 
+// Real backend Revenue model
+export interface Revenue {
+  id: string
+  amount: number
+  receivedDate: string
+  description?: string
+  project: { id: string; name: string }
+  createdBy: { id: string; firstName: string; lastName: string }
+  createdAt: string
+}
+
 export interface Expense {
   id: string
   category: string
@@ -24,6 +35,19 @@ export interface Expense {
   billUrl?: string
   requestedBy: string
   approvedBy?: string
+}
+
+// Real backend Expense model
+export interface ExpenseRecord {
+  id: string
+  type: 'SALARY' | 'MANUAL'
+  amount: number
+  expenseDate: string
+  description?: string
+  employee?: { id: string; firstName: string; lastName: string }
+  project?: { id: string; name: string }
+  createdBy: { id: string; firstName: string; lastName: string }
+  createdAt: string
 }
 
 export interface FinanceSummary {
