@@ -1,6 +1,15 @@
 import AttendanceStatusBadge from './AttendanceStatusBadge';
 import { formatISTDate, formatTime } from '../../../../utils/date.util';
 
+const formatHours = (decimal: number): string => {
+  if (!decimal || decimal <= 0) return '—';
+  const h = Math.floor(decimal);
+  const m = Math.round((decimal - h) * 60);
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+};
+
 interface AttendanceSession {
   id: string;
   checkIn: string;
@@ -113,7 +122,7 @@ const AttendanceTable = ({ data, showUserColumn = false, onRowClick }: Attendanc
                   {/* Total Hours */}
                   <td style={td}>
                     <span style={{ fontWeight: 700, color: record.totalHours > 0 ? '#16a34a' : '#9ca3af', fontSize: '14px' }}>
-                      {record.totalHours > 0 ? `${record.totalHours.toFixed(2)}h` : '—'}
+                      {formatHours(record.totalHours)}
                     </span>
                   </td>
 

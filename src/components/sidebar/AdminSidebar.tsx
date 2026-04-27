@@ -90,7 +90,7 @@ const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
               margin: 0,
               letterSpacing: '-0.01em'
             }}>
-              EPMS
+              ERP
             </h2>
             <p style={{
               fontSize: '12px',

@@ -5,6 +5,7 @@ import api from '../../../../utils/api'
 import ProjectSummary from './components/ProjectSummary'
 import ProjectTasksTab from './components/ProjectTasksTab'
 import ProjectTicketsTab from './components/ProjectTicketsTab'
+import ProjectFinanceTab from './components/ProjectFinanceTab'
 import ProjectForm from '../form/ProjectForm'
 
 type TabType = 'summary' | 'tasks' | 'tickets' | 'finance'
@@ -88,7 +89,8 @@ const ProjectDetailPage = () => {
   const tabs = [
     { id: 'summary' as TabType, label: 'Overview' },
     { id: 'tasks' as TabType, label: 'Tasks' },
-    { id: 'tickets' as TabType, label: 'Tickets' }
+    { id: 'tickets' as TabType, label: 'Tickets' },
+    { id: 'finance' as TabType, label: 'Finance' },
   ]
 
   return (
@@ -200,6 +202,7 @@ const ProjectDetailPage = () => {
       {activeTab === 'summary' && <ProjectSummary project={project} />}
       {activeTab === 'tasks' && <ProjectTasksTab project={project} onTaskCreated={fetchProject} />}
       {activeTab === 'tickets' && <ProjectTicketsTab project={project} />}
+      {activeTab === 'finance' && <ProjectFinanceTab />}
 
       {/* Edit Modal */}
       {isEditModalOpen && (

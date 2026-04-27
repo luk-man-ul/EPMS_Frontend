@@ -117,7 +117,13 @@ const AttendanceEmployeeDetailPage = () => {
           <div style={{ paddingTop: '16px', textAlign: 'right' }}>
             <div style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Total Hours</div>
             <div style={{ fontSize: '28px', fontWeight: 700, color: record.totalHours > 0 ? '#16a34a' : '#9ca3af' }}>
-              {record.totalHours > 0 ? `${record.totalHours.toFixed(2)}h` : '—'}
+              {record.totalHours > 0 ? (() => {
+                const h = Math.floor(record.totalHours)
+                const m = Math.round((record.totalHours - h) * 60)
+                if (h === 0) return `${m}m`
+                if (m === 0) return `${h}h`
+                return `${h}h ${m}m`
+              })() : '—'}
             </div>
           </div>
         </div>
