@@ -102,16 +102,24 @@ function displayKey(day: CalendarDay): string {
 
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-const AttendanceCalendar = () => {
+interface AttendanceCalendarProps {
+  /** When set, the calendar is locked to this userId (no employee selector shown) */
+  fixedUserId?: string
+  /** Hide the employee selector dropdown entirely */
+  hideEmployeeSelector?: boolean
+}
+
+const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false }: AttendanceCalendarProps = {}) => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth())
-  const [selectedUserId, setSelectedUserId] = useState('')
+  const [selectedUserId, setSelectedUserId] = useState(fixedUserId ?? '')
   const [employees, setEmployees] = useState<Employee[]>([])
   const [calendarData, setCalendarData] = useState<CalendarDay[]>([])
   const [loading, setLoading] = useState(false)
   const [tooltip, setTooltip] = useState<{ day: CalendarDay; x: number; y: number } | null>(null)
 
-  // ── Fetch employee list once ────────────────────────────────────────────────
+  // ── Fetch employee list (skip when fixedUserId is provided) ─────────────────
   useEffect(() => {
+    if (fixedUserId) return  // no need to load employee list when locked to one user
     api.get('/users', { params: { page: 1, limit: 200 } })
       .then((res) => {
         const list: Employee[] = res.data.data || res.data || []
@@ -152,17 +160,19 @@ const AttendanceCalendar = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
 
         {/* Employee selector */}
-        <select
-          value={selectedUserId}
-          onChange={(e) => setSelectedUserId(e.target.value)}
-          style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', fontSize: '14px', minWidth: '200px', cursor: 'pointer', outline: 'none' }}
-        >
-          {employees.map((emp) => (
-            <option key={emp.id} value={emp.id}>
-              {emp.firstName} {emp.lastName}
-            </option>
-          ))}
-        </select>
+        {!hideEmployeeSelector && (
+          <select
+            value={selectedUserId}
+            onChange={(e) => setSelectedUserId(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', fontSize: '14px', minWidth: '200px', cursor: 'pointer', outline: 'none' }}
+          >
+            {employees.map((emp) => (
+              <option key={emp.id} value={emp.id}>
+                {emp.firstName} {emp.lastName}
+              </option>
+            ))}
+          </select>
+        )}
 
         {/* Month navigation */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

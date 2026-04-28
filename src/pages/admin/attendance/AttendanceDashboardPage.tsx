@@ -4,6 +4,7 @@ import api from '../../../utils/api';
 import { LoadingSpinner } from '../../../components/ui';
 import AttendanceTable from '../../shared/attendance/components/AttendanceTable';
 import AttendanceFilters from '../../shared/attendance/components/AttendanceFilters';
+import AttendanceCalendar from './components/AttendanceCalendar';
 import { todayLocalDateStr, formatISTDate } from '../../../utils/date.util';
 
 // ── Stats API response shape ─────────────────────────────────────────────────
@@ -113,6 +114,7 @@ function buildStatCardsFromApi(stats: AttendanceStatsResponse): StatCard[] {
 // ── Component ────────────────────────────────────────────────────────────────
 const AttendanceDashboardPage = () => {
   const navigate = useNavigate()
+  const [activeView, setActiveView] = useState<'table' | 'calendar'>('table')
   const [attendance, setAttendance] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<AttendanceStatsResponse | null>(null);
@@ -224,29 +226,37 @@ const AttendanceDashboardPage = () => {
               Monitor and manage attendance records across the organization
             </p>
           </div>
-          <button
-            onClick={() => navigate('/admin/attendance/manage')}
-            style={{
-              padding: '8px 14px',
-              borderRadius: '8px',
-              background: '#6366f1',
-              color: '#fff',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 500,
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              flexShrink: 0,
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#4f46e5')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = '#6366f1')}
-          >
-            📅 Calendar View
-          </button>
         </div>
 
+        {/* View Tabs */}
+        <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid #e5e7eb', marginBottom: '20px' }}>
+          {(['table', 'calendar'] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setActiveView(v)}
+              style={{
+                padding: '10px 18px',
+                border: 'none',
+                background: 'none',
+                fontSize: '14px',
+                fontWeight: 500,
+                color: activeView === v ? '#111827' : '#6b7280',
+                cursor: 'pointer',
+                borderBottom: activeView === v ? '2px solid #111827' : '2px solid transparent',
+                marginBottom: '-1px',
+                transition: 'all 0.15s',
+              }}
+            >
+              {v === 'table' ? '📋 Table View' : '📅 Calendar View'}
+            </button>
+          ))}
+        </div>
+
+        {activeView === 'calendar' && (
+          <AttendanceCalendar />
+        )}
+
+        {activeView === 'table' && (<>
         {/* Context indicator */}
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
@@ -352,6 +362,7 @@ const AttendanceDashboardPage = () => {
             )}
           </>
         )}
+        </>)}
       </div>
     </div>
   );
