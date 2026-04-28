@@ -209,7 +209,7 @@ const AttendancePage = () => {
               alignItems: 'center'
             }}>
               <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a' }}>
-                Today's Attendance - February 10, 2026
+                Today's Attendance - {new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
               </h3>
               <input
                 type="text"
@@ -267,9 +267,12 @@ const AttendancePage = () => {
                 outline: 'none'
               }}
             >
-              <option>February 2026</option>
-              <option>January 2026</option>
-              <option>December 2025</option>
+              {Array.from({ length: 12 }, (_, i) => {
+                const d = new Date()
+                d.setMonth(d.getMonth() - i)
+                const label = d.toLocaleDateString('en-IN', { year: 'numeric', month: 'long' })
+                return <option key={i}>{label}</option>
+              })}
             </select>
           </div>
           <MonthlyReportTable />
@@ -277,34 +280,7 @@ const AttendancePage = () => {
       )}
 
       {activeView === 'calendar' && (
-        <>
-          <div style={{ 
-            display: 'flex', 
-            gap: '12px', 
-            marginBottom: '24px',
-            alignItems: 'center'
-          }}>
-            <select
-              style={{
-                padding: '10px 16px',
-                borderRadius: '8px',
-                border: '1px solid #e5e5e5',
-                background: '#fff',
-                fontSize: '14px',
-                color: '#1a1a1a',
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              <option>Select Employee</option>
-              <option>Sarah Johnson</option>
-              <option>Michael Chen</option>
-              <option>Emily Rodriguez</option>
-              <option>David Kumar</option>
-            </select>
-          </div>
-          <AttendanceCalendar />
-        </>
+        <AttendanceCalendar />
       )}
     </div>
   )

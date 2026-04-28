@@ -1,178 +1,316 @@
-import { useState } from 'react'
-import type { AttendanceStatus } from '../types/attendance.types'
+import { useEffect, useState } from 'react'
+import api from '../../../../utils/api'
+
+// ── Types ────────────────────────────────────────────────────────────────────
+
+type DayType = 'WORKING' | 'WEEKEND' | 'HOLIDAY'
+type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY' | 'LEAVE' | 'WFH'
+
+interface CalendarDay {
+  date: string          // YYYY-MM-DD
+  dayType: DayType
+  holidayName?: string
+  status?: AttendanceStatus
+  firstCheckIn?: string
+  lastCheckOut?: string
+  totalHours?: number
+}
+
+interface Employee {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Format a UTC ISO timestamp to HH:MM IST */
+function formatTimeIST(iso?: string): string {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  return d.toLocaleTimeString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  })
+}
+
+/** YYYY-MM → "Month YYYY" */
+function formatMonthLabel(ym: string): string {
+  const [y, m] = ym.split('-').map(Number)
+  return new Date(y, m - 1, 1).toLocaleString('en-IN', { month: 'long', year: 'numeric' })
+}
+
+/** Add/subtract months from a YYYY-MM string */
+function shiftMonth(ym: string, delta: number): string {
+  const [y, m] = ym.split('-').map(Number)
+  const d = new Date(y, m - 1 + delta, 1)
+  const ny = d.getFullYear()
+  const nm = String(d.getMonth() + 1).padStart(2, '0')
+  return `${ny}-${nm}`
+}
+
+/** Current month as YYYY-MM */
+function currentMonth(): string {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+/** Today as YYYY-MM-DD in IST */
+function todayIST(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
+}
+
+// ── Colour / label maps ───────────────────────────────────────────────────────
+
+const STATUS_BG: Record<string, string> = {
+  PRESENT:  '#16a34a',
+  LATE:     '#d97706',
+  HALF_DAY: '#7c3aed',
+  ABSENT:   '#dc2626',
+  LEAVE:    '#0891b2',
+  WFH:      '#2563eb',
+  WEEKEND:  '#9ca3af',
+  HOLIDAY:  '#b45309',
+  WORKED_WEEKEND: '#059669',
+  WORKED_HOLIDAY: '#92400e',
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  PRESENT:  'Present',
+  LATE:     'Late',
+  HALF_DAY: 'Half Day',
+  ABSENT:   'Absent',
+  LEAVE:    'On Leave',
+  WFH:      'WFH',
+  WEEKEND:  'Weekend',
+  HOLIDAY:  'Holiday',
+  WORKED_WEEKEND: 'Worked on Weekend',
+  WORKED_HOLIDAY: 'Worked on Holiday',
+}
+
+/** Derive a display key from dayType + status */
+function displayKey(day: CalendarDay): string {
+  if (day.dayType === 'HOLIDAY') return day.status ? 'WORKED_HOLIDAY' : 'HOLIDAY'
+  if (day.dayType === 'WEEKEND') return day.status ? 'WORKED_WEEKEND' : 'WEEKEND'
+  return day.status ?? ''
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 const AttendanceCalendar = () => {
-  const [selectedMonth] = useState('February 2026')
-  
-  // Generate calendar days for February 2026
-  const daysInMonth = 28
-  const firstDayOfWeek = 6 // Saturday (0 = Sunday)
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  
-  // Sample attendance data for calendar
-  const attendanceMap: Record<number, AttendanceStatus> = {
-    1: 'PRESENT', 2: 'PRESENT', 3: 'LATE', 4: 'PRESENT', 5: 'PRESENT',
-    6: 'PRESENT', 7: 'PRESENT', 8: 'ABSENT', 9: 'PRESENT', 10: 'PRESENT',
-    11: 'PRESENT', 12: 'LATE', 13: 'PRESENT', 14: 'LEAVE', 15: 'PRESENT',
-    16: 'PRESENT', 17: 'PRESENT', 18: 'PRESENT', 19: 'PRESENT', 20: 'HALF_DAY'
-  }
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth())
+  const [selectedUserId, setSelectedUserId] = useState('')
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [calendarData, setCalendarData] = useState<CalendarDay[]>([])
+  const [loading, setLoading] = useState(false)
+  const [tooltip, setTooltip] = useState<{ day: CalendarDay; x: number; y: number } | null>(null)
 
-  const getStatusColor = (status: AttendanceStatus | null) => {
-    if (!status) return '#fff'
-    const colors = {
-      PRESENT: '#1a1a1a',
-      ABSENT: '#fff',
-      LATE: '#f0f0f0',
-      HALF_DAY: '#f0f0f0',
-      LEAVE: '#fafafa',
-      WORK_FROM_HOME: '#f0f0f0'
-    }
-    return colors[status]
-  }
+  // ── Fetch employee list once ────────────────────────────────────────────────
+  useEffect(() => {
+    api.get('/users', { params: { page: 1, limit: 200 } })
+      .then((res) => {
+        const list: Employee[] = res.data.data || res.data || []
+        setEmployees(list)
+        if (list.length > 0 && !selectedUserId) {
+          setSelectedUserId(list[0].id)
+        }
+      })
+      .catch((err) => console.error('Failed to load employees', err))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const getStatusTextColor = (status: AttendanceStatus | null) => {
-    if (!status) return '#1a1a1a'
-    return status === 'PRESENT' ? '#fff' : '#1a1a1a'
-  }
+  // ── Fetch calendar data when user or month changes ──────────────────────────
+  useEffect(() => {
+    if (!selectedUserId) return
+    setLoading(true)
+    api.get('/attendance/calendar', { params: { userId: selectedUserId, month: selectedMonth } })
+      .then((res) => setCalendarData(res.data))
+      .catch((err) => {
+        console.error('Failed to load calendar data', err)
+        setCalendarData([])
+      })
+      .finally(() => setLoading(false))
+  }, [selectedUserId, selectedMonth])
 
+  // ── Build calendar grid ─────────────────────────────────────────────────────
+  const [year, mon] = selectedMonth.split('-').map(Number)
+  const firstDayOfWeek = new Date(year, mon - 1, 1).getDay() // 0 = Sun
+  const today = todayIST()
+
+  // Map date string → CalendarDay for O(1) lookup
+  const dayMap = new Map(calendarData.map((d) => [d.date, d]))
+
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div style={{
-      background: '#fff',
-      border: '1px solid #e5e5e5',
-      borderRadius: '12px',
-      padding: '24px'
-    }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '24px'
-      }}>
-        <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a' }}>
-          {selectedMonth}
-        </h3>
-        <div style={{ display: 'flex', gap: '8px' }}>
+    <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '24px' }}>
+
+      {/* ── Controls ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+
+        {/* Employee selector */}
+        <select
+          value={selectedUserId}
+          onChange={(e) => setSelectedUserId(e.target.value)}
+          style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', fontSize: '14px', minWidth: '200px', cursor: 'pointer', outline: 'none' }}
+        >
+          {employees.map((emp) => (
+            <option key={emp.id} value={emp.id}>
+              {emp.firstName} {emp.lastName}
+            </option>
+          ))}
+        </select>
+
+        {/* Month navigation */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
-            style={{
-              padding: '6px 12px',
-              borderRadius: '8px',
-              border: '1px solid #e5e5e5',
-              background: '#fff',
-              fontSize: '18px',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
-          >
-            ←
-          </button>
+            onClick={() => setSelectedMonth((m) => shiftMonth(m, -1))}
+            style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', background: '#fff', fontSize: '18px', cursor: 'pointer' }}
+          >←</button>
+          <span style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a', minWidth: '140px', textAlign: 'center' }}>
+            {formatMonthLabel(selectedMonth)}
+          </span>
           <button
-            style={{
-              padding: '6px 12px',
-              borderRadius: '8px',
-              border: '1px solid #e5e5e5',
-              background: '#fff',
-              fontSize: '18px',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
-          >
-            →
-          </button>
+            onClick={() => setSelectedMonth((m) => shiftMonth(m, 1))}
+            style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', background: '#fff', fontSize: '18px', cursor: 'pointer' }}
+          >→</button>
         </div>
       </div>
 
-      {/* Calendar Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
-        {/* Week day headers */}
-        {weekDays.map(day => (
-          <div
-            key={day}
-            style={{
-              padding: '12px',
-              textAlign: 'center',
-              fontSize: '12px',
-              fontWeight: 600,
-              color: '#666'
-            }}
-          >
-            {day}
+      {/* ── Loading skeleton ── */}
+      {loading && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+          {Array.from({ length: 35 }).map((_, i) => (
+            <div key={i} style={{ height: '64px', borderRadius: '8px', background: '#f3f4f6' }} />
+          ))}
+        </div>
+      )}
+
+      {/* ── Calendar grid ── */}
+      {!loading && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+
+          {/* Week day headers */}
+          {WEEK_DAYS.map((wd) => (
+            <div key={wd} style={{ padding: '8px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>
+              {wd}
+            </div>
+          ))}
+
+          {/* Leading empty cells */}
+          {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+            <div key={`empty-${i}`} />
+          ))}
+
+          {/* Day cells */}
+          {calendarData.map((day) => {
+            const key = displayKey(day)
+            const bg = STATUS_BG[key] ?? '#f9fafb'
+            const label = STATUS_LABEL[key] ?? ''
+            const isToday = day.date === today
+            const dayNum = parseInt(day.date.split('-')[2], 10)
+
+            return (
+              <div
+                key={day.date}
+                onMouseEnter={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  setTooltip({ day, x: rect.left, y: rect.bottom + 6 })
+                }}
+                onMouseLeave={() => setTooltip(null)}
+                style={{
+                  borderRadius: '8px',
+                  padding: '8px 6px',
+                  minHeight: '64px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  background: bg,
+                  border: isToday ? '2px solid #1a1a1a' : '1px solid transparent',
+                  cursor: 'default',
+                  transition: 'opacity 0.15s',
+                  opacity: 1,
+                }}
+                onMouseOver={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '0.85' }}
+                onMouseOut={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '1' }}
+              >
+                <span style={{ fontSize: '13px', fontWeight: 600, color: key ? '#fff' : '#374151' }}>
+                  {dayNum}
+                </span>
+                {label && (
+                  <span style={{ fontSize: '9px', fontWeight: 500, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>
+                    {label}
+                  </span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* ── Tooltip ── */}
+      {tooltip && (
+        <div
+          style={{
+            position: 'fixed',
+            top: tooltip.y,
+            left: Math.min(tooltip.x, window.innerWidth - 220),
+            zIndex: 9999,
+            background: '#1a1a1a',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '10px 14px',
+            fontSize: '12px',
+            lineHeight: 1.6,
+            pointerEvents: 'none',
+            minWidth: '180px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+          }}
+        >
+          <div style={{ fontWeight: 600, marginBottom: '4px' }}>{tooltip.day.date}</div>
+          {tooltip.day.holidayName && (
+            <div>🎉 {tooltip.day.holidayName}</div>
+          )}
+          {tooltip.day.status && (
+            <>
+              <div>Status: {STATUS_LABEL[tooltip.day.status] ?? tooltip.day.status}</div>
+              {tooltip.day.firstCheckIn && <div>In: {formatTimeIST(tooltip.day.firstCheckIn)}</div>}
+              {tooltip.day.lastCheckOut && <div>Out: {formatTimeIST(tooltip.day.lastCheckOut)}</div>}
+              {tooltip.day.totalHours != null && (
+                <div>Hours: {tooltip.day.totalHours.toFixed(1)}h</div>
+              )}
+            </>
+          )}
+          {!tooltip.day.status && tooltip.day.dayType === 'WORKING' && (
+            <div style={{ color: '#9ca3af' }}>No record</div>
+          )}
+        </div>
+      )}
+
+      {/* ── Legend ── */}
+      <div style={{ display: 'flex', gap: '12px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #f5f5f5', flexWrap: 'wrap' }}>
+        {[
+          { key: 'PRESENT',        label: 'Present' },
+          { key: 'LATE',           label: 'Late' },
+          { key: 'HALF_DAY',       label: 'Half Day' },
+          { key: 'ABSENT',         label: 'Absent' },
+          { key: 'LEAVE',          label: 'Leave' },
+          { key: 'WFH',            label: 'WFH' },
+          { key: 'WEEKEND',        label: 'Weekend' },
+          { key: 'HOLIDAY',        label: 'Holiday' },
+          { key: 'WORKED_WEEKEND', label: 'Worked on Weekend' },
+          { key: 'WORKED_HOLIDAY', label: 'Worked on Holiday' },
+        ].map(({ key, label }) => (
+          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: STATUS_BG[key] }} />
+            <span style={{ fontSize: '12px', color: '#6b7280' }}>{label}</span>
           </div>
         ))}
-
-        {/* Empty cells for days before month starts */}
-        {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-          <div key={`empty-${i}`} style={{ padding: '12px' }} />
-        ))}
-
-        {/* Calendar days */}
-        {Array.from({ length: daysInMonth }).map((_, i) => {
-          const day = i + 1
-          const status = attendanceMap[day] || null
-          const isToday = day === 10
-          
-          return (
-            <div
-              key={day}
-              style={{
-                padding: '12px',
-                borderRadius: '8px',
-                textAlign: 'center',
-                fontSize: '14px',
-                fontWeight: 500,
-                backgroundColor: getStatusColor(status),
-                color: getStatusTextColor(status),
-                border: isToday ? '2px solid #1a1a1a' : '1px solid #e5e5e5',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-                minHeight: '48px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-              onMouseEnter={(e) => {
-                if (status !== 'PRESENT') {
-                  e.currentTarget.style.backgroundColor = '#f5f5f5'
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = getStatusColor(status)
-              }}
-            >
-              {day}
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Legend */}
-      <div style={{ 
-        display: 'flex', 
-        gap: '16px', 
-        marginTop: '24px',
-        paddingTop: '20px',
-        borderTop: '1px solid #f5f5f5',
-        flexWrap: 'wrap'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: '#1a1a1a' }} />
-          <span style={{ fontSize: '13px', color: '#666' }}>Present</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: '#f0f0f0', border: '1px solid #e5e5e5' }} />
-          <span style={{ fontSize: '13px', color: '#666' }}>Late</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: '#fff', border: '1px solid #e5e5e5' }} />
-          <span style={{ fontSize: '13px', color: '#666' }}>Absent</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: '#fafafa', border: '1px solid #e5e5e5' }} />
-          <span style={{ fontSize: '13px', color: '#666' }}>Leave</span>
-        </div>
       </div>
     </div>
   )
