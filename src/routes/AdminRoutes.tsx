@@ -9,7 +9,6 @@ import EmployeeDetail from '../pages/admin/employees/EmployeeDetail'
 import Projects from '../pages/admin/Projects'
 import Tasks from '../pages/admin/Tasks'
 import Tickets from '../pages/admin/Tickets'
-import Attendance from '../pages/admin/Attendance'
 import Finance from '../pages/admin/Finance'
 import Reports from '../pages/admin/Reports'
 import Notifications from '../pages/admin/Notifications'
@@ -61,7 +60,6 @@ const AdminRoutes = () => (
       {/* Attendance Routes */}
       <Route path="attendance" element={<AttendanceDashboardPage />} />
       <Route path="attendance/reports" element={<AttendanceDashboardPage />} />
-      <Route path="attendance/manage" element={<Attendance />} />
       <Route path="attendance/employee-detail" element={<AttendanceEmployeeDetailPage />} />
       
       {/* Leave Routes */}

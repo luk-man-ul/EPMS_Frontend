@@ -65,7 +65,6 @@ export const ATTENDANCE_ROUTES = {
   HISTORY: '/admin/attendance/history',
   TEAM: '/admin/attendance/team',
   REPORTS: '/admin/attendance/reports',
-  MANAGE: '/admin/attendance/manage',
 } as const;
 
 /**
