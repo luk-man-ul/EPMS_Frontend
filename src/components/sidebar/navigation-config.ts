@@ -309,6 +309,13 @@ export const navigationConfig: NavigationConfig = {
           roles: ['ADMIN'],
         },
         {
+          id: 'admin-finance',
+          label: 'Finance',
+          path: '/admin/finance',
+          icon: 'finance',
+          roles: ['ADMIN'],
+        },
+        {
           id: 'settings',
           label: 'Settings',
           path: ADMIN_ROUTES.SETTINGS,

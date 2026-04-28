@@ -18,7 +18,8 @@ import {
   FileText,
   Umbrella,
   ClipboardList,
-  TrendingUp
+  TrendingUp,
+  DollarSign
 } from 'lucide-react';
 import type { NavigationItemConfig } from './navigation-config.ts';
 
@@ -216,6 +217,7 @@ function getIcon(iconName?: string): ReactElement {
     'reports': <BarChart3 {...iconProps} />,
     '📈': <TrendingUp {...iconProps} />,
     'analytics': <PieChart {...iconProps} />,
+    'finance': <DollarSign {...iconProps} />,
   };
 
   return iconMap[iconName || ''] || <ClipboardList {...iconProps} />;
