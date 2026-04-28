@@ -91,6 +91,7 @@ export const ADMIN_ROUTES = {
   EMPLOYEES: '/admin/employees',
   EMPLOYEE_DETAIL: '/admin/employees/:id',
   SETTINGS: '/admin/settings',
+  HOLIDAYS: '/admin/holidays',
 } as const;
 
 // ============================================================================

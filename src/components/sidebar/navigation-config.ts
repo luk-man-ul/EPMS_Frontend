@@ -309,6 +309,13 @@ export const navigationConfig: NavigationConfig = {
           roles: ['ADMIN'],
         },
         {
+          id: 'holiday-management',
+          label: 'Holiday Management',
+          path: ADMIN_ROUTES.HOLIDAYS,
+          icon: 'umbrella',
+          roles: ['ADMIN'],
+        },
+        {
           id: 'admin-finance',
           label: 'Finance',
           path: '/admin/finance',
