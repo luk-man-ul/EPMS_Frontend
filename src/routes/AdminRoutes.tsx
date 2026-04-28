@@ -61,6 +61,7 @@ const AdminRoutes = () => (
       {/* Attendance Routes */}
       <Route path="attendance" element={<AttendanceDashboardPage />} />
       <Route path="attendance/reports" element={<AttendanceDashboardPage />} />
+      <Route path="attendance/manage" element={<Attendance />} />
       <Route path="attendance/employee-detail" element={<AttendanceEmployeeDetailPage />} />
       
       {/* Leave Routes */}

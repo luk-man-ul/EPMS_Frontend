@@ -309,6 +309,13 @@ export const navigationConfig: NavigationConfig = {
           roles: ['ADMIN'],
         },
         {
+          id: 'attendance-calendar',
+          label: 'Attendance Calendar',
+          path: ATTENDANCE_ROUTES.MANAGE,
+          icon: 'calendar',
+          roles: ['ADMIN'],
+        },
+        {
           id: 'admin-finance',
           label: 'Finance',
           path: '/admin/finance',
