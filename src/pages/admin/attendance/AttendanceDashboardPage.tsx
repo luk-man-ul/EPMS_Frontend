@@ -215,13 +215,36 @@ const AttendanceDashboardPage = () => {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
 
         {/* Header */}
-        <div style={{ marginBottom: '20px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
-            Attendance Dashboard
-          </h1>
-          <p style={{ fontSize: '14px', color: '#6b7280' }}>
-            Monitor and manage attendance records across the organization
-          </p>
+        <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
+              Attendance Dashboard
+            </h1>
+            <p style={{ fontSize: '14px', color: '#6b7280' }}>
+              Monitor and manage attendance records across the organization
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/admin/attendance/manage')}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '8px',
+              background: '#6366f1',
+              color: '#fff',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: 500,
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              flexShrink: 0,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#4f46e5')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = '#6366f1')}
+          >
+            📅 Calendar View
+          </button>
         </div>
 
         {/* Context indicator */}
