@@ -117,6 +117,40 @@ const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false }: Atten
   const [loading, setLoading] = useState(false)
   const [tooltip, setTooltip] = useState<{ day: CalendarDay; x: number; y: number } | null>(null)
 
+  // Add Holiday modal state
+  const [showAddHoliday, setShowAddHoliday] = useState(false)
+  const [holidayForm, setHolidayForm] = useState({ date: '', name: '', description: '' })
+  const [submitting, setSubmitting] = useState(false)
+  const [formError, setFormError] = useState('')
+
+  const handleAddHoliday = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!holidayForm.date || !holidayForm.name.trim()) return
+    setFormError('')
+    setSubmitting(true)
+    try {
+      await api.post('/holidays', {
+        date: holidayForm.date,
+        name: holidayForm.name.trim(),
+        description: holidayForm.description.trim() || undefined,
+      })
+      setHolidayForm({ date: '', name: '', description: '' })
+      setShowAddHoliday(false)
+      // Refresh calendar to show new holiday
+      if (selectedUserId) {
+        setLoading(true)
+        api.get('/attendance/calendar', { params: { userId: selectedUserId, month: selectedMonth } })
+          .then((res) => setCalendarData(res.data))
+          .catch(() => setCalendarData([]))
+          .finally(() => setLoading(false))
+      }
+    } catch (err: any) {
+      setFormError(err?.response?.data?.message || 'Failed to add holiday')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   // ── Fetch employee list (skip when fixedUserId is provided) ─────────────────
   useEffect(() => {
     if (fixedUserId) return  // no need to load employee list when locked to one user
@@ -174,8 +208,8 @@ const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false }: Atten
           </select>
         )}
 
-        {/* Month navigation */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Month navigation + Add Holiday button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto' }}>
           <button
             onClick={() => setSelectedMonth((m) => shiftMonth(m, -1))}
             style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', background: '#fff', fontSize: '18px', cursor: 'pointer' }}
@@ -187,8 +221,83 @@ const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false }: Atten
             onClick={() => setSelectedMonth((m) => shiftMonth(m, 1))}
             style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', background: '#fff', fontSize: '18px', cursor: 'pointer' }}
           >→</button>
+
+          <button
+            onClick={() => { setShowAddHoliday(true); setFormError('') }}
+            style={{
+              padding: '8px 16px', borderRadius: '8px', border: 'none',
+              background: '#6366f1', color: '#fff',
+              fontWeight: 600, fontSize: '13px', cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            + Add Holiday
+          </button>
         </div>
       </div>
+
+      {/* ── Add Holiday Modal ── */}
+      {showAddHoliday && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAddHoliday(false) }}
+        >
+          <div style={{
+            background: '#fff', borderRadius: '16px', padding: '28px',
+            width: '100%', maxWidth: '480px', boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', margin: 0 }}>Add Holiday</h2>
+              <button onClick={() => setShowAddHoliday(false)}
+                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#6b7280' }}>✕</button>
+            </div>
+            <form onSubmit={handleAddHoliday} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>Date *</label>
+                <input
+                  type="date" required
+                  value={holidayForm.date}
+                  onChange={(e) => setHolidayForm((f) => ({ ...f, date: e.target.value }))}
+                  style={{ padding: '9px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '14px', outline: 'none' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>Name *</label>
+                <input
+                  type="text" required placeholder="e.g. Independence Day"
+                  value={holidayForm.name}
+                  onChange={(e) => setHolidayForm((f) => ({ ...f, name: e.target.value }))}
+                  style={{ padding: '9px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '14px', outline: 'none' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>Description (optional)</label>
+                <input
+                  type="text" placeholder="Optional"
+                  value={holidayForm.description}
+                  onChange={(e) => setHolidayForm((f) => ({ ...f, description: e.target.value }))}
+                  style={{ padding: '9px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '14px', outline: 'none' }}
+                />
+              </div>
+              {formError && (
+                <p style={{ fontSize: '13px', color: '#dc2626', fontWeight: 500, margin: 0 }}>⚠ {formError}</p>
+              )}
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '4px' }}>
+                <button type="button" onClick={() => setShowAddHoliday(false)}
+                  style={{ padding: '9px 18px', borderRadius: '8px', border: '1px solid #e5e7eb', background: '#fff', fontSize: '14px', fontWeight: 500, cursor: 'pointer', color: '#374151' }}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={submitting}
+                  style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', background: submitting ? '#a5b4fc' : '#6366f1', color: '#fff', fontWeight: 600, fontSize: '14px', cursor: submitting ? 'not-allowed' : 'pointer' }}>
+                  {submitting ? 'Adding…' : '+ Add Holiday'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ── Loading skeleton ── */}
       {loading && (
