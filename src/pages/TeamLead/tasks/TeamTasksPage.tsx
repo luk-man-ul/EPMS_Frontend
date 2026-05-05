@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import api from '../../../utils/api'
 import TaskTable from '../../shared/tasks/components/TaskTable'
 import TaskFilters from '../../shared/tasks/components/TaskFilters'
@@ -11,20 +11,28 @@ import { Card } from '../../../components/ui'
 const TeamTasksPage = () => {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
 
   const [tasks, setTasks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [pagination, setPagination] = useState<any>(null)
 
   // ✅ Universal filter object
   const [filters, setFilters] = useState<any>({})
   
   // ✅ Search state
   const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
 
   // ✅ Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<any>(null)
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 300)
+    return () => clearTimeout(t)
+  }, [searchTerm])
 
   ////////////////////////////////////////////////////////////////
   // FETCH TASKS
@@ -34,8 +42,18 @@ const TeamTasksPage = () => {
     try {
       setLoading(true)
 
-      const res = await api.get('/tasks')
+      const params: any = { page, limit: 10 }
+      if (filters.projectId) params.projectId = filters.projectId
+      if (filters.type) params.type = filters.type
+      if (filters.status) params.status = filters.status
+      if (filters.priority) params.priority = filters.priority
+      if (filters.dueDate) params.dueDate = filters.dueDate
+      if (debouncedSearch) params.search = debouncedSearch
+
+      const res = await api.get('/tasks', { params })
       setTasks(res.data.data || [])
+      const p = res.data.pagination
+      if (p) setPagination(p)
     } catch (err) {
       console.error('Failed to fetch tasks', err)
     } finally {
@@ -43,24 +61,19 @@ const TeamTasksPage = () => {
     }
   }
 
+  // When page changes (Next/Prev), fetch at the new page.
+  // When filters/search change, reset page to 1 first — the page change then triggers the fetch.
   useEffect(() => {
     fetchTasks()
-  }, [])
+  }, [page])
 
-  // Refetch tasks when returning to this page
   useEffect(() => {
-    // Check if we're returning from a detail page or if state indicates refresh
-    const shouldRefresh = location.state?.refresh || location.key !== 'default'
-    
-    if (shouldRefresh && !loading) {
-      fetchTasks()
-      
-      // Clear the refresh state to prevent repeated fetches
-      if (location.state?.refresh) {
-        window.history.replaceState({}, document.title)
-      }
+    if (page !== 1) {
+      setPage(1) // triggers the page useEffect above to fetch
+    } else {
+      fetchTasks() // already on page 1, fetch directly
     }
-  }, [location])
+  }, [filters, debouncedSearch])
 
   ////////////////////////////////////////////////////////////////
   // STATUS UPDATE
@@ -107,69 +120,6 @@ const TeamTasksPage = () => {
       setEditModalOpen(true)
     }
   }
-
-  ////////////////////////////////////////////////////////////////
-  // FILTERING (BASED ON UNIVERSAL FILTER STRUCTURE + SEARCH)
-  ////////////////////////////////////////////////////////////////
-
-  const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
-      // Search filter
-      const matchesSearch =
-        !searchTerm ||
-        task.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        task.description?.toLowerCase().includes(searchTerm.toLowerCase())
-
-      const matchesProject =
-        !filters.projectId ||
-        task.project?.id === filters.projectId
-
-      const matchesType =
-        !filters.type ||
-        task.type === filters.type
-
-      const matchesStatus =
-        !filters.status ||
-        task.status === filters.status
-
-      const matchesPriority =
-        !filters.priority ||
-        task.priority === filters.priority
-
-      const matchesDueDate =
-        !filters.dueDate ||
-        (task.dueDate &&
-          task.dueDate.startsWith(filters.dueDate))
-
-      return (
-        matchesSearch &&
-        matchesProject &&
-        matchesType &&
-        matchesStatus &&
-        matchesPriority &&
-        matchesDueDate
-      )
-    })
-  }, [tasks, filters, searchTerm])
-
-  ////////////////////////////////////////////////////////////////
-  // PROJECT OPTIONS (FORMAT FOR UNIVERSAL FILTER)
-  ////////////////////////////////////////////////////////////////
-
-  const projects = useMemo(() => {
-    const map = new Map()
-
-    tasks.forEach((task) => {
-      if (task.project?.id) {
-        map.set(task.project.id, {
-          id: task.project.id,
-          name: task.project.name,
-        })
-      }
-    })
-
-    return Array.from(map.values())
-  }, [tasks])
 
   ////////////////////////////////////////////////////////////////
   // NAVIGATION
@@ -226,7 +176,7 @@ const TeamTasksPage = () => {
 
       {/* UNIVERSAL FILTER */}
       <TaskFilters
-        projects={projects}
+        projects={[]}
         filters={filters}
         onFilterChange={(newFilters) => {
           if (newFilters.__clear) {
@@ -245,13 +195,48 @@ const TeamTasksPage = () => {
       {/* TABLE */}
       <Card padding="lg">
         <TaskTable
-          tasks={filteredTasks}
+          tasks={tasks}
           loading={loading}
           onStatusChange={handleStatusChange}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
       </Card>
+
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={() => setPage(page - 1)}
+            disabled={page === 1}
+            style={{
+              padding: '8px 16px', borderRadius: '8px', border: '1px solid #e5e5e5',
+              background: page === 1 ? '#f9fafb' : '#fff',
+              color: page === 1 ? '#9ca3af' : '#374151',
+              fontSize: '14px', fontWeight: 500,
+              cursor: page === 1 ? 'not-allowed' : 'pointer',
+            }}
+          >
+            Previous
+          </button>
+          <span style={{ padding: '8px 16px', fontSize: '14px', color: '#374151' }}>
+            Page {pagination.page} of {pagination.totalPages}
+          </span>
+          <button
+            onClick={() => setPage(page + 1)}
+            disabled={page === pagination.totalPages}
+            style={{
+              padding: '8px 16px', borderRadius: '8px', border: '1px solid #e5e5e5',
+              background: page === pagination.totalPages ? '#f9fafb' : '#fff',
+              color: page === pagination.totalPages ? '#9ca3af' : '#374151',
+              fontSize: '14px', fontWeight: 500,
+              cursor: page === pagination.totalPages ? 'not-allowed' : 'pointer',
+            }}
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {/* Edit Modal */}
       <EditTaskModal

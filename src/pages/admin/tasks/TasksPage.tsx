@@ -81,14 +81,21 @@ const TasksPage = () => {
 
   const handleFilterChange = (newFilters: any) => {
     if (newFilters.__clear) {
-      setFilters({})
-      fetchTasks({})
+      const cleared = {}
+      setFilters(cleared)
+      fetchTasks(cleared)
       return
     }
 
-    const updated = { ...filters, ...newFilters, page: 1 }
-    setFilters(updated)
-    fetchTasks(updated)
+    // Pagination clicks pass { page: N } — preserve current filters, don't reset to page 1
+    const isPaginationClick = Object.keys(newFilters).length === 1 && 'page' in newFilters
+    setFilters((prev: any) => {
+      const updated = isPaginationClick
+        ? { ...prev, page: newFilters.page }
+        : { ...prev, ...newFilters, page: 1 }
+      fetchTasks(updated)
+      return updated
+    })
   }
 
   ////////////////////////////////////////////////////////////
@@ -151,7 +158,11 @@ const TasksPage = () => {
   ////////////////////////////////////////////////////////////
 
   useEffect(() => {
-    fetchTasks()
+    setFilters((prev: any) => {
+      const updated = { ...prev, page: 1 }
+      fetchTasks(updated)
+      return updated
+    })
   }, [searchTerm])
 
   ////////////////////////////////////////////////////////////
@@ -235,6 +246,47 @@ const TasksPage = () => {
         }}
         onCreated={fetchTasks}
       />
+
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={() => handleFilterChange({ page: (filters.page || 1) - 1 })}
+            disabled={(filters.page || 1) === 1}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: '1px solid #e5e5e5',
+              background: (filters.page || 1) === 1 ? '#f9fafb' : '#fff',
+              color: (filters.page || 1) === 1 ? '#9ca3af' : '#374151',
+              fontSize: '14px',
+              fontWeight: 500,
+              cursor: (filters.page || 1) === 1 ? 'not-allowed' : 'pointer',
+            }}
+          >
+            Previous
+          </button>
+          <span style={{ padding: '8px 16px', fontSize: '14px', color: '#374151' }}>
+            Page {pagination.page} of {pagination.totalPages}
+          </span>
+          <button
+            onClick={() => handleFilterChange({ page: (filters.page || 1) + 1 })}
+            disabled={(filters.page || 1) === pagination.totalPages}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: '1px solid #e5e5e5',
+              background: (filters.page || 1) === pagination.totalPages ? '#f9fafb' : '#fff',
+              color: (filters.page || 1) === pagination.totalPages ? '#9ca3af' : '#374151',
+              fontSize: '14px',
+              fontWeight: 500,
+              cursor: (filters.page || 1) === pagination.totalPages ? 'not-allowed' : 'pointer',
+            }}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   )
 }

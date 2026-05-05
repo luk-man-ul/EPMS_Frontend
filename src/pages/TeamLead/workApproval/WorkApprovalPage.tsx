@@ -25,18 +25,20 @@ const WorkApprovalPage = () => {
   const [metrics, setMetrics] = useState<SelfWorkMetrics | null>(null)
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('')
+  const [page, setPage] = useState(1)
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, totalPages: 0 })
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [showRejectModal, setShowRejectModal] = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
 
   useEffect(() => {
     fetchData()
-  }, [statusFilter])
+  }, [statusFilter, page])
 
   const fetchData = async () => {
     try {
       setLoading(true)
-      const params: any = { type: 'SELF_WORK' }
+      const params: any = { type: 'SELF_WORK', page, limit: 10 }
       if (statusFilter) params.status = statusFilter
 
       const [tasksRes, metricsData] = await Promise.all([
@@ -45,6 +47,10 @@ const WorkApprovalPage = () => {
       ])
 
       setTasks(tasksRes.data.data || tasksRes.data || [])
+      const p = tasksRes.data.pagination
+      if (p) {
+        setPagination({ total: p.total, page: p.page, limit: p.limit, totalPages: p.totalPages })
+      }
       setMetrics(metricsData)
     } catch (err: any) {
       console.error('Error fetching work approvals:', err)
@@ -59,7 +65,9 @@ const WorkApprovalPage = () => {
       setActionLoading(taskId)
       await approveSelfWork(taskId)
       showToast('success', 'Self-work task approved successfully')
-      await fetchData()
+      // If this was the last item on the current page, go back to page 1
+      if (tasks.length === 1 && page > 1) setPage(1)
+      else await fetchData()
     } catch (err: any) {
       showToast('error', err.response?.data?.message || 'Failed to approve task')
     } finally {
@@ -84,7 +92,9 @@ const WorkApprovalPage = () => {
       showToast('success', 'Self-work task rejected')
       setShowRejectModal(null)
       setRejectReason('')
-      await fetchData()
+      // If this was the last item on the current page, go back to page 1
+      if (tasks.length === 1 && page > 1) setPage(1)
+      else await fetchData()
     } catch (err: any) {
       showToast('error', err.response?.data?.message || 'Failed to reject task')
     } finally {
@@ -127,7 +137,7 @@ const WorkApprovalPage = () => {
           <Select
             label="Status"
             value={statusFilter}
-            onChange={(value) => setStatusFilter(value as string)}
+            onChange={(value) => { setStatusFilter(value as string); setPage(1) }}
             options={[
               { value: '', label: 'All Statuses' },
               { value: 'PROPOSED', label: 'Pending' },
@@ -225,6 +235,31 @@ const WorkApprovalPage = () => {
           </div>
         )}
       </Card>
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setPage(page - 1)}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <span style={{ padding: '8px 16px', fontSize: '14px', color: '#374151' }}>
+            Page {pagination.page} of {pagination.totalPages}
+          </span>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setPage(page + 1)}
+            disabled={page === pagination.totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      )}
 
       {/* Reject Modal */}
       <Modal

@@ -25,12 +25,15 @@ const TicketsPage = () => {
   projectId?: string
   assignedToId?: string
   search?: string
+  page?: number
+  limit?: number
 }
 
-  const [filters, setFilters] = useState<TicketFiltersState>({})
+  const [filters, setFilters] = useState<TicketFiltersState>({ page: 1, limit: 10 })
   const [searchTerm, setSearchTerm] = useState('')
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(false)
+  const [pagination, setPagination] = useState<any>(null)
   const [showModal, setShowModal] = useState(false)
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null)
 
@@ -70,8 +73,15 @@ const TicketsPage = () => {
 
       const response = await getTickets(queryFilters)
 
-      // assuming backend returns { data, meta }
       setTickets(response.data)
+      // Backend returns either `pagination` or `meta`
+      const p = response.pagination || (response.meta ? {
+        total: response.meta.total,
+        page: response.meta.page,
+        limit: response.meta.limit,
+        totalPages: Math.ceil(response.meta.total / response.meta.limit),
+      } : null)
+      if (p) setPagination(p)
 
     } catch (error) {
       console.error('Failed to fetch tickets:', error)
@@ -86,7 +96,7 @@ const TicketsPage = () => {
       filtersWithSearch.search = searchTerm
     }
     fetchTickets(filtersWithSearch)
-  }, [filters, searchTerm])
+  }, [filters])
 
   ////////////////////////////////////////////////////////////
   // FILTER HANDLER
@@ -95,17 +105,22 @@ const TicketsPage = () => {
 const handleFilterChange = (newFilters: any) => {
   // CLEAR LOGIC
   if (newFilters.__clear) {
-    setFilters({})
+    setFilters({ page: 1, limit: 10 })
     setSearchTerm('')
     return
   }
 
-  const updated = { ...filters, ...newFilters, page: 1 }
-  setFilters(updated)
+  // Pagination clicks: preserve filters, just change page
+  const isPaginationClick = Object.keys(newFilters).length === 1 && 'page' in newFilters
+  setFilters((prev: any) => isPaginationClick
+    ? { ...prev, page: newFilters.page }
+    : { ...prev, ...newFilters, page: 1 }
+  )
 }
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value)
+    setFilters((prev: any) => ({ ...prev, page: 1 }))
   }
 
   const handleSearchClear = () => {
@@ -236,6 +251,41 @@ const handleFilterChange = (newFilters: any) => {
         />
       </div>
 
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={() => handleFilterChange({ page: (filters.page || 1) - 1 })}
+            disabled={(filters.page || 1) === 1}
+            style={{
+              padding: '8px 16px', borderRadius: '8px', border: '1px solid #e5e5e5',
+              background: (filters.page || 1) === 1 ? '#f9fafb' : '#fff',
+              color: (filters.page || 1) === 1 ? '#9ca3af' : '#374151',
+              fontSize: '14px', fontWeight: 500,
+              cursor: (filters.page || 1) === 1 ? 'not-allowed' : 'pointer',
+            }}
+          >
+            Previous
+          </button>
+          <span style={{ padding: '8px 16px', fontSize: '14px', color: '#374151' }}>
+            Page {pagination.page} of {pagination.totalPages}
+          </span>
+          <button
+            onClick={() => handleFilterChange({ page: (filters.page || 1) + 1 })}
+            disabled={(filters.page || 1) === pagination.totalPages}
+            style={{
+              padding: '8px 16px', borderRadius: '8px', border: '1px solid #e5e5e5',
+              background: (filters.page || 1) === pagination.totalPages ? '#f9fafb' : '#fff',
+              color: (filters.page || 1) === pagination.totalPages ? '#9ca3af' : '#374151',
+              fontSize: '14px', fontWeight: 500,
+              cursor: (filters.page || 1) === pagination.totalPages ? 'not-allowed' : 'pointer',
+            }}
+          >
+            Next
+          </button>
+        </div>
+      )}
+
       {/* Modal */}
       {showModal && (
         <TicketCreateModal
@@ -247,5 +297,4 @@ const handleFilterChange = (newFilters: any) => {
     </div>
   )
 }
-
 export default TicketsPage

@@ -50,9 +50,15 @@ export interface Ticket {
 
 export interface PaginatedTickets {
   data: Ticket[]
-  meta: {
+  meta?: {
     total: number
     page: number
     limit: number
+  }
+  pagination?: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
   }
 }

@@ -12,6 +12,8 @@ const TicketsPage = () => {
   const [tickets, setTickets] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [pagination, setPagination] = useState<any>(null)
 
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
@@ -70,7 +72,7 @@ const TicketsPage = () => {
       setLoading(true)
       setError(null)
 
-      const params: any = {}
+      const params: any = { page, limit: 10 }
 
       if (statusFilter !== 'all') params.status = statusFilter.toUpperCase()
       if (priorityFilter !== 'all') params.priority = priorityFilter.toUpperCase()
@@ -97,6 +99,8 @@ const TicketsPage = () => {
       }))
 
       setTickets(mapped)
+      const p = res.data.pagination
+      if (p) setPagination(p)
     } catch (err: any) {
       if (err.response?.status === 403) {
         setError('restricted')
@@ -108,8 +112,18 @@ const TicketsPage = () => {
     }
   }
 
+  // When page changes (Next/Prev), fetch at the new page.
+  // When filters/search change, reset page to 1 first — the page change then triggers the fetch.
   useEffect(() => {
     fetchTickets()
+  }, [page])
+
+  useEffect(() => {
+    if (page !== 1) {
+      setPage(1) // triggers the page useEffect above to fetch
+    } else {
+      fetchTickets() // already on page 1, fetch directly
+    }
   }, [debouncedSearchTerm, projectFilter, assignedToFilter, priorityFilter, statusFilter, typeFilter])
 
   if (error === 'restricted') {
@@ -151,6 +165,41 @@ const TicketsPage = () => {
         <div>Loading tickets...</div>
       ) : (
         <TicketsTable tickets={tickets} currentUserId={user?.id} />
+      )}
+
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={() => setPage(page - 1)}
+            disabled={page === 1}
+            style={{
+              padding: '8px 16px', borderRadius: '8px', border: '1px solid #e5e5e5',
+              background: page === 1 ? '#f9fafb' : '#fff',
+              color: page === 1 ? '#9ca3af' : '#374151',
+              fontSize: '14px', fontWeight: 500,
+              cursor: page === 1 ? 'not-allowed' : 'pointer',
+            }}
+          >
+            Previous
+          </button>
+          <span style={{ padding: '8px 16px', fontSize: '14px', color: '#374151' }}>
+            Page {pagination.page} of {pagination.totalPages}
+          </span>
+          <button
+            onClick={() => setPage(page + 1)}
+            disabled={page === pagination.totalPages}
+            style={{
+              padding: '8px 16px', borderRadius: '8px', border: '1px solid #e5e5e5',
+              background: page === pagination.totalPages ? '#f9fafb' : '#fff',
+              color: page === pagination.totalPages ? '#9ca3af' : '#374151',
+              fontSize: '14px', fontWeight: 500,
+              cursor: page === pagination.totalPages ? 'not-allowed' : 'pointer',
+            }}
+          >
+            Next
+          </button>
+        </div>
       )}
     </div>
   )
