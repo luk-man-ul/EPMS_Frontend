@@ -15,18 +15,25 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
-      // Connect socket with user role
-      socketService.connect(user.id, user.role);
+    // Guard: do not connect until we have a real user id
+    if (!user?.id) return;
 
-      // Load rooms
-      loadRooms();
-    }
+    // Connect socket — socketService.connect() always tears down any
+    // existing socket first, so this is safe to call on every mount.
+    socketService.connect(user.id, user.role);
+
+    // Load rooms after socket is initialised
+    loadRooms();
 
     return () => {
       socketService.disconnect();
     };
-  }, [user]);
+  // Depend only on the primitive user id, NOT the full user object.
+  // Using the full object causes the effect to re-run (disconnect + reconnect)
+  // whenever AuthContext produces a new object reference, even if the user
+  // identity hasn't changed — which is the root cause of the disconnect loop.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const loadRooms = async () => {
     try {

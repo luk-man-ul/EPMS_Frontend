@@ -2,32 +2,62 @@ import { io, Socket } from 'socket.io-client';
 
 const SOCKET_URL = import.meta.env.VITE_API_URL;
 
+/** Read the JWT token from whichever storage it was saved to. */
+function getToken(): string | null {
+  try {
+    const ls = localStorage.getItem('token');
+    if (ls && ls !== 'undefined' && ls !== 'null') return ls;
+    const ss = sessionStorage.getItem('token');
+    if (ss && ss !== 'undefined' && ss !== 'null') return ss;
+  } catch { /* ignore */ }
+  return null;
+}
+
 class SocketService {
   private socket: Socket | null = null;
 
+  /**
+   * Connect to the /chat namespace.
+   * Always disconnects any existing socket first so a fresh connection
+   * is made with the current user's token — prevents stale-socket bugs
+   * after logout/login cycles.
+   */
   connect(userId: string, userRole?: string): Socket {
-    if (this.socket?.connected) {
-      return this.socket;
+    // Always tear down the old socket before creating a new one.
+    // The old guard `if (this.socket?.connected) return this.socket` was
+    // the root cause of the "userId not provided" error: after a logout/login
+    // the old socket was still marked connected, so the new userId was never sent.
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
     }
 
+    const token = getToken();
+
     this.socket = io(`${SOCKET_URL}/chat`, {
-      query: { 
+      // Pass JWT in auth (preferred, secure) AND keep userId/userRole in query
+      // for backward compatibility with chat.gateway.ts room membership checks.
+      auth: token ? { token } : undefined,
+      query: {
         userId,
-        userRole: userRole || 'EMPLOYEE'
+        userRole: userRole || 'EMPLOYEE',
       },
       transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
     });
 
     this.socket.on('connect', () => {
-      console.log('Socket connected:', this.socket?.id);
+      console.log('[Chat] Socket connected:', this.socket?.id);
     });
 
     this.socket.on('disconnect', () => {
-      console.log('Socket disconnected');
+      console.log('[Chat] Socket disconnected');
     });
 
     this.socket.on('error', (error: any) => {
-      console.error('Socket error:', error);
+      console.error('[Chat] Socket error:', error);
     });
 
     return this.socket;
