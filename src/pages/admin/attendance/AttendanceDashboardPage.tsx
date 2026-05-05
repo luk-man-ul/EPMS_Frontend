@@ -205,6 +205,17 @@ const AttendanceDashboardPage = () => {
     }
   };
 
+  // ── Weekly hours for selected employee ──────────────────────────────────
+  // Computed from the already-fetched attendance records when a single
+  // employee is selected. No extra API call needed — totalHours is already
+  // in each attendance record.
+  const weeklyHours = useMemo(() => {
+    if (!filters.userId) return null;
+    // Sum totalHours across all fetched records for this employee
+    const total = attendance.reduce((sum: number, r: any) => sum + (r.totalHours ?? 0), 0);
+    return Math.round(total * 10) / 10; // one decimal place
+  }, [filters.userId, attendance]);
+
   // Stat cards come from the API response, not from paginated table data
   const statCards = useMemo(
     () => (stats ? buildStatCardsFromApi(stats) : []),
@@ -305,6 +316,47 @@ const AttendanceDashboardPage = () => {
             </div>
           ))}
         </div>
+
+        {/* Weekly Hours Card — only visible when a specific employee is selected */}
+        {weeklyHours !== null && (
+          <div style={{ marginBottom: '24px' }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                flexDirection: 'column',
+                background: '#faf5ff',
+                borderRadius: '16px',
+                padding: '16px 24px',
+                border: '1px solid #e9d5ff',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                minWidth: '200px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Weekly Hours
+                </span>
+                <span style={{ fontSize: '15px' }}>⏱️</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                <span style={{ fontSize: '26px', fontWeight: 700, color: weeklyHours >= 40 ? '#16a34a' : '#7c3aed', letterSpacing: '-0.02em' }}>
+                  {weeklyHours}
+                </span>
+                <span style={{ fontSize: '14px', fontWeight: 500, color: '#9ca3af' }}>/ 40 hrs</span>
+              </div>
+              {/* Progress bar */}
+              <div style={{ marginTop: '10px', height: '4px', background: '#e9d5ff', borderRadius: '2px', overflow: 'hidden', width: '100%' }}>
+                <div style={{
+                  height: '100%',
+                  width: `${Math.min((weeklyHours / 40) * 100, 100)}%`,
+                  background: weeklyHours >= 40 ? '#16a34a' : '#7c3aed',
+                  borderRadius: '2px',
+                  transition: 'width 0.3s ease',
+                }} />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <AttendanceFilters
