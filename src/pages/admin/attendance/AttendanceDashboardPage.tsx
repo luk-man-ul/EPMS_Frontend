@@ -217,10 +217,23 @@ const AttendanceDashboardPage = () => {
   }, [filters.userId, attendance]);
 
   // Stat cards come from the API response, not from paginated table data
-  const statCards = useMemo(
-    () => (stats ? buildStatCardsFromApi(stats) : []),
-    [stats],
-  );
+  // When a specific employee is selected, append the Weekly Hours card
+  // directly into the grid so it sits right after "Attendance Rate"
+  const statCards = useMemo(() => {
+    const base = stats ? buildStatCardsFromApi(stats) : [];
+    if (weeklyHours === null) return base;
+    return [
+      ...base,
+      {
+        label: 'Weekly Hours',
+        tooltip: 'Total hours worked in the selected date range (target: 40 hrs/week)',
+        value: `${weeklyHours} / 40`,
+        accent: weeklyHours >= 40 ? '#16a34a' : '#7c3aed',
+        bg: weeklyHours >= 40 ? '#f0fdf4' : '#faf5ff',
+        icon: '⏱️',
+      },
+    ];
+  }, [stats, weeklyHours]);
   const contextLabel = useMemo(() => buildContextLabel(filters, employees), [filters, employees]);
 
   return (
@@ -316,47 +329,6 @@ const AttendanceDashboardPage = () => {
             </div>
           ))}
         </div>
-
-        {/* Weekly Hours Card — only visible when a specific employee is selected */}
-        {weeklyHours !== null && (
-          <div style={{ marginBottom: '24px' }}>
-            <div
-              style={{
-                display: 'inline-flex',
-                flexDirection: 'column',
-                background: '#faf5ff',
-                borderRadius: '16px',
-                padding: '16px 24px',
-                border: '1px solid #e9d5ff',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                minWidth: '200px',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Weekly Hours
-                </span>
-                <span style={{ fontSize: '15px' }}>⏱️</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                <span style={{ fontSize: '26px', fontWeight: 700, color: weeklyHours >= 40 ? '#16a34a' : '#7c3aed', letterSpacing: '-0.02em' }}>
-                  {weeklyHours}
-                </span>
-                <span style={{ fontSize: '14px', fontWeight: 500, color: '#9ca3af' }}>/ 40 hrs</span>
-              </div>
-              {/* Progress bar */}
-              <div style={{ marginTop: '10px', height: '4px', background: '#e9d5ff', borderRadius: '2px', overflow: 'hidden', width: '100%' }}>
-                <div style={{
-                  height: '100%',
-                  width: `${Math.min((weeklyHours / 40) * 100, 100)}%`,
-                  background: weeklyHours >= 40 ? '#16a34a' : '#7c3aed',
-                  borderRadius: '2px',
-                  transition: 'width 0.3s ease',
-                }} />
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Filters */}
         <AttendanceFilters
