@@ -19,7 +19,6 @@ interface Notification {
 
 const SOCKET_URL = import.meta.env.VITE_API_URL as string;
 
-/** Read the JWT token from whichever storage it was saved to. */
 function getToken(): string | null {
   try {
     const ls = localStorage.getItem('token');
@@ -35,17 +34,23 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  // initialLoading is only true on the very first fetch — prevents flicker on polls
+  const [initialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
+  // Track whether we have ever loaded data for this user
+  const hasFetchedRef = useRef(false);
 
-  // ─── Fetch from REST (initial load + fallback polling) ───────────────────
-  const fetchNotifications = useCallback(async () => {
+  // ─── Fetch from REST ─────────────────────────────────────────────────────
+  // isInitial=true → show spinner (first load only)
+  // isInitial=false → silent background refresh, no loading state change
+  const fetchNotifications = useCallback(async (isInitial = false) => {
     try {
-      setLoading(true);
+      if (isInitial) setInitialLoading(true);
       setError(null);
       const response = await api.get('/notifications');
+      // Batch both state updates together to produce a single re-render
       setNotifications(response.data.notifications ?? []);
       setUnreadCount(response.data.unreadCount ?? 0);
     } catch (err: unknown) {
@@ -53,9 +58,9 @@ export function NotificationBell() {
       console.error('Failed to fetch notifications:', err);
       setError(msg);
     } finally {
-      setLoading(false);
+      if (isInitial) setInitialLoading(false);
     }
-  }, []);
+  }, []); // stable — no deps that change
 
   // ─── Reset + reconnect whenever the logged-in user changes ───────────────
   useEffect(() => {
@@ -63,6 +68,8 @@ export function NotificationBell() {
     setNotifications([]);
     setUnreadCount(0);
     setIsOpen(false);
+    setError(null);
+    hasFetchedRef.current = false;
 
     // Disconnect any existing socket
     socketRef.current?.disconnect();
@@ -70,11 +77,12 @@ export function NotificationBell() {
 
     if (!user?.id) return;
 
-    // Initial REST fetch
-    fetchNotifications();
+    // Initial REST fetch — show spinner
+    hasFetchedRef.current = true;
+    fetchNotifications(true);
 
-    // Fallback polling every 60 s (real-time socket is primary)
-    const interval = setInterval(fetchNotifications, 60_000);
+    // Fallback polling every 60 s — silent, no spinner
+    const interval = setInterval(() => fetchNotifications(false), 60_000);
 
     // ── WebSocket connection to /notifications namespace ──────────────────
     const token = getToken();
@@ -99,7 +107,9 @@ export function NotificationBell() {
         console.error('[Notifications] Socket error:', err);
       });
 
-      // Real-time push: prepend new notification and bump unread count
+      // Real-time push: prepend notification and bump count.
+      // Uses functional updates so both state changes are batched by React
+      // into a single re-render (React 18 automatic batching).
       socket.on('notification', (notification: Notification) => {
         setNotifications((prev) => [notification, ...prev]);
         setUnreadCount((prev) => prev + 1);
@@ -113,16 +123,17 @@ export function NotificationBell() {
       socketRef.current?.disconnect();
       socketRef.current = null;
     };
-  }, [user?.id, fetchNotifications]);
+  }, [user?.id]); // fetchNotifications intentionally omitted — it is stable (useCallback([])) and including it would re-run this effect on every render in React strict mode
 
   // ─── Close dropdown on outside click ─────────────────────────────────────
   useEffect(() => {
+    if (!isOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
-    if (isOpen) document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
@@ -214,7 +225,7 @@ export function NotificationBell() {
             </div>
 
             <div className="notification-list">
-              {loading && notifications.length === 0 ? (
+              {initialLoading ? (
                 <div className="notification-loading">
                   <LoadingSpinner size="sm" text="Loading..." />
                 </div>
@@ -261,7 +272,7 @@ export function NotificationBell() {
                   className="view-all-btn"
                   onClick={() => {
                     setIsOpen(false);
-                    fetchNotifications();
+                    fetchNotifications(false);
                   }}
                 >
                   Refresh to see all

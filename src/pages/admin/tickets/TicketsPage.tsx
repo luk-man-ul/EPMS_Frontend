@@ -96,7 +96,7 @@ const TicketsPage = () => {
       filtersWithSearch.search = searchTerm
     }
     fetchTickets(filtersWithSearch)
-  }, [filters])
+  }, [filters, searchTerm])
 
   ////////////////////////////////////////////////////////////
   // FILTER HANDLER
@@ -120,7 +120,13 @@ const handleFilterChange = (newFilters: any) => {
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value)
-    setFilters((prev: any) => ({ ...prev, page: 1 }))
+    // Reset to page 1 when search changes, but do NOT also call setFilters
+    // to avoid double-fetching. The useEffect([filters, searchTerm]) handles both.
+    setFilters((prev: any) => {
+      // Only update if page is not already 1 to avoid unnecessary re-render
+      if (prev.page === 1) return prev
+      return { ...prev, page: 1 }
+    })
   }
 
   const handleSearchClear = () => {
