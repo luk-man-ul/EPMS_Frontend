@@ -4,6 +4,160 @@ import { useAuth } from '../../context/AuthContext'
 import { NotificationBell } from '../notifications'
 import api from '../../utils/api'
 
+// ─── Quick Check-In/Out Widget ───────────────────────────────────────────────
+
+const CheckInWidget = () => {
+  const { user } = useAuth()
+  const [hasActiveSession, setHasActiveSession] = useState<boolean | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [tooltip, setTooltip] = useState<string | null>(null)
+
+  // Only show for EMPLOYEE and TEAM_LEAD — admins don't do attendance check-in
+  const shouldShow = user?.role === 'EMPLOYEE' || user?.role === 'TEAM_LEAD'
+
+  // Fetch today's attendance on mount to know current state
+  useEffect(() => {
+    if (!shouldShow) return
+    const fetchState = async () => {
+      try {
+        const res = await api.get('/attendance/today', {
+          headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+        })
+        const sessions = res.data.sessions || []
+        setHasActiveSession(sessions.some((s: any) => !s.checkOut))
+      } catch {
+        // 404 = no record today → not checked in
+        setHasActiveSession(false)
+      }
+    }
+    fetchState()
+  }, [shouldShow])
+
+  const handleCheckIn = () => {
+    if (!navigator.geolocation) {
+      setTooltip('Location access required')
+      setTimeout(() => setTooltip(null), 3000)
+      return
+    }
+    setLoading(true)
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          await api.post('/attendance/check-in', {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          })
+          setHasActiveSession(true)
+          setTooltip('Checked in!')
+          setTimeout(() => setTooltip(null), 2000)
+        } catch (err: any) {
+          setTooltip(err.response?.data?.message || 'Check-in failed')
+          setTimeout(() => setTooltip(null), 3000)
+        } finally {
+          setLoading(false)
+        }
+      },
+      () => {
+        setTooltip('Location access denied')
+        setTimeout(() => setTooltip(null), 3000)
+        setLoading(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    )
+  }
+
+  const handleCheckOut = async () => {
+    setLoading(true)
+    try {
+      await api.post('/attendance/check-out')
+      setHasActiveSession(false)
+      setTooltip('Checked out!')
+      setTimeout(() => setTooltip(null), 2000)
+    } catch (err: any) {
+      setTooltip(err.response?.data?.message || 'Check-out failed')
+      setTimeout(() => setTooltip(null), 3000)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Don't render until we know the state, or if user shouldn't see it
+  if (!shouldShow || hasActiveSession === null) return null
+
+  const isCheckedIn = hasActiveSession
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        onClick={isCheckedIn ? handleCheckOut : handleCheckIn}
+        disabled={loading}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          padding: '7px 14px',
+          borderRadius: '8px',
+          border: 'none',
+          background: isCheckedIn ? '#fee2e2' : '#dcfce7',
+          color: isCheckedIn ? '#dc2626' : '#16a34a',
+          fontSize: '13px',
+          fontWeight: 600,
+          cursor: loading ? 'not-allowed' : 'pointer',
+          opacity: loading ? 0.7 : 1,
+          transition: 'all 0.2s',
+          whiteSpace: 'nowrap',
+        }}
+        onMouseEnter={(e) => {
+          if (!loading) e.currentTarget.style.opacity = '0.85'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.opacity = loading ? '0.7' : '1'
+        }}
+      >
+        {/* Pulsing dot */}
+        <span style={{
+          width: 8,
+          height: 8,
+          borderRadius: '50%',
+          background: isCheckedIn ? '#dc2626' : '#16a34a',
+          display: 'inline-block',
+          flexShrink: 0,
+          animation: isCheckedIn ? 'pulse-dot 1.5s ease-in-out infinite' : 'none',
+        }} />
+        {loading ? '...' : isCheckedIn ? 'Check Out' : 'Check In'}
+      </button>
+
+      {/* Tooltip feedback */}
+      {tooltip && (
+        <div style={{
+          position: 'absolute',
+          top: 'calc(100% + 8px)',
+          right: 0,
+          background: '#1a1a1a',
+          color: '#fff',
+          fontSize: '12px',
+          padding: '6px 12px',
+          borderRadius: '6px',
+          whiteSpace: 'nowrap',
+          zIndex: 9999,
+          pointerEvents: 'none',
+        }}>
+          {tooltip}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes pulse-dot {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.3); }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 interface SearchResult {
   id: string
   type: 'project' | 'task' | 'ticket' | 'employee'
@@ -328,6 +482,7 @@ const AppHeader = ({ onMenuClick }: { onMenuClick?: () => void }) => {
       </div>
 
       <div className="header-actions">
+        <CheckInWidget />
         <NotificationBell />
         <div style={{ position: 'relative' }}>
           <div
