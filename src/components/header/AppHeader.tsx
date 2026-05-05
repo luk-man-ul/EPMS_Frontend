@@ -50,6 +50,8 @@ const CheckInWidget = () => {
           setHasActiveSession(true)
           setTooltip('Checked in!')
           setTimeout(() => setTooltip(null), 2000)
+          // Notify CheckInPage to re-fetch if it's open
+          window.dispatchEvent(new CustomEvent('attendance-updated'))
         } catch (err: any) {
           setTooltip(err.response?.data?.message || 'Check-in failed')
           setTimeout(() => setTooltip(null), 3000)
@@ -73,6 +75,8 @@ const CheckInWidget = () => {
       setHasActiveSession(false)
       setTooltip('Checked out!')
       setTimeout(() => setTooltip(null), 2000)
+      // Notify CheckInPage to re-fetch if it's open
+      window.dispatchEvent(new CustomEvent('attendance-updated'))
     } catch (err: any) {
       setTooltip(err.response?.data?.message || 'Check-out failed')
       setTimeout(() => setTooltip(null), 3000)

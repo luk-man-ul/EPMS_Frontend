@@ -48,6 +48,11 @@ const CheckInPage = () => {
       setLocationSupported(false);
     }
     fetchTodayAttendance();
+
+    // Re-fetch when the navbar widget performs a check-in or check-out
+    const handleAttendanceUpdated = () => fetchTodayAttendance();
+    window.addEventListener('attendance-updated', handleAttendanceUpdated);
+    return () => window.removeEventListener('attendance-updated', handleAttendanceUpdated);
   }, []);
 
   const fetchTodayAttendance = async () => {
