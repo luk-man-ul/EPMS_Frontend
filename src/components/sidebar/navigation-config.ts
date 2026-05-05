@@ -86,6 +86,26 @@ export const navigationConfig: NavigationConfig = {
     },
 
     // ========================================================================
+    // ATTENDANCE (ADMIN ONLY — sits between Main and Work)
+    // ========================================================================
+    {
+      id: 'attendance',
+      title: 'Attendance',
+      collapsible: true,
+      defaultExpanded: true,
+      roles: ['ADMIN'],
+      items: [
+        {
+          id: 'attendance-reports',
+          label: 'Attendance Reports',
+          path: ATTENDANCE_ROUTES.REPORTS,
+          icon: 'analytics',
+          roles: ['ADMIN'],
+        },
+      ],
+    },
+
+    // ========================================================================
     // WORK MANAGEMENT
     // ========================================================================
     {
@@ -299,13 +319,6 @@ export const navigationConfig: NavigationConfig = {
           label: 'Employees',
           path: ADMIN_ROUTES.EMPLOYEES,
           icon: 'user',
-          roles: ['ADMIN'],
-        },
-        {
-          id: 'attendance-reports',
-          label: 'Attendance Reports',
-          path: ATTENDANCE_ROUTES.REPORTS,
-          icon: 'analytics',
           roles: ['ADMIN'],
         },
         {
