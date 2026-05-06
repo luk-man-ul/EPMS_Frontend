@@ -160,7 +160,18 @@ const AttendanceDashboardPage = () => {
       params.append('limit', String(filters.limit ?? 20));
 
       const response = await api.get(`/attendance?${params.toString()}`);
-      const data: any[] = response.data.data || [];
+      let data: any[] = response.data.data || [];
+
+      // The backend injects today's live records at the top of every page.
+      // On pages > 1, remove today's records so they only appear on page 1.
+      if ((filters.page ?? 1) > 1) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        // Also compute IST today string (UTC+5:30)
+        const istOffset = 5.5 * 60 * 60 * 1000;
+        const istToday = new Date(Date.now() + istOffset).toISOString().split('T')[0];
+        data = data.filter((r: any) => r.date !== todayStr && r.date !== istToday);
+      }
+
       setAttendance(data);
 
       if (response.data.total !== undefined) {
