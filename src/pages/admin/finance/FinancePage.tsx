@@ -4,8 +4,10 @@ import IncomeTable from './components/IncomeTable'
 import ExpenseTable from './components/ExpenseTable'
 import ProjectProfit from './components/ProjectProfit'
 import EmployeeCost from './components/EmployeeCost'
+import LedgerPage from './components/LedgerPage'
+import InvoicePage from './components/InvoicePage'
 
-type ViewType = 'dashboard' | 'income' | 'expenses' | 'project-profit' | 'employee-cost'
+type ViewType = 'dashboard' | 'income' | 'expenses' | 'project-profit' | 'employee-cost' | 'ledger' | 'invoices'
 
 const FinancePage = () => {
   const [activeView, setActiveView] = useState<ViewType>('dashboard')
@@ -132,6 +134,8 @@ const FinancePage = () => {
             { id: 'expenses' as ViewType, label: 'Expense Management' },
             { id: 'project-profit' as ViewType, label: 'Project Profit' },
             { id: 'employee-cost' as ViewType, label: 'Employee Cost' },
+            { id: 'ledger' as ViewType, label: 'Ledger' },
+            { id: 'invoices' as ViewType, label: 'Invoices' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -171,6 +175,14 @@ const FinancePage = () => {
       {activeView === 'project-profit' && <ProjectProfit />}
 
       {activeView === 'employee-cost' && <EmployeeCost />}
+
+      {activeView === 'ledger' && (
+        <LedgerPage />
+      )}
+
+      {activeView === 'invoices' && (
+        <InvoicePage />
+      )}
 
       {activeView === 'income' && (
         <>
