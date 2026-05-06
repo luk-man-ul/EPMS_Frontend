@@ -107,9 +107,11 @@ interface AttendanceCalendarProps {
   fixedUserId?: string
   /** Hide the employee selector dropdown entirely */
   hideEmployeeSelector?: boolean
+  /** Hide the Add Holiday button (for non-admin views) */
+  hideAddHoliday?: boolean
 }
 
-const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false }: AttendanceCalendarProps = {}) => {
+const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false, hideAddHoliday = false }: AttendanceCalendarProps = {}) => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth())
   const [selectedUserId, setSelectedUserId] = useState(fixedUserId ?? '')
   const [employees, setEmployees] = useState<Employee[]>([])
@@ -229,6 +231,7 @@ const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false }: Atten
               background: '#6366f1', color: '#fff',
               fontWeight: 600, fontSize: '13px', cursor: 'pointer',
               whiteSpace: 'nowrap',
+              display: hideAddHoliday ? 'none' : undefined,
             }}
           >
             + Add Holiday

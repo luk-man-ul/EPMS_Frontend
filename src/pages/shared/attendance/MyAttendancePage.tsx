@@ -119,7 +119,7 @@ const MyAttendancePage = () => {
         )}
 
         {activeView === 'calendar' && user && (
-          <AttendanceCalendar fixedUserId={user.id} hideEmployeeSelector />
+          <AttendanceCalendar fixedUserId={user.id} hideEmployeeSelector hideAddHoliday />
         )}
       </div>
     </div>
