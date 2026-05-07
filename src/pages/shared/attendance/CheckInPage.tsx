@@ -251,11 +251,11 @@ const CheckInPage = () => {
   const liveElapsed = useLiveElapsed(activeSession?.checkIn ?? null, serverNow);
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col max-h-full overflow-hidden pb-4">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold text-gray-900 tracking-tight mb-2">Attendance Check-In</h1>
-        <p className="text-gray-500">Record your daily attendance - multiple sessions supported</p>
+      <div className="mb-4 shrink-0">
+        <h1 className="text-[28px] font-semibold text-gray-900 tracking-tight mb-1">Attendance Check-In</h1>
+        <p className="text-gray-500 text-sm">Record your daily attendance - multiple sessions supported</p>
       </div>
 
       {!locationSupported && (
@@ -274,44 +274,43 @@ const CheckInPage = () => {
       )}
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 min-h-0 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
         
         {/* Left Column: Active Tracker */}
-        <div className="bg-white rounded-[2rem] border border-gray-100 p-8 shadow-sm relative flex flex-col h-[520px]">
+        <div className="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm relative flex flex-col h-full min-h-0">
           {/* Top left info */}
           {hasActiveSession ? (
-            <div>
-              <div className="text-[28px] font-bold text-gray-900 tracking-tight">{formatTime(activeSession.checkIn)}</div>
-              <div className="text-sm text-gray-500 font-medium mt-1">Start time</div>
+            <div className="shrink-0">
+              <div className="text-[26px] font-bold text-gray-900 tracking-tight">{formatTime(activeSession.checkIn)}</div>
+              <div className="text-sm text-gray-500 font-medium mt-0.5">Start time</div>
             </div>
           ) : (
-            <div>
-              <div className="text-[28px] font-bold text-gray-900 tracking-tight">{formatTime(new Date().toISOString())}</div>
-              <div className="text-sm text-gray-500 font-medium mt-1">Current time</div>
+            <div className="shrink-0">
+              <div className="text-[26px] font-bold text-gray-900 tracking-tight">{formatTime(new Date().toISOString())}</div>
+              <div className="text-sm text-gray-500 font-medium mt-0.5">Current time</div>
             </div>
           )}
 
-          <div className="flex-1 flex flex-col items-center justify-center relative mt-6 mb-12">
+          <div className="flex-1 flex flex-col items-center justify-center relative my-2 min-h-0">
             <CircularProgress durationText={hasActiveSession ? formatElapsed(liveElapsed) : '0h 00m'} />
             
-            {/* Overlapping Button */}
-            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 translate-y-1/2">
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-10">
               {hasActiveSession ? (
                 <button
                   onClick={handleCheckOut}
                   disabled={loading}
-                  className="flex items-center gap-2 px-10 py-4 bg-[#a32a39] hover:bg-[#8b2331] text-white rounded-full font-medium shadow-xl transition-all disabled:opacity-70 whitespace-nowrap text-lg"
+                  className="flex items-center gap-2 px-8 py-3.5 bg-[#a32a39] hover:bg-[#8b2331] text-white rounded-full font-medium shadow-xl transition-all disabled:opacity-70 whitespace-nowrap text-[17px]"
                 >
-                  <LogOut size={20} />
+                  <LogOut size={18} />
                   {loading ? 'Processing...' : 'Check Out'}
                 </button>
               ) : (
                 <button
                   onClick={handleCheckIn}
                   disabled={loading || !locationSupported}
-                  className="flex items-center gap-2 px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-medium shadow-xl transition-all disabled:opacity-70 whitespace-nowrap text-lg"
+                  className="flex items-center gap-2 px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-medium shadow-xl transition-all disabled:opacity-70 whitespace-nowrap text-[17px]"
                 >
-                  <LogIn size={20} />
+                  <LogIn size={18} />
                   {loading ? 'Processing...' : 'Check In'}
                 </button>
               )}
@@ -319,8 +318,8 @@ const CheckInPage = () => {
           </div>
 
           {/* Status Banner */}
-          <div className="mt-auto pt-4">
-            <div className="w-full text-center py-4 px-6 rounded-2xl text-sm font-medium bg-blue-50/60 text-blue-700 border border-blue-100/60">
+          <div className="mt-auto shrink-0 pt-2">
+            <div className="w-full text-center py-3 px-4 rounded-xl text-[13px] font-medium bg-blue-50/60 text-blue-700 border border-blue-100/60">
               {hasActiveSession 
                 ? "You have an active session. Please check out before starting a new session."
                 : "You can start a new session by checking in."
@@ -330,13 +329,13 @@ const CheckInPage = () => {
         </div>
 
         {/* Right Column: Today's Sessions */}
-        <div className="bg-white rounded-[2rem] border border-gray-100 p-8 shadow-sm flex flex-col h-[520px]">
-          <div className="mb-6 shrink-0">
-            <h2 className="text-[22px] font-bold tracking-tight text-gray-900 uppercase">Today's Sessions</h2>
-            <p className="text-[15px] text-gray-500 mt-1">{todayData?.sessions?.length || 0} total sessions</p>
+        <div className="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm flex flex-col h-full min-h-0">
+          <div className="mb-4 shrink-0">
+            <h2 className="text-xl font-bold tracking-tight text-gray-900 uppercase">Today's Sessions</h2>
+            <p className="text-sm text-gray-500 mt-0.5">{todayData?.sessions?.length || 0} total sessions</p>
           </div>
           
-          <div className="flex flex-col gap-4 overflow-y-auto pr-2">
+          <div className="flex flex-col gap-3 overflow-y-auto pr-2 min-h-0 flex-1">
             {(!todayData?.sessions || todayData.sessions.length === 0) ? (
               <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
                 No sessions recorded today yet.
