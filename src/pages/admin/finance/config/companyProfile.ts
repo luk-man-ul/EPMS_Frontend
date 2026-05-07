@@ -41,12 +41,12 @@ export interface CompanyProfile {
 }
 
 const companyProfile: CompanyProfile = {
-  companyName:  'Your Company Name',
-  address:      '123 Business Street\nCity, State 400001\nIndia',
-  gstin:        '22AAAAA0000A1Z5',
-  phone:        '+91 98765 43210',
-  email:        'billing@yourcompany.com',
-  website:      'www.yourcompany.com',
+  companyName:  'Altezzai LLP',
+  address:      '306, Students Amenities Centre, \n Innovation and Incubation Foundation (KU-IIF), \n Thavakkara, \n Kannur University Campus, Kannur, 670002',
+  gstin:        '',
+  phone:        '+91 9562937970',
+  email:        'billing@Altezzai.com',
+  website:      'www.Altezzai.com',
   logoUrl:      null,   // set to '/logo.png' or a base64 data URI when logo is available
   termsAndConditions:
     '1. Payment is due within 30 days of the invoice date.\n' +
