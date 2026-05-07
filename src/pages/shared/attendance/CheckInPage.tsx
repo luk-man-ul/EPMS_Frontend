@@ -251,7 +251,7 @@ const CheckInPage = () => {
   const liveElapsed = useLiveElapsed(activeSession?.checkIn ?? null, serverNow);
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="h-full flex flex-col">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-gray-900 tracking-tight mb-2">Attendance Check-In</h1>
@@ -262,9 +262,14 @@ const CheckInPage = () => {
         <ErrorMessage message="Geolocation is not supported by your browser. Please use a modern browser to check in." type="page" />
       )}
       {error && <ErrorMessage message={error} type="page" onDismiss={() => setError(null)} />}
+      
+      {/* Toast Notification */}
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
-          <div className="text-sm text-green-700 font-medium">✅ {success}</div>
+        <div className="fixed bottom-8 right-8 z-50 bg-white border border-green-200 rounded-xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center gap-3 transition-all duration-300">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+          </div>
+          <div className="text-sm text-gray-800 font-semibold pr-2">{success}</div>
         </div>
       )}
 

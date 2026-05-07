@@ -31,6 +31,9 @@ const CheckInWidget = () => {
       }
     }
     fetchState()
+
+    window.addEventListener('attendance-updated', fetchState)
+    return () => window.removeEventListener('attendance-updated', fetchState)
   }, [shouldShow])
 
   const handleCheckIn = () => {
