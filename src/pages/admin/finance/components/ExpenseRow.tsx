@@ -5,14 +5,6 @@ interface Props {
   expense: ExpenseRecord
 }
 
-const typeBadge: React.CSSProperties = {
-  padding: '4px 10px',
-  borderRadius: '6px',
-  fontSize: '12px',
-  fontWeight: 600,
-  display: 'inline-block',
-}
-
 // Small pill badge for payment method
 const PaymentBadge = ({ method }: { method?: string | null }) => {
   if (!method) return <span style={{ color: '#bbb', fontSize: '13px' }}>—</span>
@@ -31,6 +23,24 @@ const PaymentBadge = ({ method }: { method?: string | null }) => {
   )
 }
 
+// Category badge — salary gets blue, others get green
+const CategoryBadge = ({ name }: { name: string }) => {
+  const isSalary = name.toLowerCase() === 'salary'
+  return (
+    <span style={{
+      padding: '4px 10px',
+      borderRadius: '6px',
+      fontSize: '12px',
+      fontWeight: 600,
+      display: 'inline-block',
+      background: isSalary ? '#eff6ff' : '#f0fdf4',
+      color:      isSalary ? '#2563eb' : '#16a34a',
+    }}>
+      {name}
+    </span>
+  )
+}
+
 const ExpenseRow = ({ expense }: Props) => {
   const entityLabel = expense.employee
     ? `${expense.employee.firstName} ${expense.employee.lastName}`
@@ -44,15 +54,9 @@ const ExpenseRow = ({ expense }: Props) => {
       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#fafafa')}
       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
     >
-      {/* Type badge */}
+      {/* Category badge (replaces old Type badge) */}
       <td style={{ padding: '16px 20px' }}>
-        <span style={{
-          ...typeBadge,
-          background: expense.type === 'SALARY' ? '#eff6ff' : '#f5f5f5',
-          color: expense.type === 'SALARY' ? '#2563eb' : '#666',
-        }}>
-          {expense.type}
-        </span>
+        <CategoryBadge name={expense.category.name} />
       </td>
 
       {/* Amount */}
@@ -76,25 +80,6 @@ const ExpenseRow = ({ expense }: Props) => {
           <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
             {expense.project.name}
           </div>
-        )}
-      </td>
-
-      {/* Category */}
-      <td style={{ padding: '16px 20px' }}>
-        {expense.category ? (
-          <span style={{
-            padding: '3px 8px',
-            borderRadius: '5px',
-            fontSize: '12px',
-            fontWeight: 500,
-            background: '#f0fdf4',
-            color: '#16a34a',
-            display: 'inline-block',
-          }}>
-            {expense.category.name}
-          </span>
-        ) : (
-          <span style={{ color: '#bbb', fontSize: '13px' }}>—</span>
         )}
       </td>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { getExpenses, createExpense, getBankAccounts, getExpenseCategories } from '../finance.api'
 import type { ExpenseRecord, BankAccount, ExpenseCategory } from '../types/finance.types'
 import ExpenseRow from './ExpenseRow'
@@ -22,35 +22,41 @@ const inputStyle: React.CSSProperties = {
 }
 
 const EMPTY_FORM = {
-  type: 'MANUAL' as 'SALARY' | 'MANUAL',
-  amount: '',
-  expenseDate: '',
-  employeeId: '',
-  projectId: '',
-  description: '',
+  categoryId:    '',
+  amount:        '',
+  expenseDate:   '',
+  employeeId:    '',
+  projectId:     '',
+  description:   '',
   paymentMethod: '' as '' | 'CASH' | 'ONLINE',
   bankAccountId: '',
-  categoryId: '',
 }
 
 const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
   const { showToast } = useToast()
 
   // ── Expense list ────────────────────────────────────────
-  const [expenses, setExpenses] = useState<ExpenseRecord[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [expenses,  setExpenses]  = useState<ExpenseRecord[]>([])
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState<string | null>(null)
 
   // ── Dropdown data ───────────────────────────────────────
-  const [projects, setProjects] = useState<ProjectOption[]>([])
-  const [employees, setEmployees] = useState<EmployeeOption[]>([])
+  const [projects,     setProjects]     = useState<ProjectOption[]>([])
+  const [employees,    setEmployees]    = useState<EmployeeOption[]>([])
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])
-  const [categories, setCategories] = useState<ExpenseCategory[]>([])
+  const [categories,   setCategories]   = useState<ExpenseCategory[]>([])
 
   // ── Form state ──────────────────────────────────────────
-  const [form, setForm] = useState(EMPTY_FORM)
-  const [formError, setFormError] = useState<string | null>(null)
+  const [form,       setForm]       = useState(EMPTY_FORM)
+  const [formError,  setFormError]  = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  // ── Derived: is the selected category a salary category? ─
+  const selectedCategory = useMemo(
+    () => categories.find((c) => c.id === form.categoryId),
+    [categories, form.categoryId],
+  )
+  const isSalary = selectedCategory?.name?.toLowerCase() === 'salary'
 
   // ── Fetch expenses ──────────────────────────────────────
   const fetchExpenses = () => {
@@ -72,9 +78,11 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
     getExpenseCategories().then(setCategories).catch(() => {})
   }, [])
 
-  // ── Clear employeeId when switching away from SALARY ────
-  const handleTypeChange = (type: 'SALARY' | 'MANUAL') => {
-    setForm({ ...form, type, employeeId: '' })
+  // ── Clear employeeId when switching away from Salary ────
+  const handleCategoryChange = (categoryId: string) => {
+    const cat = categories.find((c) => c.id === categoryId)
+    const newIsSalary = cat?.name?.toLowerCase() === 'salary'
+    setForm({ ...form, categoryId, employeeId: newIsSalary ? form.employeeId : '' })
   }
 
   // ── Clear bankAccountId when switching away from ONLINE ─
@@ -87,22 +95,22 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
     e.preventDefault()
     setFormError(null)
 
-    if (!form.amount || Number(form.amount) <= 0)          { setFormError('Amount must be greater than 0'); return }
+    if (!form.categoryId)                                   { setFormError('Category is required'); return }
+    if (!form.amount || Number(form.amount) <= 0)           { setFormError('Amount must be greater than 0'); return }
     if (!form.expenseDate)                                  { setFormError('Expense date is required'); return }
-    if (form.type === 'SALARY' && !form.employeeId)         { setFormError('Employee is required for salary expenses'); return }
+    if (isSalary && !form.employeeId)                       { setFormError('Employee is required for Salary expenses'); return }
 
     try {
       setSubmitting(true)
       await createExpense({
-        type:          form.type,
+        categoryId:    form.categoryId,
         amount:        Number(form.amount),
         expenseDate:   form.expenseDate,
-        employeeId:    form.type === 'SALARY' ? form.employeeId : undefined,
+        employeeId:    isSalary ? form.employeeId : undefined,
         projectId:     form.projectId || undefined,
         description:   form.description || undefined,
         paymentMethod: form.paymentMethod || undefined,
         bankAccountId: form.paymentMethod === 'ONLINE' && form.bankAccountId ? form.bankAccountId : undefined,
-        categoryId:    form.categoryId || undefined,
       })
       showToast('success', 'Expense record created')
       setForm(EMPTY_FORM)
@@ -137,23 +145,27 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* Row 1: Type · Amount · Date · Employee/Project */}
+            {/* Row 1: Category · Amount · Date · Employee (salary) or Project */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', alignItems: 'end' }}>
 
+              {/* Category — required, drives salary logic */}
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#666', marginBottom: '6px' }}>
-                  Type *
+                  Category *
                 </label>
                 <select
-                  value={form.type}
-                  onChange={(e) => handleTypeChange(e.target.value as 'SALARY' | 'MANUAL')}
+                  value={form.categoryId}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
                   style={{ ...inputStyle, background: '#fff', cursor: 'pointer' }}
                 >
-                  <option value="MANUAL">Manual</option>
-                  <option value="SALARY">Salary</option>
+                  <option value="">Select category</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
                 </select>
               </div>
 
+              {/* Amount */}
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#666', marginBottom: '6px' }}>
                   Amount *
@@ -169,6 +181,7 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
                 />
               </div>
 
+              {/* Expense Date */}
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#666', marginBottom: '6px' }}>
                   Expense Date *
@@ -181,8 +194,8 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
                 />
               </div>
 
-              {/* Employee (SALARY) or Project (MANUAL) */}
-              {form.type === 'SALARY' ? (
+              {/* Employee (Salary) or Project (other) */}
+              {isSalary ? (
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#666', marginBottom: '6px' }}>
                     Employee *
@@ -217,24 +230,8 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
               )}
             </div>
 
-            {/* Row 2: Category · Payment Method · Bank Account (conditional) · Description */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 2fr', gap: '12px', marginTop: '12px', alignItems: 'end' }}>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#666', marginBottom: '6px' }}>
-                  Category
-                </label>
-                <select
-                  value={form.categoryId}
-                  onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
-                  style={{ ...inputStyle, background: '#fff', cursor: 'pointer' }}
-                >
-                  <option value="">Select category</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
+            {/* Row 2: Payment Method · Bank Account (conditional) · Description */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: '12px', marginTop: '12px', alignItems: 'end' }}>
 
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#666', marginBottom: '6px' }}>
@@ -251,7 +248,6 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
                 </select>
               </div>
 
-              {/* Bank account — only shown when ONLINE */}
               {form.paymentMethod === 'ONLINE' ? (
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#666', marginBottom: '6px' }}>
@@ -269,7 +265,6 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
                   </select>
                 </div>
               ) : (
-                /* Empty placeholder to keep description in the last column */
                 <div />
               )}
 
@@ -287,8 +282,8 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
               </div>
             </div>
 
-            {/* Project row for SALARY type (project is optional but available) */}
-            {form.type === 'SALARY' && (
+            {/* Project row for Salary (optional project link) */}
+            {isSalary && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '12px', marginTop: '12px', alignItems: 'end' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#666', marginBottom: '6px' }}>
@@ -340,11 +335,10 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ textAlign: 'left', fontSize: '12px', color: '#666', fontWeight: 500, borderBottom: '1px solid #e5e5e5' }}>
-              <th style={{ padding: '16px 20px', fontWeight: 500 }}>Type</th>
+              <th style={{ padding: '16px 20px', fontWeight: 500 }}>Category</th>
               <th style={{ padding: '16px 20px', fontWeight: 500 }}>Amount</th>
               <th style={{ padding: '16px 20px', fontWeight: 500 }}>Expense Date</th>
               <th style={{ padding: '16px 20px', fontWeight: 500 }}>Employee / Project</th>
-              <th style={{ padding: '16px 20px', fontWeight: 500 }}>Category</th>
               <th style={{ padding: '16px 20px', fontWeight: 500 }}>Payment</th>
               <th style={{ padding: '16px 20px', fontWeight: 500 }}>Description</th>
               <th style={{ padding: '16px 20px', fontWeight: 500 }}>Created By</th>

@@ -33,13 +33,13 @@ export const createRevenue = async (data: CreateRevenuePayload): Promise<Revenue
 export interface ExpenseQueryParams {
   projectId?: string
   employeeId?: string
-  type?: 'SALARY' | 'MANUAL'
+  categoryId?: string
   startDate?: string
   endDate?: string
 }
 
 export interface CreateExpensePayload {
-  type: 'SALARY' | 'MANUAL'
+  categoryId: string
   amount: number
   expenseDate: string
   employeeId?: string
@@ -47,7 +47,6 @@ export interface CreateExpensePayload {
   description?: string
   paymentMethod?: 'CASH' | 'ONLINE'
   bankAccountId?: string
-  categoryId?: string
 }
 
 export const getExpenses = async (params?: ExpenseQueryParams): Promise<ExpenseRecord[]> => {

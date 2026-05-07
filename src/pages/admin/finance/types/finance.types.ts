@@ -67,13 +67,12 @@ export interface Expense {
 
 export interface ExpenseRecord {
   id: string
-  type: 'SALARY' | 'MANUAL'
   amount: number
   expenseDate: string
   description?: string
   paymentMethod?: PaymentMethod
   bankAccount?: { id: string; name: string; bankName: string } | null
-  category?: { id: string; name: string } | null
+  category: { id: string; name: string }   // required — every expense has a category
   employee?: { id: string; firstName: string; lastName: string }
   project?: { id: string; name: string }
   createdBy: { id: string; firstName: string; lastName: string }
