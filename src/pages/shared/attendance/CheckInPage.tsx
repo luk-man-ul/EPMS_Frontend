@@ -97,8 +97,8 @@ const CircularProgress = ({ durationText }: { durationText: string }) => {
       </svg>
       
       <div className="absolute flex flex-col items-center justify-center">
-        <span className="text-gray-500 text-lg mb-1">Duration:</span>
-        <span className="text-6xl font-semibold text-gray-900 tracking-tight">{durationText}</span>
+        <span className="text-gray-500 text-base mb-1">Duration:</span>
+        <span className="text-4xl font-semibold text-gray-900 tracking-tight">{durationText}</span>
       </div>
     </div>
   );
@@ -220,6 +220,7 @@ const CheckInPage = () => {
             totalHours: prev?.totalHours || 0,
           }));
           setSuccess('Successfully checked in!');
+          window.dispatchEvent(new Event('attendance-updated'));
           setTimeout(async () => { await fetchTodayAttendance(); setSuccess(null); }, 1000);
         } catch (err: any) {
           setError(err.response?.data?.message || 'Failed to check in. Please try again.');
@@ -238,6 +239,7 @@ const CheckInPage = () => {
     try {
       await api.post('/attendance/check-out');
       setSuccess('Successfully checked out!');
+      window.dispatchEvent(new Event('attendance-updated'));
       setTimeout(async () => { await fetchTodayAttendance(); setSuccess(null); }, 1000);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to check out. Please try again.');
@@ -249,7 +251,7 @@ const CheckInPage = () => {
   const liveElapsed = useLiveElapsed(activeSession?.checkIn ?? null, serverNow);
 
   return (
-    <div className="p-8 max-w-[1400px] mx-auto min-h-[calc(100vh-100px)]">
+    <div className="w-full h-full flex flex-col">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-gray-900 tracking-tight mb-2">Attendance Check-In</h1>
@@ -267,10 +269,10 @@ const CheckInPage = () => {
       )}
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 min-h-0 mb-8">
         
         {/* Left Column: Active Tracker */}
-        <div className="bg-white rounded-[2rem] border border-gray-100 p-10 shadow-sm relative flex flex-col h-full min-h-[500px]">
+        <div className="bg-white rounded-[2rem] border border-gray-100 p-8 shadow-sm relative flex flex-col h-[520px]">
           {/* Top left info */}
           {hasActiveSession ? (
             <div>
@@ -323,13 +325,13 @@ const CheckInPage = () => {
         </div>
 
         {/* Right Column: Today's Sessions */}
-        <div className="bg-white rounded-[2rem] border border-gray-100 p-10 shadow-sm">
-          <div className="mb-8">
+        <div className="bg-white rounded-[2rem] border border-gray-100 p-8 shadow-sm flex flex-col h-[520px]">
+          <div className="mb-6 shrink-0">
             <h2 className="text-[22px] font-bold tracking-tight text-gray-900 uppercase">Today's Sessions</h2>
             <p className="text-[15px] text-gray-500 mt-1">{todayData?.sessions?.length || 0} total sessions</p>
           </div>
           
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-4 overflow-y-auto pr-2">
             {(!todayData?.sessions || todayData.sessions.length === 0) ? (
               <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
                 No sessions recorded today yet.
