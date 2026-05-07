@@ -115,16 +115,20 @@ export function MessageBubble({ message, isOwnMessage, onEdit, onDelete }: Messa
                 rows={2}
                 style={{
                   width: '100%',
-                  padding: '6px 8px',
-                  borderRadius: 6,
-                  border: '1px solid #e5e5e5',
+                  minWidth: 200,
+                  minHeight: 64,
+                  padding: '8px 10px',
+                  borderRadius: 8,
+                  border: '1px solid #d1d5db',
                   fontSize: 14,
+                  lineHeight: 1.5,
                   fontFamily: 'inherit',
-                  resize: 'none',
+                  resize: 'vertical',
                   outline: 'none',
                   background: '#fff',
                   color: '#1a1a1a',
                   boxSizing: 'border-box',
+                  display: 'block',
                 }}
               />
               {editError && (

@@ -103,6 +103,7 @@ const TaskRow = ({
       >
         <TaskActions
           taskId={task.id}
+          task={{ type: task.type, status: task.status, createdById: task.createdById }}
           onEdit={onEdit}
           onDelete={onDelete}
         />

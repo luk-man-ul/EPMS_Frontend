@@ -3,11 +3,13 @@
 ////////////////////////////////////////////////////////////
 
 export type TaskStatus =
+  | 'PROPOSED'
   | 'TODO'
   | 'IN_PROGRESS'
   | 'REVIEW'
   | 'COMPLETED'
   | 'CANCELLED'
+  | 'REJECTED'
 
 export type TaskPriority =
   | 'LOW'
@@ -24,8 +26,15 @@ export interface Task {
   title: string
   description?: string
 
+  // Task type classification
+  type: string          // 'ASSIGNED' | 'SELF_WORK'
+
   status: TaskStatus
   priority: TaskPriority
+
+  // Ownership fields — used for edit permission checks
+  createdById: string
+  assignedToId?: string | null
 
   dueDate?: string
   estimatedHrs?: number

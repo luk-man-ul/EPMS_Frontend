@@ -45,6 +45,7 @@
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+  width: 100%;   /* prevents collapse when edit textarea renders inside */
 }
 
 .message-sender-name {

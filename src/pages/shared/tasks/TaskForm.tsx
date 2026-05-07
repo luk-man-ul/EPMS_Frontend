@@ -33,6 +33,14 @@ const TaskForm = ({
     user?.role === 'EMPLOYEE' ? TaskType.SELF_WORK : TaskType.ASSIGNED
   )
 
+  // Whether this is an employee editing their own PROPOSED SELF_WORK task.
+  // In this mode, structural fields (project, assignee) are locked.
+  const isEmployeeSelfWorkEdit =
+    !!task &&
+    user?.role === 'EMPLOYEE' &&
+    task.type === 'SELF_WORK' &&
+    task.status === 'PROPOSED'
+
   const [form, setForm] = useState({
     projectId: defaultProjectId || '',
     title: '',
@@ -146,8 +154,23 @@ const TaskForm = ({
       }
 
       if (task) {
-        // Edit existing task
-        await api.patch(`/tasks/${task.id}`, payload)
+        // Edit existing task.
+        // For employee self-work edits, only send the allowed fields —
+        // never send projectId or assignedToId (backend will reject them anyway).
+        const editPayload = isEmployeeSelfWorkEdit
+          ? {
+              title:       form.title,
+              description: form.description,
+              priority:    form.priority,
+              dueDate:     form.dueDate || null,
+            }
+          : {
+              ...form,
+              assignedToId: form.assignedToId || null,
+              dueDate:      form.dueDate || null,
+            }
+
+        await api.patch(`/tasks/${task.id}`, editPayload)
         showToast('success', 'Task updated successfully')
       } else {
         // Create new task - use appropriate endpoint based on type
@@ -192,9 +215,13 @@ const TaskForm = ({
       )}
 
       <FormField label="Project *">
-        {defaultProjectId ? (
+        {defaultProjectId || isEmployeeSelfWorkEdit ? (
           <input
-            value={projects.find(p => p.id === defaultProjectId)?.name || 'Loading...'}
+            value={
+              isEmployeeSelfWorkEdit
+                ? (task.project?.name || form.projectId)
+                : (projects.find(p => p.id === defaultProjectId)?.name || 'Loading...')
+            }
             disabled
             style={{
               ...inputStyle,

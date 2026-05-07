@@ -141,7 +141,19 @@ const TaskDetailPage = () => {
 
   // Computed after task is loaded so assignedToId is available
   const canEditStatus = user?.role === 'ADMIN' || user?.role === 'TEAM_LEAD' || user?.id === task.assignedToId
-  const canEditTask = user?.role === 'ADMIN' || user?.role === 'TEAM_LEAD'
+
+  // Edit permission:
+  // - ADMIN and TEAM_LEAD can always edit
+  // - EMPLOYEE can edit ONLY their own SELF_WORK task while still PROPOSED (pre-approval)
+  const canEditTask =
+    user?.role === 'ADMIN' ||
+    user?.role === 'TEAM_LEAD' ||
+    (
+      user?.role === 'EMPLOYEE' &&
+      task.type === 'SELF_WORK' &&
+      task.createdById === user?.id &&
+      task.status === 'PROPOSED'
+    )
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 24px' }}>

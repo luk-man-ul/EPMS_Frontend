@@ -48,13 +48,29 @@ import companyProfile from '../config/companyProfile'
 
 // ── Formatting helpers ────────────────────────────────────────────────────────
 
-const fmt = (value: number): string =>
-  new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
+/**
+ * PDF-safe money formatter.
+ *
+ * WHY NOT Intl.NumberFormat with currency: 'INR':
+ *   That outputs the ₹ glyph (U+20B9). Helvetica — the only built-in font in
+ *   @react-pdf/renderer — does not contain this Unicode codepoint. The renderer
+ *   substitutes a fallback glyph that renders as a clipped artifact (looks like
+ *   a leading "1"). Using "Rs." (plain ASCII) eliminates the issue entirely.
+ *
+ * Output examples:
+ *   formatPdfMoney(73130)    → "Rs. 73,130.00"
+ *   formatPdfMoney(0)        → "Rs. 0.00"
+ *   formatPdfMoney(1500.5)   → "Rs. 1,500.50"
+ */
+const formatPdfMoney = (value: number): string => {
+  // Use en-IN locale for Indian comma grouping (1,00,000 style),
+  // but strip any currency symbol and prepend plain ASCII "Rs."
+  const formatted = new Intl.NumberFormat('en-IN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value)
+  return `Rs. ${formatted}`
+}
 
 const fmtDate = (dateStr: string): string =>
   new Date(dateStr).toLocaleDateString('en-IN', {
@@ -115,8 +131,8 @@ const ACCENT2  = '#489cd4ff'   // slightly lighter navy — table header
 const WHITE    = '#ffffff'
 const LIGHT_BG = '#f8f9fa'
 const BORDER   = '#dee2e6'
-const TEXT_DIM = '#6c757d'
-const TEXT_MAIN= '#212529'
+const TEXT_DIM = '#000000ff'
+const TEXT_MAIN= '#000000ff'
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
@@ -263,14 +279,14 @@ const s = StyleSheet.create({
     backgroundColor: LIGHT_BG,
   },
 
-  // Column widths (flex values)
+  // Column widths — sized for "Rs. X,XX,XXX.XX" (plain ASCII, no ₹ glyph)
   cNo:    { width: 24,  fontSize: 8 },
   cDesc:  { flex: 4,    fontSize: 8 },
   cHsn:   { width: 52,  fontSize: 8, textAlign: 'center' },
   cQty:   { width: 36,  fontSize: 8, textAlign: 'right' },
-  cRate:  { width: 64,  fontSize: 8, textAlign: 'right' },
+  cRate:  { width: 80,  fontSize: 8, textAlign: 'right' },   // widened: "Rs. 1,00,000.00"
   cGst:   { width: 40,  fontSize: 8, textAlign: 'center' },
-  cTotal: { width: 72,  fontSize: 8, textAlign: 'right' },
+  cTotal: { width: 88,  fontSize: 8, textAlign: 'right' },   // widened: "Rs. 1,00,000.00"
 
   thText: {
     color: WHITE,
@@ -298,7 +314,7 @@ const s = StyleSheet.create({
     borderColor: BORDER,
   },
   totalsBox: {
-    width: 220,
+    width: 240,   // widened to fit "Rs. X,XX,XXX.XX" without wrapping
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
@@ -551,9 +567,9 @@ const BrandedInvoicePdfDocument = ({ invoice }: Props) => {
               <Text style={[s.cDesc,  s.tdText]}>{item.description}</Text>
               <Text style={[s.cHsn,   s.tdText, { textAlign: 'center' }]}>—</Text>
               <Text style={[s.cQty,   s.tdText]}>{item.quantity}</Text>
-              <Text style={[s.cRate,  s.tdText]}>{fmt(item.unitPrice)}</Text>
+              <Text style={[s.cRate,  s.tdText]}>{formatPdfMoney(item.unitPrice)}</Text>
               <Text style={[s.cGst,   s.tdText]}>0%</Text>
-              <Text style={[s.cTotal, s.tdTextBold]}>{fmt(item.total)}</Text>
+              <Text style={[s.cTotal, s.tdTextBold]}>{formatPdfMoney(item.total)}</Text>
             </View>
           ))}
         </View>
@@ -565,19 +581,19 @@ const BrandedInvoicePdfDocument = ({ invoice }: Props) => {
           <View style={s.totalsBox}>
             <View style={s.totalsLine}>
               <Text style={s.totalsLabel}>Subtotal</Text>
-              <Text style={s.totalsValue}>{fmt(subtotal)}</Text>
+              <Text style={s.totalsValue}>{formatPdfMoney(subtotal)}</Text>
             </View>
             <View style={s.totalsLine}>
               <Text style={s.totalsLabel}>CGST (0%)</Text>
-              <Text style={s.totalsValue}>{fmt(cgst)}</Text>
+              <Text style={s.totalsValue}>{formatPdfMoney(cgst)}</Text>
             </View>
             <View style={s.totalsLine}>
               <Text style={s.totalsLabel}>SGST (0%)</Text>
-              <Text style={s.totalsValue}>{fmt(sgst)}</Text>
+              <Text style={s.totalsValue}>{formatPdfMoney(sgst)}</Text>
             </View>
             <View style={s.totalsLine}>
               <Text style={s.totalsLabel}>Discount</Text>
-              <Text style={s.totalsValue}>— {fmt(discount)}</Text>
+              <Text style={s.totalsValue}>— {formatPdfMoney(discount)}</Text>
             </View>
           </View>
         </View>
@@ -585,7 +601,7 @@ const BrandedInvoicePdfDocument = ({ invoice }: Props) => {
         {/* Grand total band */}
         <View style={[s.grandLine, { marginHorizontal: 36 }]}>
           <Text style={s.grandLabel}>TOTAL AMOUNT</Text>
-          <Text style={s.grandValue}>{fmt(grandTotal)}</Text>
+          <Text style={s.grandValue}>{formatPdfMoney(grandTotal)}</Text>
         </View>
 
         {/* ══════════════════════════════════════════════════

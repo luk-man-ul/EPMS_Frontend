@@ -2,13 +2,20 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../../../context/AuthContext'
 
+interface TaskSnapshot {
+  type: string
+  status: string
+  createdById: string
+}
+
 interface Props {
   taskId: string
+  task?: TaskSnapshot          // optional — when provided, enables employee edit logic
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
 }
 
-const TaskActions = ({ taskId, onEdit, onDelete }: Props) => {
+const TaskActions = ({ taskId, task, onEdit, onDelete }: Props) => {
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
@@ -40,9 +47,24 @@ const TaskActions = ({ taskId, onEdit, onDelete }: Props) => {
 
   const isAdmin = location.pathname.startsWith('/admin')
   const basePath = isAdmin ? '/admin/tasks' : '/app/tasks'
-  
-  // EMPLOYEE role should only see View button
-  const isEmployee = user?.role === 'EMPLOYEE'
+
+  ////////////////////////////////////////////////////////////
+  // EDIT PERMISSION
+  // Admin and Team Lead can always edit.
+  // Employee can edit ONLY their own SELF_WORK task while PROPOSED.
+  ////////////////////////////////////////////////////////////
+
+  const canEdit =
+    user?.role === 'ADMIN' ||
+    user?.role === 'TEAM_LEAD' ||
+    (
+      user?.role === 'EMPLOYEE' &&
+      task?.type === 'SELF_WORK' &&
+      task?.createdById === user?.id &&
+      task?.status === 'PROPOSED'
+    )
+
+  const canDelete = user?.role === 'ADMIN' || user?.role === 'TEAM_LEAD'
 
   ////////////////////////////////////////////////////////////
   // HANDLERS
@@ -89,8 +111,8 @@ const TaskActions = ({ taskId, onEdit, onDelete }: Props) => {
       {open && (
         <div style={dropdownStyle}>
           <DropdownItem label="View Details" onClick={handleView} />
-          {!isEmployee && <DropdownItem label="Edit" onClick={handleEdit} />}
-          {!isEmployee && (
+          {canEdit && <DropdownItem label="Edit" onClick={handleEdit} />}
+          {canDelete && (
             <DropdownItem
               label="Delete"
               danger
