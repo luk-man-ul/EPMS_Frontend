@@ -132,13 +132,7 @@ const TeamTasksPage = () => {
   ////////////////////////////////////////////////////////////////
 
   return (
-    <div
-      style={{
-        padding: '32px',
-        background: '#f8fafc',
-        minHeight: '100vh',
-      }}
-    >
+    <div>
       {/* HEADER */}
       <div
         style={{
