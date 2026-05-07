@@ -42,12 +42,12 @@ export interface CompanyProfile {
 
 const companyProfile: CompanyProfile = {
   companyName:  'Altezzai LLP',
-  address:      '306, Students Amenities Centre, \n Innovation and Incubation Foundation (KU-IIF), \n Thavakkara, \n Kannur University Campus, Kannur, 670002',
+  address:      '306, Students Amenities Centre, \n Innovation and Incubation Foundation (KU-IIF), \n Thavakkara, Kannur University Campus, \n Kannur, 670002',
   gstin:        '',
   phone:        '+91 9562937970',
   email:        'billing@Altezzai.com',
   website:      'www.Altezzai.com',
-  logoUrl:      null,   // set to '/logo.png' or a base64 data URI when logo is available
+  logoUrl:      '/logo.png',   // set to '/logo.png' or a base64 data URI when logo is available
   termsAndConditions:
     '1. Payment is due within 30 days of the invoice date.\n' +
     '2. Please include the invoice number in your payment reference.\n' +

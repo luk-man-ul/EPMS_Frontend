@@ -110,8 +110,8 @@ function amountInWords(amount: number): string {
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 
-const ACCENT   = '#1a1a2e'   // dark navy — header background
-const ACCENT2  = '#16213e'   // slightly lighter navy — table header
+const ACCENT   = '#489cd4ff'   // dark navy — header background
+const ACCENT2  = '#489cd4ff'   // slightly lighter navy — table header
 const WHITE    = '#ffffff'
 const LIGHT_BG = '#f8f9fa'
 const BORDER   = '#dee2e6'
