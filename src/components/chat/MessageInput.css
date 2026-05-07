@@ -14,6 +14,46 @@
   flex-shrink: 0;
 }
 
+/* Wrapper that holds the edit indicator bar + the input row */
+.message-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+}
+
+/* Edit mode indicator bar — shown above the input when editing */
+.edit-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px;
+  background-color: #eff6ff;
+  border-top: 1px solid #bfdbfe;
+  border-bottom: 1px solid #bfdbfe;
+}
+
+.edit-mode-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #1d4ed8;
+}
+
+.edit-cancel-btn {
+  padding: 3px 10px;
+  border-radius: 5px;
+  border: 1px solid #bfdbfe;
+  background: #fff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.edit-cancel-btn:hover {
+  background: #dbeafe;
+}
+
 @media (max-width: 640px) {
   .message-input-container {
     padding: 12px;

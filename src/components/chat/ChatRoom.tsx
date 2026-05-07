@@ -21,6 +21,10 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
   const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // ── Edit state (lifted here so MessageInput can own the edit flow) ──────────
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingMessageText, setEditingMessageText] = useState('');
+
   useEffect(() => {
     if (!user || !roomId) return;
 
@@ -115,6 +119,7 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
     }
   };
 
+  // Called by MessageInput when the user submits an edit
   const handleEditMessage = (messageId: string, newContent: string) => {
     if (user) {
       let snapshot: ChatMessage[] = [];
@@ -130,6 +135,21 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
         setMessages(snapshot);
       }
     }
+    // Clear edit state regardless of outcome
+    setEditingMessageId(null);
+    setEditingMessageText('');
+  };
+
+  // Called by MessageBubble's Edit button — populates the input and sets edit mode
+  const handleEditRequest = (messageId: string, currentContent: string) => {
+    setEditingMessageId(messageId);
+    setEditingMessageText(currentContent);
+  };
+
+  // Called by MessageInput's Cancel button
+  const handleCancelEdit = () => {
+    setEditingMessageId(null);
+    setEditingMessageText('');
   };
 
   const handleDeleteMessage = (messageId: string) => {
@@ -196,7 +216,7 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
               key={message.id}
               message={message}
               isOwnMessage={message.senderId === user?.id}
-              onEdit={handleEditMessage}
+              onEditRequest={handleEditRequest}
               onDelete={handleDeleteMessage}
             />
           ))
@@ -208,7 +228,11 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
 
       <MessageInput
         onSendMessage={handleSendMessage}
+        onEditMessage={handleEditMessage}
+        onCancelEdit={handleCancelEdit}
         onTyping={handleTyping}
+        editingMessageId={editingMessageId}
+        editingMessageText={editingMessageText}
         disabled={!user}
       />
     </div>
