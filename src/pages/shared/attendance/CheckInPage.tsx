@@ -292,7 +292,7 @@ const CheckInPage = () => {
           )}
 
           <div className="flex-1 flex flex-col items-center justify-center relative my-2 min-h-0">
-            <CircularProgress durationText={hasActiveSession ? formatElapsed(liveElapsed) : formatElapsed(todayData?.totalHours || 0)} />
+            <CircularProgress durationText={formatElapsed((todayData?.totalHours || 0) + (hasActiveSession ? liveElapsed : 0))} />
             
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-10">
               {hasActiveSession ? (
