@@ -6,7 +6,7 @@ import { storeInvoicePdf } from '../finance.api'
 import { useToast } from '../../../../context/ToastContext'
 import InvoiceStatusBadge from './InvoiceStatusBadge'
 import InvoiceItemTable from './InvoiceItemTable'
-import InvoicePdfDocument from './InvoicePdfDocument'
+import BrandedInvoicePdfDocument from './BrandedInvoicePdfDocument'
 
 interface Props {
   invoice: Invoice
@@ -34,7 +34,7 @@ const value: React.CSSProperties = {
 
 /** Generate a PDF Blob from the invoice data using @react-pdf/renderer */
 async function generatePdfBlob(invoice: Invoice): Promise<Blob> {
-  const doc = <InvoicePdfDocument invoice={invoice} />
+  const doc = <BrandedInvoicePdfDocument invoice={invoice} />
   return pdf(doc).toBlob()
 }
 
