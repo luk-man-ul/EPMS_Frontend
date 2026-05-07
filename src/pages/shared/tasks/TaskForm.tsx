@@ -307,8 +307,13 @@ const TaskForm = ({
           onChange={(e) =>
             handleChange('assignedToId', e.target.value)
           }
-          style={inputStyle}
-          disabled={taskType === TaskType.SELF_WORK}
+          style={{
+            ...inputStyle,
+            ...(taskType === TaskType.SELF_WORK || isEmployeeSelfWorkEdit
+              ? { background: '#f5f5f5', color: '#666', cursor: 'not-allowed' }
+              : {}),
+          }}
+          disabled={taskType === TaskType.SELF_WORK || isEmployeeSelfWorkEdit}
         >
           <option value="">Select Member</option>
           {members.map((m: any) => (
@@ -317,6 +322,11 @@ const TaskForm = ({
             </option>
           ))}
         </select>
+        {isEmployeeSelfWorkEdit && (
+          <span style={{ fontSize: 11, color: '#9ca3af', marginTop: 4, display: 'block' }}>
+            Self-work tasks are always assigned to you
+          </span>
+        )}
       </FormField>
 
       {/* Info message for self-work */}

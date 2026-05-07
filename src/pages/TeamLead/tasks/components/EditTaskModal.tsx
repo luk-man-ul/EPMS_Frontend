@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import api from '../../../../utils/api'
 import { useToast } from '../../../../context/ToastContext'
+import { useAuth } from '../../../../context/AuthContext'
 
 interface Props {
   isOpen: boolean
@@ -11,6 +12,7 @@ interface Props {
 
 const EditTaskModal = ({ isOpen, task, onClose, onSuccess }: Props) => {
   const { showToast } = useToast()
+  const { user } = useAuth()
   const [projects, setProjects] = useState<any[]>([])
   const [members, setMembers] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
@@ -23,6 +25,14 @@ const EditTaskModal = ({ isOpen, task, onClose, onSuccess }: Props) => {
     assignedToId: '',
     dueDate: '',
   })
+
+  // Whether this is an employee editing their own PROPOSED SELF_WORK task.
+  // In this mode only title/description/priority/dueDate may be sent.
+  const isEmployeeSelfWorkEdit =
+    !!task &&
+    user?.role === 'EMPLOYEE' &&
+    task.type === 'SELF_WORK' &&
+    task.status === 'PROPOSED'
 
   // Load projects
   useEffect(() => {
@@ -88,11 +98,20 @@ const EditTaskModal = ({ isOpen, task, onClose, onSuccess }: Props) => {
     try {
       setLoading(true)
 
-      const payload = {
-        ...form,
-        assignedToId: form.assignedToId || null,
-        dueDate: form.dueDate || null,
-      }
+      // For employee SELF_WORK edits, send ONLY the fields the backend allows.
+      // Sending projectId or assignedToId will cause a 403.
+      const payload = isEmployeeSelfWorkEdit
+        ? {
+            title:       form.title,
+            description: form.description,
+            priority:    form.priority,
+            dueDate:     form.dueDate || null,
+          }
+        : {
+            ...form,
+            assignedToId: form.assignedToId || null,
+            dueDate:      form.dueDate || null,
+          }
 
       await api.patch(`/tasks/${task.id}`, payload)
       showToast('success', 'Task updated successfully')
@@ -125,8 +144,11 @@ const EditTaskModal = ({ isOpen, task, onClose, onSuccess }: Props) => {
               <select
                 value={form.projectId}
                 onChange={(e) => handleChange('projectId', e.target.value)}
-                style={inputStyle}
-                disabled // TEAM_LEAD cannot change project
+                style={{
+                  ...inputStyle,
+                  ...(isEmployeeSelfWorkEdit ? { background: '#f5f5f5', color: '#666', cursor: 'not-allowed' } : {}),
+                }}
+                disabled // project is never changeable in edit mode
               >
                 <option value="">Select Project</option>
                 {projects.map((p) => (
@@ -182,7 +204,11 @@ const EditTaskModal = ({ isOpen, task, onClose, onSuccess }: Props) => {
               <select
                 value={form.assignedToId}
                 onChange={(e) => handleChange('assignedToId', e.target.value)}
-                style={inputStyle}
+                style={{
+                  ...inputStyle,
+                  ...(isEmployeeSelfWorkEdit ? { background: '#f5f5f5', color: '#666', cursor: 'not-allowed' } : {}),
+                }}
+                disabled={isEmployeeSelfWorkEdit}
               >
                 <option value="">Unassigned</option>
                 {members.map((m: any) => (
@@ -191,6 +217,11 @@ const EditTaskModal = ({ isOpen, task, onClose, onSuccess }: Props) => {
                   </option>
                 ))}
               </select>
+              {isEmployeeSelfWorkEdit && (
+                <span style={{ fontSize: 11, color: '#9ca3af', marginTop: 4, display: 'block' }}>
+                  Self-work tasks are always assigned to you
+                </span>
+              )}
             </FormField>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
