@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../../utils/api'
 import { useAuth } from '../../../context/AuthContext'
-import SearchBar from '../../../components/shared/SearchBar'
 import TicketFilters from './components/TicketFilters'
 import TicketsTable from './components/TicketsTable'
 
@@ -15,8 +14,6 @@ const TicketsPage = () => {
   const [page, setPage] = useState(1)
   const [pagination, setPagination] = useState<any>(null)
 
-  const [searchTerm, setSearchTerm] = useState('')
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [projectFilter, setProjectFilter] = useState('all')
   const [assignedToFilter, setAssignedToFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
@@ -25,15 +22,6 @@ const TicketsPage = () => {
 
   const [projects, setProjects] = useState<any[]>([])
   const [employees, setEmployees] = useState<any[]>([])
-
-  // Debounce search term
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-    }, 300) // Wait 300ms after user stops typing (faster than before)
-
-    return () => clearTimeout(timer)
-  }, [searchTerm])
 
   // Fetch projects and employees for filters
   useEffect(() => {
@@ -79,7 +67,6 @@ const TicketsPage = () => {
       if (projectFilter !== 'all') params.projectId = projectFilter
       if (assignedToFilter !== 'all') params.assignedToId = assignedToFilter
       if (typeFilter !== 'all') params.type = typeFilter.toUpperCase()
-      if (debouncedSearchTerm) params.search = debouncedSearchTerm
 
       const res = await api.get('/tickets', { params })
 
@@ -124,7 +111,7 @@ const TicketsPage = () => {
     } else {
       fetchTickets() // already on page 1, fetch directly
     }
-  }, [debouncedSearchTerm, projectFilter, assignedToFilter, priorityFilter, statusFilter, typeFilter])
+  }, [projectFilter, assignedToFilter, priorityFilter, statusFilter, typeFilter])
 
   if (error === 'restricted') {
     return <div>🔒 Restricted Access</div>
@@ -136,14 +123,6 @@ const TicketsPage = () => {
 
   return (
     <div>
-      <div style={{ marginBottom: '16px' }}>
-        <SearchBar
-          placeholder="Search tickets by title or description..."
-          value={searchTerm}
-          onChange={setSearchTerm}
-        />
-      </div>
-
       <TicketFilters
         projectFilter={projectFilter}
         assignedToFilter={assignedToFilter}
