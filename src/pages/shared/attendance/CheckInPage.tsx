@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../../../utils/api';
-import { Button, Card, ErrorMessage, Badge } from '../../../components/ui';
+import { ErrorMessage } from '../../../components/ui';
+import { LogOut, LogIn } from 'lucide-react';
 
 // Live elapsed time hook — ticks every second, accounts for server/client clock offset
 const useLiveElapsed = (checkIn: string | null, serverNow: number) => {
@@ -10,9 +11,8 @@ const useLiveElapsed = (checkIn: string | null, serverNow: number) => {
   useEffect(() => {
     if (!checkIn) { setElapsed(0); return; }
 
-    // Use server time as reference to avoid client clock skew
     const checkInMs = new Date(checkIn).getTime();
-    const clientOffsetMs = Date.now() - serverNow; // how far client is behind/ahead of server
+    const clientOffsetMs = Date.now() - serverNow;
 
     const tick = () => {
       const serverNowMs = Date.now() - clientOffsetMs;
@@ -30,9 +30,137 @@ const formatElapsed = (hours: number) => {
   const totalSecs = Math.floor(hours * 3600);
   const h = Math.floor(totalSecs / 3600);
   const m = Math.floor((totalSecs % 3600) / 60);
-  const s = totalSecs % 60;
-  if (h > 0) return `${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
-  return `${m}m ${s.toString().padStart(2, '0')}s`;
+  return `${h}h ${m.toString().padStart(2, '0')}m`;
+};
+
+const formatTime = (dateString: string | null) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
+
+const calculateDuration = (checkIn: string, checkOut: string | null) => {
+  if (!checkOut) return 'Running';
+  const start = new Date(checkIn).getTime();
+  const end = new Date(checkOut).getTime();
+  const ms = end - start;
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  return `${h}h ${m.toString().padStart(2, '0')}m`;
+};
+
+const CircularProgress = ({ durationText }: { durationText: string }) => {
+  const radius = 140;
+  const stroke = 22;
+  const normalizedRadius = radius - stroke * 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const arcLength = circumference * 0.75;
+  const gapLength = circumference * 0.25;
+  
+  return (
+    <div className="relative flex justify-center items-center w-full max-w-[360px] mx-auto my-4">
+      <svg
+        height={radius * 2}
+        width={radius * 2}
+        className="transform rotate-[135deg]"
+      >
+        <defs>
+          <linearGradient id="arcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#4f46e5" />
+            <stop offset="100%" stopColor="#10b981" />
+          </linearGradient>
+        </defs>
+        <circle
+          stroke="#f3f4f6"
+          fill="transparent"
+          strokeWidth={stroke}
+          strokeDasharray={`${arcLength} ${gapLength}`}
+          strokeLinecap="round"
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+        />
+        <circle
+          stroke="url(#arcGradient)"
+          fill="transparent"
+          strokeWidth={stroke}
+          strokeDasharray={`${arcLength} ${gapLength}`}
+          strokeLinecap="round"
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+        />
+      </svg>
+      
+      <div className="absolute flex flex-col items-center justify-center">
+        <span className="text-gray-500 text-lg mb-1">Duration:</span>
+        <span className="text-6xl font-semibold text-gray-900 tracking-tight">{durationText}</span>
+      </div>
+    </div>
+  );
+};
+
+const MiniCircularProgress = ({ durationText, isActive }: { durationText: string, isActive?: boolean }) => {
+  const radius = 42;
+  const stroke = 6;
+  const normalizedRadius = radius - stroke * 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const arcLength = circumference * 0.75;
+  const gapLength = circumference * 0.25;
+  
+  return (
+    <div className="relative flex justify-center items-center w-[84px] h-[84px] shrink-0">
+      <svg
+        height={radius * 2}
+        width={radius * 2}
+        className="transform rotate-[135deg]"
+      >
+        <defs>
+          <linearGradient id={`miniGradient-${isActive ? 'active' : 'inactive'}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            {isActive ? (
+              <>
+                <stop offset="0%" stopColor="#4f46e5" />
+                <stop offset="100%" stopColor="#10b981" />
+              </>
+            ) : (
+              <>
+                <stop offset="0%" stopColor="#d1d5db" />
+                <stop offset="100%" stopColor="#9ca3af" />
+              </>
+            )}
+          </linearGradient>
+        </defs>
+        <circle
+          stroke="#f1f5f9"
+          fill="transparent"
+          strokeWidth={stroke}
+          strokeDasharray={`${arcLength} ${gapLength}`}
+          strokeLinecap="round"
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+        />
+        <circle
+          stroke={`url(#miniGradient-${isActive ? 'active' : 'inactive'})`}
+          fill="transparent"
+          strokeWidth={stroke}
+          strokeDasharray={`${arcLength * (isActive ? 1 : 0.6)} ${circumference}`}
+          strokeLinecap="round"
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+        />
+      </svg>
+      <div className="absolute flex flex-col items-center justify-center">
+        <span className="text-[10px] text-gray-500 font-medium">Duration:</span>
+        <span className="text-[12px] font-semibold text-gray-800 tracking-tight mt-[-2px]">{durationText}</span>
+      </div>
+    </div>
+  );
 };
 
 const CheckInPage = () => {
@@ -49,7 +177,6 @@ const CheckInPage = () => {
     }
     fetchTodayAttendance();
 
-    // Re-fetch when the navbar widget performs a check-in or check-out
     const handleAttendanceUpdated = () => fetchTodayAttendance();
     window.addEventListener('attendance-updated', handleAttendanceUpdated);
     return () => window.removeEventListener('attendance-updated', handleAttendanceUpdated);
@@ -58,12 +185,8 @@ const CheckInPage = () => {
   const fetchTodayAttendance = async () => {
     try {
       const response = await api.get('/attendance/today', {
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-        },
+        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
       });
-      // Capture server time from response Date header to correct clock skew
       const serverDate = response.headers['date'];
       if (serverDate) setServerNow(new Date(serverDate).getTime());
       setTodayData({
@@ -71,7 +194,6 @@ const CheckInPage = () => {
         totalHours: response.data.totalHours || 0,
       });
     } catch (err: any) {
-      // 404 means no attendance record for today, which is fine
       if (err.response?.status !== 404) {
         console.error('Error fetching attendance:', err);
       }
@@ -80,292 +202,173 @@ const CheckInPage = () => {
   };
 
   const handleCheckIn = async () => {
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
-
+    setLoading(true); setError(null); setSuccess(null);
     if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser');
-      setLoading(false);
-      return;
+      setError('Geolocation is not supported by your browser'); setLoading(false); return;
     }
-
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-
         try {
-          const checkInResponse = await api.post('/attendance/check-in', {
-            latitude,
-            longitude,
-          });
-          // Capture server time immediately from check-in response
+          const checkInResponse = await api.post('/attendance/check-in', { latitude, longitude });
           const serverDate = checkInResponse.headers['date'];
           const serverTime = serverDate ? new Date(serverDate).getTime() : Date.now();
           setServerNow(serverTime);
-
-          // Optimistically add a fake active session immediately so the timer
-          // starts right away without waiting for fetchTodayAttendance
           const optimisticCheckIn = new Date(serverTime).toISOString();
           setTodayData((prev: any) => ({
             sessions: [...(prev?.sessions || []), { id: '__optimistic__', checkIn: optimisticCheckIn, checkOut: null }],
             totalHours: prev?.totalHours || 0,
           }));
-
           setSuccess('Successfully checked in!');
-          // Fetch real data in background to replace optimistic session
-          setTimeout(async () => {
-            await fetchTodayAttendance();
-            setSuccess(null);
-          }, 1000);
+          setTimeout(async () => { await fetchTodayAttendance(); setSuccess(null); }, 1000);
         } catch (err: any) {
-          console.error('Check-in error:', err);
           setError(err.response?.data?.message || 'Failed to check in. Please try again.');
-        } finally {
-          setLoading(false);
-        }
+        } finally { setLoading(false); }
       },
       (error) => {
-        console.error('Geolocation error:', error);
         setError('Location access is required for attendance check-in. Please enable location permissions.');
         setLoading(false);
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
   const handleCheckOut = async () => {
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
-
+    setLoading(true); setError(null); setSuccess(null);
     try {
       await api.post('/attendance/check-out');
       setSuccess('Successfully checked out!');
-      // Force refresh to get updated state
-      setTimeout(async () => {
-        await fetchTodayAttendance();
-        setSuccess(null);
-      }, 1000);
+      setTimeout(async () => { await fetchTodayAttendance(); setSuccess(null); }, 1000);
     } catch (err: any) {
-      console.error('Check-out error:', err);
       setError(err.response?.data?.message || 'Failed to check out. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatTime = (dateString: string | null) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
-
-  const calculateDuration = (checkIn: string, checkOut: string | null) => {
-    if (!checkOut) return 'Running';
-    const start = new Date(checkIn).getTime();
-    const end = new Date(checkOut).getTime();
-    const ms = end - start;
-    const h = Math.floor(ms / 3600000);
-    const m = Math.floor((ms % 3600000) / 60000);
-    if (h === 0) return `${m}m`;
-    if (m === 0) return `${h}h`;
-    return `${h}h ${m}m`;
+    } finally { setLoading(false); }
   };
 
   const hasActiveSession = todayData?.sessions?.some((s: any) => !s.checkOut);
   const activeSession = todayData?.sessions?.find((s: any) => !s.checkOut) || null;
   const liveElapsed = useLiveElapsed(activeSession?.checkIn ?? null, serverNow);
 
-  // Total = completed sessions hours + live elapsed for active session
-  const completedHours = (todayData?.sessions || [])
-    .filter((s: any) => s.checkOut)
-    .reduce((acc: number, s: any) => {
-      return acc + (new Date(s.checkOut).getTime() - new Date(s.checkIn).getTime()) / 3600000;
-    }, 0);
-  const liveTotal = Math.max(0, completedHours + (activeSession ? liveElapsed : 0));
-
   return (
-    <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }}>
-      <h1
-        style={{
-          fontSize: '28px',
-          fontWeight: 600,
-          color: '#1a1a1a',
-          marginBottom: '8px',
-        }}
-      >
-        Attendance Check-In
-      </h1>
-      <p style={{ fontSize: '14px', color: '#666666', marginBottom: '24px' }}>
-        Record your daily attendance - multiple sessions supported
-      </p>
+    <div className="p-8 max-w-[1400px] mx-auto min-h-[calc(100vh-100px)]">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-semibold text-gray-900 tracking-tight mb-2">Attendance Check-In</h1>
+        <p className="text-gray-500">Record your daily attendance - multiple sessions supported</p>
+      </div>
 
       {!locationSupported && (
-        <ErrorMessage
-          message="Geolocation is not supported by your browser. Please use a modern browser to check in."
-          type="page"
-        />
+        <ErrorMessage message="Geolocation is not supported by your browser. Please use a modern browser to check in." type="page" />
       )}
-
-      {error && (
-        <ErrorMessage
-          message={error}
-          type="page"
-          onDismiss={() => setError(null)}
-        />
-      )}
-
+      {error && <ErrorMessage message={error} type="page" onDismiss={() => setError(null)} />}
       {success && (
-        <div
-          style={{
-            background: '#f0fdf4',
-            border: '1px solid #bbf7d0',
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-          }}
-        >
-          <div style={{ fontSize: '14px', color: '#15803d', fontWeight: 500 }}>
-            ✅ {success}
-          </div>
+        <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
+          <div className="text-sm text-green-700 font-medium">✅ {success}</div>
         </div>
       )}
 
-      {/* Today's Sessions */}
-      {todayData && todayData.sessions && todayData.sessions.length > 0 && (
-        <Card className="mb-6">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a' }}>
-              Today's Sessions
-            </h3>
-            <div style={{ fontSize: '16px', fontWeight: 600, color: '#10b981' }}>
-              Total: {activeSession ? formatElapsed(liveTotal) : (() => {
-                const h = Math.floor(todayData.totalHours || 0);
-                const m = Math.round(((todayData.totalHours || 0) - h) * 60);
-                if (h === 0 && m === 0) return '0m';
-                if (h === 0) return `${m}m`;
-                if (m === 0) return `${h}h`;
-                return `${h}h ${m}m`;
-              })()}
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        {/* Left Column: Active Tracker */}
+        <div className="bg-white rounded-[2rem] border border-gray-100 p-10 shadow-sm relative flex flex-col h-full min-h-[500px]">
+          {/* Top left info */}
+          {hasActiveSession ? (
+            <div>
+              <div className="text-[28px] font-bold text-gray-900 tracking-tight">{formatTime(activeSession.checkIn)}</div>
+              <div className="text-sm text-gray-500 font-medium mt-1">Start time</div>
+            </div>
+          ) : (
+            <div>
+              <div className="text-[28px] font-bold text-gray-900 tracking-tight">{formatTime(new Date().toISOString())}</div>
+              <div className="text-sm text-gray-500 font-medium mt-1">Current time</div>
+            </div>
+          )}
+
+          <div className="flex-1 flex flex-col items-center justify-center relative mt-6 mb-12">
+            <CircularProgress durationText={hasActiveSession ? formatElapsed(liveElapsed) : '0h 00m'} />
+            
+            {/* Overlapping Button */}
+            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 translate-y-1/2">
+              {hasActiveSession ? (
+                <button
+                  onClick={handleCheckOut}
+                  disabled={loading}
+                  className="flex items-center gap-2 px-10 py-4 bg-[#a32a39] hover:bg-[#8b2331] text-white rounded-full font-medium shadow-xl transition-all disabled:opacity-70 whitespace-nowrap text-lg"
+                >
+                  <LogOut size={20} />
+                  {loading ? 'Processing...' : 'Check Out'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleCheckIn}
+                  disabled={loading || !locationSupported}
+                  className="flex items-center gap-2 px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-medium shadow-xl transition-all disabled:opacity-70 whitespace-nowrap text-lg"
+                >
+                  <LogIn size={20} />
+                  {loading ? 'Processing...' : 'Check In'}
+                </button>
+              )}
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {todayData.sessions.map((session: any) => (
-              <div
-                key={session.id}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '100px 100px 100px 1fr',
-                  gap: '16px',
-                  padding: '12px',
-                  background: session.checkOut ? '#f9fafb' : '#f0f9ff',
-                  borderRadius: '8px',
-                  border: session.checkOut ? '1px solid #e5e7eb' : '1px solid #bae6fd',
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '2px' }}>Check In</div>
-                  <div style={{ fontSize: '14px', fontWeight: 500, color: '#1f2937' }}>
-                    {formatTime(session.checkIn)}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '2px' }}>Check Out</div>
-                  <div style={{ fontSize: '14px', fontWeight: 500, color: '#1f2937' }}>
-                    {formatTime(session.checkOut)}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '2px' }}>Duration</div>
-                  <div style={{ fontSize: '14px', fontWeight: 500, color: session.checkOut ? '#1f2937' : '#0369a1' }}>
-                    {session.checkOut
-                      ? calculateDuration(session.checkIn, session.checkOut)
-                      : formatElapsed(liveElapsed)}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                  {!session.checkOut && (
-                    <Badge variant="info">Active</Badge>
-                  )}
-                </div>
-              </div>
-            ))}
+          {/* Status Banner */}
+          <div className="mt-auto pt-4">
+            <div className="w-full text-center py-4 px-6 rounded-2xl text-sm font-medium bg-blue-50/60 text-blue-700 border border-blue-100/60">
+              {hasActiveSession 
+                ? "You have an active session. Please check out before starting a new session."
+                : "You can start a new session by checking in."
+              }
+            </div>
           </div>
-        </Card>
-      )}
-
-      {/* Action Buttons */}
-      <Card>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          {!hasActiveSession && (
-            <Button
-              onClick={handleCheckIn}
-              disabled={loading || !locationSupported}
-              loading={loading}
-              variant="primary"
-              size="lg"
-              style={{ flex: 1, minWidth: '200px' }}
-            >
-              {loading ? 'Processing...' : '✅ Check In'}
-            </Button>
-          )}
-
-          {hasActiveSession && (
-            <Button
-              onClick={handleCheckOut}
-              disabled={loading}
-              loading={loading}
-              variant="danger"
-              size="lg"
-              style={{ flex: 1, minWidth: '200px' }}
-            >
-              {loading ? 'Processing...' : '🚪 Check Out'}
-            </Button>
-          )}
         </div>
 
-        {!hasActiveSession && todayData?.sessions?.length > 0 && (
-          <div
-            style={{
-              marginTop: '16px',
-              padding: '12px',
-              background: '#f9fafb',
-              borderRadius: '8px',
-              fontSize: '13px',
-              color: '#666666',
-              textAlign: 'center',
-            }}
-          >
-            You can start a new session by checking in again
+        {/* Right Column: Today's Sessions */}
+        <div className="bg-white rounded-[2rem] border border-gray-100 p-10 shadow-sm">
+          <div className="mb-8">
+            <h2 className="text-[22px] font-bold tracking-tight text-gray-900 uppercase">Today's Sessions</h2>
+            <p className="text-[15px] text-gray-500 mt-1">{todayData?.sessions?.length || 0} total sessions</p>
           </div>
-        )}
+          
+          <div className="flex flex-col gap-5">
+            {(!todayData?.sessions || todayData.sessions.length === 0) ? (
+              <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                No sessions recorded today yet.
+              </div>
+            ) : (
+              todayData.sessions.map((session: any, index: number) => {
+                const isActive = !session.checkOut;
+                const durationText = isActive 
+                  ? formatElapsed(liveElapsed)
+                  : calculateDuration(session.checkIn, session.checkOut);
+                  
+                return (
+                  <div key={session.id} className="flex items-center justify-between p-4 rounded-[1.25rem] border border-gray-100 bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-5">
+                      <MiniCircularProgress durationText={durationText} isActive={isActive} />
+                      <div>
+                        <div className="flex items-center gap-3 mb-1">
+                          <span className="font-semibold text-gray-900 text-lg">Session {index + 1}</span>
+                          {isActive && (
+                            <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-[11px] font-bold tracking-wide uppercase">Active</span>
+                          )}
+                        </div>
+                        <div className="text-gray-500 text-[15px]">
+                          {formatTime(session.checkIn)} - {isActive ? 'Present' : formatTime(session.checkOut)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end mr-4">
+                      <span className="text-gray-500 text-sm mb-1">Duration:</span>
+                      <span className="font-semibold text-gray-900 text-lg">{durationText}</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
 
-        {hasActiveSession && (
-          <div
-            style={{
-              marginTop: '16px',
-              padding: '12px',
-              background: '#f0f9ff',
-              borderRadius: '8px',
-              fontSize: '13px',
-              color: '#0369a1',
-              textAlign: 'center',
-            }}
-          >
-            You have an active session. Please check out before starting a new session.
-          </div>
-        )}
-      </Card>
+      </div>
     </div>
   );
 };
