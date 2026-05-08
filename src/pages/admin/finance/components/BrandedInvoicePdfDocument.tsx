@@ -175,7 +175,7 @@ const s = StyleSheet.create({
   },
   companyDetail: {
     fontSize: 8,
-    color: '#adb5bd',
+    color: '#ffffffff',
     lineHeight: 1.5,
   },
   invoiceTitleBlock: {
@@ -195,7 +195,7 @@ const s = StyleSheet.create({
   },
   invoiceMetaLabel: {
     fontSize: 8,
-    color: '#adb5bd',
+    color: '#ffffffff',
     width: 80,
     textAlign: 'right',
   },
