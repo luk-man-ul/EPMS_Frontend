@@ -113,7 +113,7 @@ const WorkApprovalPage = () => {
   }, [metrics])
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div style={{ width: '100%' }}>
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1a1a1a', marginBottom: '8px' }}>
           Self-Work Approval

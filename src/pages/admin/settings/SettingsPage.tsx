@@ -15,7 +15,7 @@ const SettingsPage = () => {
   ]
 
   return (
-    <div style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ width: '100%' }}>
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
         <h1 style={{ 

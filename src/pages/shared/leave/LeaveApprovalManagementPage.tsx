@@ -122,7 +122,7 @@ const LeaveApprovalManagementPage = () => {
   };
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div style={{ width: '100%' }}>
       <h1
         style={{
           fontSize: '28px',

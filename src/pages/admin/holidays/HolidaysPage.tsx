@@ -67,8 +67,8 @@ const HolidaysPage = () => {
     });
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '32px 24px' }}>
-      <div style={{ maxWidth: '860px', margin: '0 auto' }}>
+    <div style={{ width: '100%' }}>
+      <div style={{ width: '100%' }}>
 
         {/* Header */}
         <div style={{ marginBottom: '28px' }}>

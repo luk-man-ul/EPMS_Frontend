@@ -73,7 +73,7 @@ const WfhManagementPage = () => {
   const hasActiveFilters = filters.status || filters.fromDate || filters.toDate;
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div style={{ width: '100%' }}>
       <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>
         WFH Requests
       </h1>

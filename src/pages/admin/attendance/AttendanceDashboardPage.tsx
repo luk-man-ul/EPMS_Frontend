@@ -248,8 +248,8 @@ const AttendanceDashboardPage = () => {
   const contextLabel = useMemo(() => buildContextLabel(filters, employees), [filters, employees]);
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '32px 24px' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ width: '100%' }}>
+      <div style={{ width: '100%' }}>
 
         {/* Header */}
         <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
