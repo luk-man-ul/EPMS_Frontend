@@ -130,6 +130,19 @@ const AdminDashboard = () => {
     <div className="dashboard">
       <StatsCards />
 
+      {/* Work Progress · Attendance Summary · Finance Snapshot
+          Placed directly below KPI cards for immediate visibility */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '24px',
+        margin: '24px 0',
+      }}>
+        <WorkProgress />
+        <AttendanceWidget />
+        <FinanceWidget />
+      </div>
+
       {/* Analytics Charts Section */}
       <div style={{ 
         display: 'grid', 
@@ -157,9 +170,6 @@ const AdminDashboard = () => {
       </div>
 
       <div className="dashboard-grid">
-        <WorkProgress />
-        <AttendanceWidget />
-        <FinanceWidget />
         <AlertsPanel />
       </div>
     </div>

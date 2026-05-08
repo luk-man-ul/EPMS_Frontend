@@ -236,9 +236,9 @@ const AttendanceDashboardPage = () => {
     return [
       ...base,
       {
-        label: 'Weekly Hours',
+        label: 'Worked Hours',
         tooltip: 'Total hours worked in the selected date range (target: 40 hrs/week)',
-        value: `${weeklyHours} / 40`,
+        value: `${weeklyHours} `,
         accent: weeklyHours >= 40 ? '#16a34a' : '#7c3aed',
         bg: weeklyHours >= 40 ? '#f0fdf4' : '#faf5ff',
         icon: '⏱️',
