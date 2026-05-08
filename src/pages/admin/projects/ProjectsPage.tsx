@@ -1,25 +1,16 @@
 import { useEffect, useState } from 'react'
 import ProjectTable from './components/ProjectTable'
-import ProjectFilters from './components/ProjectFilters'
 import api from '../../../utils/api'
 import type {
   ProjectListItem,
   ProjectDetail,
 } from './types/project.types'
 import ProjectForm from './form/ProjectForm'
-import SearchBar from '../../../components/shared/SearchBar'
 
 interface EmployeeOption {
   id: string
   name: string
   role?: string
-}
-
-interface ProjectFilterValues {
-  status?: string
-  ownerId?: string
-  memberId?: string
-  endDate?: string
 }
 
 const ProjectsPage = () => {
@@ -32,18 +23,11 @@ const ProjectsPage = () => {
   const [selectedProject, setSelectedProject] =
     useState<ProjectDetail | null>(null)
 
-  // Search state
-  const [searchTerm, setSearchTerm] = useState('')
+  // Active filter state
+  const [activeFilter, setActiveFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED' | 'RISK'>('ALL')
   
-  // Filter state
-  const [filters, setFilters] = useState<ProjectFilterValues>({})
-  
-  // Employees for filters
+  // Employees (cached for form)
   const [employees, setEmployees] = useState<EmployeeOption[]>([])
-
-  ////////////////////////////////////////////////////////////
-  // FETCH PROJECTS
-  ////////////////////////////////////////////////////////////
 
   useEffect(() => {
     fetchProjects()
@@ -63,10 +47,6 @@ const ProjectsPage = () => {
     }
   }
 
-  ////////////////////////////////////////////////////////////
-  // LOAD EMPLOYEES FOR FILTERS
-  ////////////////////////////////////////////////////////////
-
   const loadEmployees = async () => {
     try {
       const response = await api.get('/users')
@@ -83,32 +63,11 @@ const ProjectsPage = () => {
     }
   }
 
-  ////////////////////////////////////////////////////////////
-  // FILTER HANDLER
-  ////////////////////////////////////////////////////////////
-
-  const handleFilterChange = (newFilters: any) => {
-    if (newFilters.__clear) {
-      setFilters({})
-      return
-    }
-
-    setFilters({ ...filters, ...newFilters })
-  }
-
-  ////////////////////////////////////////////////////////////
-  // CREATE
-  ////////////////////////////////////////////////////////////
-
   const handleCreate = () => {
     setEditingProjectId(null)
     setSelectedProject(null)
     setIsModalOpen(true)
   }
-
-  ////////////////////////////////////////////////////////////
-  // EDIT
-  ////////////////////////////////////////////////////////////
 
   const handleEdit = async (id: string) => {
     try {
@@ -121,17 +80,8 @@ const ProjectsPage = () => {
     }
   }
 
-  ////////////////////////////////////////////////////////////
-  // DELETE
-  ////////////////////////////////////////////////////////////
-
   const handleDelete = async (id: string) => {
-    const confirmDelete = window.confirm(
-      'Are you sure you want to delete this project?'
-    )
-
-    if (!confirmDelete) return
-
+    if (!window.confirm('Are you sure you want to delete this project?')) return
     try {
       await api.delete(`/projects/${id}`)
       fetchProjects()
@@ -140,10 +90,6 @@ const ProjectsPage = () => {
     }
   }
 
-  ////////////////////////////////////////////////////////////
-  // SUCCESS HANDLER (CREATE / EDIT)
-  ////////////////////////////////////////////////////////////
-
   const handleSuccess = () => {
     setIsModalOpen(false)
     setEditingProjectId(null)
@@ -151,84 +97,30 @@ const ProjectsPage = () => {
     fetchProjects()
   }
 
-  ////////////////////////////////////////////////////////////
-  // FILTER LOGIC
-  ////////////////////////////////////////////////////////////
-
   const filteredProjects = projects.filter((project) => {
-    // Search filter
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase()
-      const nameMatch = project.name.toLowerCase().includes(searchLower)
-      const descriptionMatch = project.description?.toLowerCase().includes(searchLower)
-      
-      if (!nameMatch && !descriptionMatch) {
-        return false
-      }
-    }
-
-    // Status filter
-    if (filters.status && project.status !== filters.status) {
-      return false
-    }
-
-    // Owner/Team Lead filter
-    if (filters.ownerId) {
-      if (project.lead?.id !== filters.ownerId) {
-        return false
-      }
-    }
-
-    // Member filter
-    if (filters.memberId) {
-      const hasMember = project.members?.some(
-        (member: any) => member.user?.id === filters.memberId
-      )
-      if (!hasMember) {
-        return false
-      }
-    }
-
-    // Deadline filter
-    if (filters.endDate && project.endDate) {
-      const projectEnd = new Date(project.endDate)
-      const filterEnd = new Date(filters.endDate)
-      if (projectEnd > filterEnd) {
-        return false
-      }
-    }
-
+    if (activeFilter === 'ALL') return true
+    if (activeFilter === 'ACTIVE') return project.status === 'ACTIVE'
+    if (activeFilter === 'COMPLETED') return project.status === 'COMPLETED'
+    if (activeFilter === 'RISK') return project.status === 'ON_HOLD' || project.status === 'CANCELLED'
     return true
   })
 
-  ////////////////////////////////////////////////////////////
-  // RENDER
-  ////////////////////////////////////////////////////////////
-
   return (
-    <div style={{ padding: '32px', maxWidth: '1600px', margin: '0 auto' }}>
+    <div style={{ width: '100%' }}>
       {/* Header */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '24px',
+          marginBottom: '28px',
         }}
       >
         <div>
-          <h1
-            style={{
-              fontSize: '24px',
-              fontWeight: 600,
-              marginBottom: 4,
-              color: '#1a1a1a',
-              letterSpacing: '-0.01em',
-            }}
-          >
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
             Projects
           </h1>
-          <p style={{ color: '#666', fontSize: '14px' }}>
+          <p style={{ color: '#6b7280', fontSize: '14px' }}>
             Manage all projects and track progress
           </p>
         </div>
@@ -236,70 +128,95 @@ const ProjectsPage = () => {
         <button
           onClick={handleCreate}
           style={{
-            padding: '10px 18px',
+            padding: '10px 20px',
             borderRadius: '10px',
             border: 'none',
-            backgroundColor: '#1a1a1a',
+            backgroundColor: '#111827',
             color: '#fff',
-            fontWeight: 500,
+            fontWeight: 600,
             cursor: 'pointer',
             fontSize: '14px',
+            transition: 'all 0.2s',
           }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#374151'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#111827'}
         >
           + Create Project
         </button>
       </div>
 
-      {/* Stats Cards */}
+      {/* Interactive Stats Cards */}
       {!loading && !error && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' }}>
           {[
-            { label: 'Total Projects',     value: projects.length,                                          color: '#1a1a1a' },
-            { label: 'Active Projects',    value: projects.filter(p => p.status === 'ACTIVE').length,       color: '#16a34a' },
-            { label: 'Completed',          value: projects.filter(p => p.status === 'COMPLETED').length,    color: '#2563eb' },
-            { label: 'At Risk',            value: projects.filter(p => p.status === 'ON_HOLD' || p.status === 'CANCELLED').length, color: '#dc2626' },
-          ].map((card) => (
-            <div key={card.label} style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e5e5', padding: '20px 24px' }}>
-              <p style={{ fontSize: '13px', color: '#888', margin: '0 0 8px 0', fontWeight: 500 }}>{card.label}</p>
-              <p style={{ fontSize: '28px', fontWeight: 700, color: card.color, margin: 0, lineHeight: 1 }}>{card.value}</p>
-            </div>
-          ))}
+            { id: 'ALL' as const,       label: 'Total Projects',  value: projects.length,                                          color: '#111827' },
+            { id: 'ACTIVE' as const,    label: 'Active Projects', value: projects.filter(p => p.status === 'ACTIVE').length,       color: '#16a34a' },
+            { id: 'COMPLETED' as const, label: 'Completed',       value: projects.filter(p => p.status === 'COMPLETED').length,    color: '#2563eb' },
+            { id: 'RISK' as const,      label: 'At Risk',         value: projects.filter(p => p.status === 'ON_HOLD' || p.status === 'CANCELLED').length, color: '#dc2626' },
+          ].map((card) => {
+            const isSelected = activeFilter === card.id
+            return (
+              <div
+                key={card.id}
+                onClick={() => setActiveFilter(card.id)}
+                style={{
+                  background: '#fff',
+                  borderRadius: '16px',
+                  border: isSelected ? `2px solid ${card.color}` : '1px solid #e5e7eb',
+                  padding: '24px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: isSelected ? `0 4px 12px ${card.color}15` : '0 1px 3px rgba(0,0,0,0.04)',
+                  position: 'relative',
+                  transform: isSelected ? 'translateY(-2px)' : 'none',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.borderColor = card.color
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.borderColor = '#e5e7eb'
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'
+                  }
+                }}
+              >
+                <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 12px 0', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  {card.label}
+                </p>
+                <p style={{ fontSize: '32px', fontWeight: 800, color: card.color, margin: 0, lineHeight: 1 }}>
+                  {card.value}
+                </p>
+                {isSelected && (
+                  <div style={{ position: 'absolute', top: 12, right: 12, width: 8, height: 8, borderRadius: '50%', background: card.color }} />
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
-
-      {/* Search Bar */}
-      <div style={{ marginBottom: '20px' }}>
-        <SearchBar
-          placeholder="Search projects by name or description..."
-          value={searchTerm}
-          onChange={setSearchTerm}
-        />
-      </div>
-
-      {/* Comprehensive Filters */}
-      <ProjectFilters
-        employees={employees}
-        filters={filters}
-        onFilterChange={handleFilterChange}
-      />
 
       {/* Content */}
       <div
         style={{
           backgroundColor: '#fff',
-          borderRadius: '12px',
-          border: '1px solid #e5e5e5',
-          overflow: 'visible',
+          borderRadius: '16px',
+          border: '1px solid #e5e7eb',
+          overflow: 'hidden',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         }}
       >
-        {loading && <div style={{ padding: 20 }}>Loading projects...</div>}
-        {error && (
-          <div style={{ padding: 20, color: 'red' }}>{error}</div>
-        )}
-
-        {!loading && !error && (
+        {loading ? (
+          <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>Loading projects...</div>
+        ) : error ? (
+          <div style={{ padding: 40, textAlign: 'center', color: '#dc2626' }}>{error}</div>
+        ) : (
           <ProjectTable
             projects={filteredProjects}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
           />
         )}
       </div>
@@ -311,6 +228,7 @@ const ProjectsPage = () => {
             position: 'fixed',
             inset: 0,
             backgroundColor: 'rgba(0,0,0,0.4)',
+            backdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

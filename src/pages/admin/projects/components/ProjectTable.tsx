@@ -3,9 +3,11 @@ import type { ProjectListItem } from '../types/project.types'
 
 interface Props {
   projects: ProjectListItem[]
+  onEdit: (id: string) => void
+  onDelete: (id: string) => void
 }
 
-const ProjectTable = ({ projects }: Props) => {
+const ProjectTable = ({ projects, onEdit, onDelete }: Props) => {
   return (
     <table
       style={{
@@ -18,29 +20,21 @@ const ProjectTable = ({ projects }: Props) => {
           style={{
             textAlign: 'left',
             fontSize: '12px',
-            color: '#666',
-            fontWeight: 500,
-            borderBottom: '1px solid #e5e5e5',
+            color: '#6b7280',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            background: '#f9fafb',
+            borderBottom: '1px solid #e5e7eb',
           }}
         >
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>
-            Project Name
-          </th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>
-            Lead
-          </th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>
-            Status
-          </th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>
-            Team Size
-          </th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>
-            Progress
-          </th>
-          <th style={{ padding: '16px 20px', fontWeight: 500 }}>
-            Deadline
-          </th>
+          <th style={{ padding: '12px 20px' }}>Project Name</th>
+          <th style={{ padding: '12px 20px' }}>Lead</th>
+          <th style={{ padding: '12px 20px' }}>Status</th>
+          <th style={{ padding: '12px 20px' }}>Team Size</th>
+          <th style={{ padding: '12px 20px' }}>Progress</th>
+          <th style={{ padding: '12px 20px' }}>Deadline</th>
+          <th style={{ padding: '12px 20px', textAlign: 'right' }}>Actions</th>
         </tr>
       </thead>
 
@@ -49,6 +43,8 @@ const ProjectTable = ({ projects }: Props) => {
           <ProjectRow
             key={project.id}
             project={project}
+            onEdit={onEdit}
+            onDelete={onDelete}
           />
         ))}
       </tbody>
