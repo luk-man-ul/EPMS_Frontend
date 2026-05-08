@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { Card, Badge, LoadingSpinner, ErrorMessage } from '../ui';
 import api from '../../utils/api';
@@ -31,6 +32,7 @@ function getToken(): string | null {
 
 export function NotificationBell() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -160,6 +162,68 @@ export function NotificationBell() {
     }
   };
 
+  // ─── Resolve navigation path from notification type + metadata ───────────
+  const getNotificationPath = (n: Notification): string | null => {
+    const meta = n.metadata ?? {};
+    const isAdmin = user?.role === 'ADMIN';
+    const base = isAdmin ? '/admin' : '/app';
+
+    switch (n.type) {
+      // Task notifications
+      case 'TASK_ASSIGNED':
+      case 'TASK_APPROVED':
+      case 'TASK_REJECTED': {
+        const taskId = (meta.taskId ?? n.entityId) as string | undefined;
+        if (taskId) return `${base}/tasks/${taskId}`;
+        return `${base}/tasks`;
+      }
+      // Self-work approval
+      case 'SELF_WORK_REQUESTED':
+        return `${base}/tasks/approval`;
+      // Leave notifications
+      case 'LEAVE_REQUESTED':
+        return isAdmin ? '/admin/leave/approvals' : '/app/leave/approvals';
+      case 'LEAVE_APPROVED':
+      case 'LEAVE_REJECTED':
+        return isAdmin ? '/admin/leave/approvals' : '/app/leave';
+      // WFH notifications
+      case 'WFH_REQUESTED':
+        return isAdmin ? '/admin/wfh/requests' : '/app/wfh/requests';
+      case 'WFH_APPROVED':
+      case 'WFH_REJECTED':
+        return isAdmin ? '/admin/wfh/requests' : '/app/wfh';
+      // Project notifications
+      case 'PROJECT_ASSIGNED': {
+        const projectId = (meta.projectId ?? n.entityId) as string | undefined;
+        if (projectId) return `${base}/projects/${projectId}`;
+        return `${base}/projects`;
+      }
+      // Ticket notifications
+      case 'TICKET_RAISED':
+      case 'TICKET_ASSIGNED': {
+        const ticketId = (meta.ticketId ?? n.entityId) as string | undefined;
+        if (ticketId) return `${base}/tickets/${ticketId}`;
+        return `${base}/tickets`;
+      }
+      default:
+        return null;
+    }
+  };
+
+  // ─── Handle notification click: mark read + navigate ─────────────────────
+  const handleNotificationClick = async (notification: Notification) => {
+    // Mark as read if unread
+    if (!notification.isRead) {
+      await markAsRead(notification.id);
+    }
+    // Navigate to relevant page
+    const path = getNotificationPath(notification);
+    if (path) {
+      setIsOpen(false);
+      navigate(path);
+    }
+  };
+
   // ─── Helpers ─────────────────────────────────────────────────────────────
   const getNotificationIcon = (type: string) => {
     const icons: Record<string, string> = {
@@ -243,11 +307,12 @@ export function NotificationBell() {
                   <div
                     key={notification.id}
                     className={`notification-item ${!notification.isRead ? 'unread' : ''}`}
-                    onClick={() => !notification.isRead && markAsRead(notification.id)}
+                    onClick={() => handleNotificationClick(notification)}
                     role="button"
                     tabIndex={0}
+                    style={{ cursor: getNotificationPath(notification) ? 'pointer' : 'default' }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !notification.isRead) markAsRead(notification.id);
+                      if (e.key === 'Enter') handleNotificationClick(notification);
                     }}
                   >
                     <div className="notification-icon" aria-hidden="true">

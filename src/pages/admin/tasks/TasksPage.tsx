@@ -3,7 +3,6 @@ import api from '../../../utils/api'
 import TaskFilters from '../../shared/tasks/components/TaskFilters'
 import TaskTable from '../../shared/tasks/components/TaskTable'
 import CreateTaskModal from './components/CreateTaskModal'
-import SearchBar from '../../../components/shared/SearchBar'
 import type { Task } from '../../shared/tasks/types/task.types'
 import { getProjectsForDropdown } from '../tickets/projects.api'
 import { getEmployeesForDropdown } from '../tickets/employees.api'
@@ -20,7 +19,6 @@ interface EmployeeOption {
 
 const TasksPage = () => {
   const [filters, setFilters] = useState<any>({})
-  const [searchTerm, setSearchTerm] = useState('')
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(false)
   const [pagination, setPagination] = useState<any>(null)
@@ -42,7 +40,6 @@ const TasksPage = () => {
       const res = await api.get('/tasks', {
         params: {
           ...currentFilters,
-          search: searchTerm || undefined,
           page: currentFilters.page || 1,
           limit: 10,
         },
@@ -154,18 +151,6 @@ const TasksPage = () => {
   }, [])
 
   ////////////////////////////////////////////////////////////
-  // SEARCH HANDLER
-  ////////////////////////////////////////////////////////////
-
-  useEffect(() => {
-    setFilters((prev: any) => {
-      const updated = { ...prev, page: 1 }
-      fetchTasks(updated)
-      return updated
-    })
-  }, [searchTerm])
-
-  ////////////////////////////////////////////////////////////
   // RENDER
   ////////////////////////////////////////////////////////////
 
@@ -206,12 +191,6 @@ const TasksPage = () => {
           + Create Task
         </button>
       </div>
-
-      <SearchBar
-        placeholder="Search tasks by title or description..."
-        value={searchTerm}
-        onChange={setSearchTerm}
-      />
 
       <TaskFilters
   projects={projects}

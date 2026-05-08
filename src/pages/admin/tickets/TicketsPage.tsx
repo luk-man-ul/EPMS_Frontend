@@ -13,7 +13,6 @@ import {
   type EmployeeOption,
 } from './employees.api'
 import { useAuth } from '../../../context/AuthContext'
-import SearchBar from '../../../components/shared/SearchBar'
 import api from '../../../utils/api'
 
 const TicketsPage = () => {
@@ -24,13 +23,11 @@ const TicketsPage = () => {
   priority?: string
   projectId?: string
   assignedToId?: string
-  search?: string
   page?: number
   limit?: number
 }
 
   const [filters, setFilters] = useState<TicketFiltersState>({ page: 1, limit: 10 })
-  const [searchTerm, setSearchTerm] = useState('')
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(false)
   const [pagination, setPagination] = useState<any>(null)
@@ -91,22 +88,17 @@ const TicketsPage = () => {
   }
 
   useEffect(() => {
-    const filtersWithSearch = { ...filters }
-    if (searchTerm) {
-      filtersWithSearch.search = searchTerm
-    }
-    fetchTickets(filtersWithSearch)
-  }, [filters, searchTerm])
+    fetchTickets(filters)
+  }, [filters])
 
   ////////////////////////////////////////////////////////////
   // FILTER HANDLER
   ////////////////////////////////////////////////////////////
 
-const handleFilterChange = (newFilters: any) => {
+  const handleFilterChange = (newFilters: any) => {
   // CLEAR LOGIC
   if (newFilters.__clear) {
     setFilters({ page: 1, limit: 10 })
-    setSearchTerm('')
     return
   }
 
@@ -117,21 +109,6 @@ const handleFilterChange = (newFilters: any) => {
     : { ...prev, ...newFilters, page: 1 }
   )
 }
-
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value)
-    // Reset to page 1 when search changes, but do NOT also call setFilters
-    // to avoid double-fetching. The useEffect([filters, searchTerm]) handles both.
-    setFilters((prev: any) => {
-      // Only update if page is not already 1 to avoid unnecessary re-render
-      if (prev.page === 1) return prev
-      return { ...prev, page: 1 }
-    })
-  }
-
-  const handleSearchClear = () => {
-    setSearchTerm('')
-  }
 
   ////////////////////////////////////////////////////////////
   // EDIT HANDLER
@@ -220,16 +197,6 @@ const handleFilterChange = (newFilters: any) => {
             + Create Ticket
           </button>
         )}
-      </div>
-
-      {/* Search Bar */}
-      <div style={{ marginBottom: '20px' }}>
-        <SearchBar
-          placeholder="Search tickets by title or description..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          onClear={handleSearchClear}
-        />
       </div>
 
       {/* Filters */}

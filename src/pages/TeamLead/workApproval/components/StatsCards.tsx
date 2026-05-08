@@ -45,8 +45,8 @@ const StatsCards = ({
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-      gap: '20px',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+      gap: '12px',
       marginBottom: '24px',
     }}>
       {stats.map((stat, index) => (
@@ -54,8 +54,8 @@ const StatsCards = ({
           key={index}
           style={{
             background: '#ffffff',
-            padding: '24px',
-            borderRadius: '12px',
+            padding: '14px 16px',
+            borderRadius: '10px',
             border: '1px solid #e5e5e5',
             transition: 'all 0.3s ease',
           }}
@@ -64,31 +64,31 @@ const StatsCards = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: '12px',
+            marginBottom: '8px',
           }}>
             <div style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
+              width: '32px',
+              height: '32px',
+              borderRadius: '8px',
               background: stat.bgColor,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '24px',
+              fontSize: '16px',
             }}>
               {stat.icon}
             </div>
           </div>
           <div style={{
-            fontSize: '28px',
+            fontSize: '22px',
             fontWeight: 700,
             color: stat.color,
-            marginBottom: '4px',
+            marginBottom: '2px',
           }}>
             {stat.value}
           </div>
           <div style={{
-            fontSize: '14px',
+            fontSize: '12px',
             color: '#666666',
             fontWeight: 500,
           }}>
