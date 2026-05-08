@@ -264,6 +264,7 @@ const IncomeTable = ({ showForm = false, onFormClose }: Props) => {
               <th style={{ padding: '16px 20px', fontWeight: 500 }}>Payment</th>
               <th style={{ padding: '16px 20px', fontWeight: 500 }}>Description</th>
               <th style={{ padding: '16px 20px', fontWeight: 500 }}>Created By</th>
+              <th style={{ padding: '16px 20px', fontWeight: 500 }}>Invoice</th>
               <th style={{ padding: '16px 20px', textAlign: 'right', fontWeight: 500 }}>Actions</th>
             </tr>
           </thead>

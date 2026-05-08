@@ -3,6 +3,14 @@ import { formatCurrency, formatDate } from '../finance.utils'
 
 interface Props {
   expense: ExpenseRecord
+  /** Hide the Employee cell — used in employee drill-down where employee is already known */
+  hideEmployee?: boolean
+  /** Hide the Project cell — used in project drill-down where project is already known */
+  hideProject?: boolean
+  /** Hide the Actions column — used in read-only analytics drill-down tables */
+  hideActions?: boolean
+  /** Alias for hideActions */
+  readOnly?: boolean
 }
 
 // Small pill badge for payment method
@@ -41,12 +49,33 @@ const CategoryBadge = ({ name }: { name: string }) => {
   )
 }
 
-const ExpenseRow = ({ expense }: Props) => {
-  const entityLabel = expense.employee
+const ExpenseRow = ({
+  expense,
+  hideEmployee = false,
+  hideProject = false,
+  hideActions = false,
+  readOnly = false,
+}: Props) => {
+  const suppressActions = hideActions || readOnly
+
+  // Build the entity label respecting hide flags
+  const employeeLabel = expense.employee
     ? `${expense.employee.firstName} ${expense.employee.lastName}`
-    : expense.project
-    ? expense.project.name
-    : '—'
+    : null
+  const projectLabel = expense.project?.name ?? null
+
+  // What to show in the combined Employee/Project cell
+  const entityLabel = (() => {
+    if (!hideEmployee && employeeLabel) return employeeLabel
+    if (!hideProject && projectLabel)   return projectLabel
+    if (hideEmployee && projectLabel)   return projectLabel   // employee drill-down: show project
+    if (hideProject && employeeLabel)   return employeeLabel  // project drill-down: show employee
+    return '—'
+  })()
+
+  // Sub-label (project name under employee name when both exist and neither is hidden)
+  const showSubLabel =
+    !hideEmployee && !hideProject && expense.employee && expense.project
 
   return (
     <tr
@@ -54,7 +83,7 @@ const ExpenseRow = ({ expense }: Props) => {
       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#fafafa')}
       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
     >
-      {/* Category badge (replaces old Type badge) */}
+      {/* Category badge */}
       <td style={{ padding: '16px 20px' }}>
         <CategoryBadge name={expense.category.name} />
       </td>
@@ -71,14 +100,14 @@ const ExpenseRow = ({ expense }: Props) => {
         {formatDate(expense.expenseDate)}
       </td>
 
-      {/* Employee / Project */}
+      {/* Employee / Project — context-aware */}
       <td style={{ padding: '16px 20px' }}>
         <div style={{ fontSize: '14px', color: '#1a1a1a', fontWeight: 500 }}>
           {entityLabel}
         </div>
-        {expense.employee && expense.project && (
+        {showSubLabel && (
           <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
-            {expense.project.name}
+            {expense.project!.name}
           </div>
         )}
       </td>
@@ -105,16 +134,18 @@ const ExpenseRow = ({ expense }: Props) => {
         {expense.createdBy.firstName} {expense.createdBy.lastName}
       </td>
 
-      {/* Actions */}
-      <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-        <button
-          style={{ border: '1px solid #e5e5e5', background: '#fff', cursor: 'pointer', fontSize: '13px', padding: '6px 12px', borderRadius: '8px', color: '#1a1a1a', fontWeight: 500, transition: 'all 0.15s ease' }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fafafa'; e.currentTarget.style.borderColor = '#d4d4d4' }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#fff'; e.currentTarget.style.borderColor = '#e5e5e5' }}
-        >
-          Edit
-        </button>
-      </td>
+      {/* Actions — hidden in read-only mode */}
+      {!suppressActions && (
+        <td style={{ padding: '16px 20px', textAlign: 'right' }}>
+          <button
+            style={{ border: '1px solid #e5e5e5', background: '#fff', cursor: 'pointer', fontSize: '13px', padding: '6px 12px', borderRadius: '8px', color: '#1a1a1a', fontWeight: 500, transition: 'all 0.15s ease' }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fafafa'; e.currentTarget.style.borderColor = '#d4d4d4' }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#fff'; e.currentTarget.style.borderColor = '#e5e5e5' }}
+          >
+            Edit
+          </button>
+        </td>
+      )}
     </tr>
   )
 }
