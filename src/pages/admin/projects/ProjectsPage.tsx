@@ -24,7 +24,7 @@ const ProjectsPage = () => {
     useState<ProjectDetail | null>(null)
 
   // Active filter state
-  const [activeFilter, setActiveFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED' | 'RISK'>('ALL')
+  const [activeFilter, setActiveFilter] = useState<'ALL' | 'PLANNING' | 'ACTIVE' | 'ON_HOLD' | 'COMPLETED' | 'ARCHIVED'>('ALL')
   
   // Employees (cached for form)
   const [employees, setEmployees] = useState<EmployeeOption[]>([])
@@ -99,10 +99,7 @@ const ProjectsPage = () => {
 
   const filteredProjects = projects.filter((project) => {
     if (activeFilter === 'ALL') return true
-    if (activeFilter === 'ACTIVE') return project.status === 'ACTIVE'
-    if (activeFilter === 'COMPLETED') return project.status === 'COMPLETED'
-    if (activeFilter === 'RISK') return project.status === 'ON_HOLD' || project.status === 'CANCELLED'
-    return true
+    return project.status === activeFilter
   })
 
   return (
@@ -147,12 +144,14 @@ const ProjectsPage = () => {
 
       {/* Interactive Stats Cards */}
       {!loading && !error && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '32px' }}>
           {[
             { id: 'ALL' as const,       label: 'Total Projects',  value: projects.length,                                          color: '#111827' },
-            { id: 'ACTIVE' as const,    label: 'Active Projects', value: projects.filter(p => p.status === 'ACTIVE').length,       color: '#16a34a' },
-            { id: 'COMPLETED' as const, label: 'Completed',       value: projects.filter(p => p.status === 'COMPLETED').length,    color: '#2563eb' },
-            { id: 'RISK' as const,      label: 'At Risk',         value: projects.filter(p => p.status === 'ON_HOLD' || p.status === 'CANCELLED').length, color: '#dc2626' },
+            { id: 'PLANNING' as const,  label: 'Planning',        value: projects.filter(p => p.status === 'PLANNING').length,     color: '#3730a3' },
+            { id: 'ACTIVE' as const,    label: 'Active Projects', value: projects.filter(p => p.status === 'ACTIVE').length,       color: '#92400e' },
+            { id: 'ON_HOLD' as const,   label: 'On Hold',         value: projects.filter(p => p.status === 'ON_HOLD').length,      color: '#3a0303' },
+            { id: 'COMPLETED' as const, label: 'Completed',       value: projects.filter(p => p.status === 'COMPLETED').length,    color: '#166534' },
+            { id: 'ARCHIVED' as const,  label: 'Archived',        value: projects.filter(p => p.status === 'ARCHIVED').length,     color: '#046023' },
           ].map((card) => {
             const isSelected = activeFilter === card.id
             return (
@@ -183,10 +182,10 @@ const ProjectsPage = () => {
                   }
                 }}
               >
-                <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 12px 0', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 12px 0', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   {card.label}
                 </p>
-                <p style={{ fontSize: '32px', fontWeight: 800, color: card.color, margin: 0, lineHeight: 1 }}>
+                <p style={{ fontSize: '28px', fontWeight: 800, color: card.color, margin: 0, lineHeight: 1 }}>
                   {card.value}
                 </p>
                 {isSelected && (
