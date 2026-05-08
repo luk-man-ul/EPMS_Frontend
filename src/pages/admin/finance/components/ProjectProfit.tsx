@@ -1,154 +1,219 @@
 import { useState, useEffect } from 'react'
-import { getProjectProfit } from '../finance.api'
-import type { ProjectProfitData } from '../finance.api'
-import { getProjectOptions } from '../lookup.api'
-import type { ProjectOption } from '../lookup.api'
+import {
+  getAllProjectsProfit,
+  getProjectProfit,
+} from '../finance.api'
+import type {
+  AllProjectsProfitData,
+  ProjectProfitData,
+  ProjectProfitSummary,
+} from '../finance.api'
 import { formatCurrency } from '../finance.utils'
+import FinanceStatCard from './FinanceStatCard'
+
+// ── Shared table cell style ───────────────────────────────────────────────────
+const td: React.CSSProperties = {
+  padding: '14px 16px',
+  fontSize: '14px',
+  color: '#1a1a1a',
+  borderBottom: '1px solid #f5f5f5',
+}
+const th: React.CSSProperties = {
+  padding: '12px 16px',
+  fontSize: '12px',
+  fontWeight: 500,
+  color: '#666',
+  textAlign: 'left',
+  borderBottom: '1px solid #e5e5e5',
+  background: '#fafafa',
+}
 
 const ProjectProfit = () => {
-  const [projects, setProjects] = useState<ProjectOption[]>([])
-  const [selectedProjectId, setSelectedProjectId] = useState('')
-  const [data, setData] = useState<ProjectProfitData | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  // ── Aggregate state (loaded once on mount) ────────────────────────────────
+  const [aggregate, setAggregate] = useState<AllProjectsProfitData | null>(null)
+  const [aggLoading, setAggLoading] = useState(true)
+  const [aggError, setAggError] = useState<string | null>(null)
 
-  // Load project list once
+  // ── Drill-down state (loaded when a project is selected) ──────────────────
+  const [selectedProject, setSelectedProject] = useState<ProjectProfitSummary | null>(null)
+  const [drillData, setDrillData] = useState<ProjectProfitData | null>(null)
+  const [drillLoading, setDrillLoading] = useState(false)
+  const [drillError, setDrillError] = useState<string | null>(null)
+
+  // ── Load aggregate once on mount ──────────────────────────────────────────
   useEffect(() => {
-    getProjectOptions()
-      .then(setProjects)
-      .catch(() => {})
+    setAggLoading(true)
+    getAllProjectsProfit()
+      .then(setAggregate)
+      .catch((err: any) =>
+        setAggError(err.response?.data?.message || 'Failed to load project summary')
+      )
+      .finally(() => setAggLoading(false))
   }, [])
 
-  // Fetch profit whenever selected project changes
+  // ── Load drill-down when a project is selected ────────────────────────────
   useEffect(() => {
-    if (!selectedProjectId) { setData(null); return }
+    if (!selectedProject) { setDrillData(null); return }
 
-    setLoading(true)
-    setError(null)
-    getProjectProfit(selectedProjectId)
-      .then(setData)
-      .catch((err: any) => setError(err.response?.data?.message || 'Failed to load project profit'))
-      .finally(() => setLoading(false))
-  }, [selectedProjectId])
+    setDrillLoading(true)
+    setDrillError(null)
+    getProjectProfit(selectedProject.projectId)
+      .then(setDrillData)
+      .catch((err: any) =>
+        setDrillError(err.response?.data?.message || 'Failed to load project profit')
+      )
+      .finally(() => setDrillLoading(false))
+  }, [selectedProject])
 
-  const selectedName = projects.find((p) => p.id === selectedProjectId)?.name ?? ''
+  const handleSelectProject = (summary: ProjectProfitSummary) => {
+    setSelectedProject(summary)
+  }
 
-  const profitMargin = data && data.revenue > 0
-    ? ((data.profit / data.revenue) * 100).toFixed(1)
-    : null
+  const handleBack = () => {
+    setSelectedProject(null)
+    setDrillData(null)
+    setDrillError(null)
+  }
 
-  const cards = data
-    ? [
-        { label: 'Revenue', value: formatCurrency(data.revenue), color: '#1a1a1a', bgColor: '#fff' },
-        { label: 'Expense', value: formatCurrency(data.expense), color: '#666', bgColor: '#fff' },
-        {
-          label: 'Profit',
-          value: formatCurrency(data.profit),
-          color: data.profit >= 0 ? '#fff' : '#fff',
-          bgColor: data.profit >= 0 ? '#1a1a1a' : '#dc2626',
-        },
-        ...(profitMargin !== null
-          ? [{ label: 'Margin', value: `${profitMargin}%`, color: '#1a1a1a', bgColor: '#fff' }]
-          : []),
-      ]
-    : []
+  // ── Drill-down view ───────────────────────────────────────────────────────
+  if (selectedProject) {
+    const profitMargin =
+      drillData && drillData.revenue > 0
+        ? ((drillData.profit / drillData.revenue) * 100).toFixed(1)
+        : null
 
-  return (
-    <div style={{
-      background: '#fff',
-      border: '1px solid #e5e5e5',
-      borderRadius: '12px',
-      padding: '24px',
-    }}>
-      {/* Header + selector */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
-        <div>
-          <div style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a' }}>Project Profit</div>
-          {selectedName && (
-            <div style={{ fontSize: '13px', color: '#999', marginTop: '2px' }}>{selectedName}</div>
-          )}
-        </div>
-
-        <select
-          value={selectedProjectId}
-          onChange={(e) => setSelectedProjectId(e.target.value)}
-          style={{
-            padding: '10px 14px',
-            borderRadius: '8px',
-            border: '1px solid #e5e5e5',
-            fontSize: '14px',
-            color: '#1a1a1a',
-            background: '#fff',
-            cursor: 'pointer',
-            outline: 'none',
-            minWidth: '220px',
-          }}
-        >
-          <option value="">Select a project</option>
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* States */}
-      {!selectedProjectId && (
-        <div style={{ padding: '32px 0', textAlign: 'center', color: '#bbb', fontSize: '14px' }}>
-          Select a project to view its financial breakdown.
-        </div>
-      )}
-
-      {selectedProjectId && loading && (
-        <div style={{ padding: '32px 0', textAlign: 'center', color: '#999', fontSize: '14px' }}>
-          Loading...
-        </div>
-      )}
-
-      {selectedProjectId && !loading && error && (
-        <div style={{ padding: '32px 0', textAlign: 'center', color: '#dc2626', fontSize: '14px' }}>
-          {error}
-        </div>
-      )}
-
-      {/* Cards */}
-      {!loading && !error && data && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${cards.length}, 1fr)`,
-          gap: '16px',
-        }}>
-          {cards.map((card) => (
-            <div
-              key={card.label}
-              style={{
-                background: card.bgColor,
-                border: card.bgColor === '#fff' ? '1px solid #e5e5e5' : 'none',
-                borderRadius: '12px',
-                padding: '20px 24px',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                if (card.bgColor === '#fff') {
-                  e.currentTarget.style.borderColor = '#d4d4d4'
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (card.bgColor === '#fff') {
-                  e.currentTarget.style.borderColor = '#e5e5e5'
-                  e.currentTarget.style.boxShadow = 'none'
-                }
-              }}
+    return (
+      <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '24px' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <button
+              onClick={handleBack}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#666', padding: 0, display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}
             >
-              <div style={{ fontSize: '12px', color: card.bgColor === '#fff' ? '#999' : 'rgba(255,255,255,0.7)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                {card.label}
-              </div>
-              <div style={{ fontSize: '26px', fontWeight: 600, color: card.color, letterSpacing: '-0.02em' }}>
-                {card.value}
-              </div>
+              ← Back to All Projects
+            </button>
+            <div style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a' }}>
+              {selectedProject.projectName}
             </div>
-          ))}
+            <div style={{ fontSize: '13px', color: '#999', marginTop: '2px' }}>Project financial breakdown</div>
+          </div>
         </div>
+
+        {drillLoading && (
+          <div style={{ padding: '32px 0', textAlign: 'center', color: '#999', fontSize: '14px' }}>Loading...</div>
+        )}
+        {!drillLoading && drillError && (
+          <div style={{ padding: '32px 0', textAlign: 'center', color: '#dc2626', fontSize: '14px' }}>{drillError}</div>
+        )}
+        {!drillLoading && !drillError && drillData && (
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${profitMargin !== null ? 4 : 3}, 1fr)`, gap: '16px' }}>
+            <FinanceStatCard label="Revenue" value={formatCurrency(drillData.revenue)} subtext="Total received" />
+            <FinanceStatCard label="Expense" value={formatCurrency(drillData.expense)} subtext="Total spent" valueColor="#666" />
+            <FinanceStatCard
+              label="Profit"
+              value={formatCurrency(drillData.profit)}
+              subtext={drillData.profit >= 0 ? 'Positive balance' : 'Negative balance'}
+              bgColor={drillData.profit >= 0 ? '#1a1a1a' : '#dc2626'}
+            />
+            {profitMargin !== null && (
+              <FinanceStatCard label="Margin" value={`${profitMargin}%`} subtext={Number(profitMargin) >= 20 ? 'Healthy' : 'Below target'} />
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ── Aggregate dashboard view ──────────────────────────────────────────────
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '24px' }}>
+      <div style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a', marginBottom: '4px' }}>Project Profit</div>
+      <div style={{ fontSize: '13px', color: '#999', marginBottom: '24px' }}>All projects ranked by profitability</div>
+
+      {aggLoading && (
+        <div style={{ padding: '48px 0', textAlign: 'center', color: '#999', fontSize: '14px' }}>Loading...</div>
+      )}
+
+      {!aggLoading && aggError && (
+        <div style={{ padding: '48px 0', textAlign: 'center', color: '#dc2626', fontSize: '14px' }}>{aggError}</div>
+      )}
+
+      {!aggLoading && !aggError && aggregate && (
+        <>
+          {/* Summary cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '28px' }}>
+            <FinanceStatCard
+              label="Total Revenue"
+              value={formatCurrency(aggregate.totalRevenue)}
+              subtext="Across all projects"
+            />
+            <FinanceStatCard
+              label="Total Expense"
+              value={formatCurrency(aggregate.totalExpense)}
+              subtext="Across all projects"
+              valueColor="#666"
+            />
+            <FinanceStatCard
+              label="Total Profit"
+              value={formatCurrency(aggregate.totalProfit)}
+              subtext={aggregate.totalProfit >= 0 ? 'Positive balance' : 'Negative balance'}
+              bgColor={aggregate.totalProfit >= 0 ? '#1a1a1a' : '#dc2626'}
+              isNegative={aggregate.totalProfit < 0}
+            />
+            {aggregate.topProject && (
+              <FinanceStatCard
+                label="Top Project"
+                value={aggregate.topProject.projectName}
+                subtext={`${formatCurrency(aggregate.topProject.profit)} profit`}
+              />
+            )}
+          </div>
+
+          {/* Project ranking table */}
+          {aggregate.projects.length === 0 ? (
+            <div style={{ padding: '32px 0', textAlign: 'center', color: '#bbb', fontSize: '14px' }}>
+              No project financial data yet.
+            </div>
+          ) : (
+            <div style={{ border: '1px solid #e5e5e5', borderRadius: '10px', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ ...th, width: 48 }}>#</th>
+                    <th style={th}>Project</th>
+                    <th style={{ ...th, textAlign: 'right' }}>Revenue</th>
+                    <th style={{ ...th, textAlign: 'right' }}>Expense</th>
+                    <th style={{ ...th, textAlign: 'right' }}>Profit</th>
+                    <th style={{ ...th, textAlign: 'right' }}>Margin</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {aggregate.projects.map((p, idx) => (
+                    <tr
+                      key={p.projectId}
+                      onClick={() => handleSelectProject(p)}
+                      style={{ cursor: 'pointer', transition: 'background 0.15s ease' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = '#fafafa')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <td style={{ ...td, color: '#999', fontWeight: 600 }}>{idx + 1}</td>
+                      <td style={{ ...td, fontWeight: 500 }}>{p.projectName}</td>
+                      <td style={{ ...td, textAlign: 'right' }}>{formatCurrency(p.revenue)}</td>
+                      <td style={{ ...td, textAlign: 'right', color: '#666' }}>{formatCurrency(p.expense)}</td>
+                      <td style={{ ...td, textAlign: 'right', fontWeight: 600, color: p.profit >= 0 ? '#1a1a1a' : '#dc2626' }}>
+                        {formatCurrency(p.profit)}
+                      </td>
+                      <td style={{ ...td, textAlign: 'right', color: p.profitMargin >= 20 ? '#16a34a' : p.profitMargin > 0 ? '#d97706' : '#dc2626' }}>
+                        {p.revenue > 0 ? `${p.profitMargin}%` : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

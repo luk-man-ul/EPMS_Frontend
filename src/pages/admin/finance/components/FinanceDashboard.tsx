@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { getFinanceSummary } from '../finance.api'
 import type { FinanceSummaryData } from '../finance.api'
 import { formatCurrency } from '../finance.utils'
+import FinanceStatCard from './FinanceStatCard'
 
 const FinanceDashboard = () => {
   const [summary, setSummary] = useState<FinanceSummaryData | null>(null)
@@ -46,29 +47,27 @@ const FinanceDashboard = () => {
       label: 'Total Revenue',
       value: formatCurrency(totalRevenue),
       subtext: 'All time revenue',
-      color: '#1a1a1a',
-      bgColor: '#fff',
+      bgColor: '#fff' as const,
     },
     {
       label: 'Total Expense',
       value: formatCurrency(totalExpense),
       subtext: 'All time expenses',
-      color: '#666',
-      bgColor: '#fff',
+      bgColor: '#fff' as const,
+      valueColor: '#666',
     },
     {
       label: 'Net Profit',
       value: formatCurrency(profit),
       subtext: profit >= 0 ? 'Positive balance' : 'Negative balance',
-      color: '#666',
-      bgColor: '#fff',
+      bgColor: '#fff' as const,
+      isNegative: profit < 0,
     },
     {
       label: 'Profit Margin',
       value: `${profitMargin}%`,
       subtext: Number(profitMargin) >= 20 ? 'Healthy margin' : 'Below target',
-      color: '#fff',
-      bgColor: '#1a1a1a',
+      bgColor: '#1a1a1a' as const,
     },
   ]
 
@@ -82,38 +81,15 @@ const FinanceDashboard = () => {
         marginBottom: '32px',
       }}>
         {cards.map((card, index) => (
-          <div
+          <FinanceStatCard
             key={index}
-            style={{
-              background: card.bgColor,
-              border: card.bgColor === '#fff' ? '1px solid #e5e5e5' : 'none',
-              borderRadius: '12px',
-              padding: '24px',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              if (card.bgColor === '#fff') {
-                e.currentTarget.style.borderColor = '#d4d4d4'
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (card.bgColor === '#fff') {
-                e.currentTarget.style.borderColor = '#e5e5e5'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
-          >
-            <div style={{ fontSize: '13px', color: card.bgColor === '#fff' ? '#666' : '#999', marginBottom: '8px' }}>
-              {card.label}
-            </div>
-            <div style={{ fontSize: '32px', fontWeight: 600, color: card.color, letterSpacing: '-0.02em', marginBottom: '8px' }}>
-              {card.value}
-            </div>
-            <div style={{ fontSize: '12px', color: card.bgColor === '#fff' ? '#999' : '#ccc' }}>
-              {card.subtext}
-            </div>
-          </div>
+            label={card.label}
+            value={card.value}
+            subtext={card.subtext}
+            bgColor={card.bgColor}
+            valueColor={'valueColor' in card ? card.valueColor : undefined}
+            isNegative={'isNegative' in card ? card.isNegative : false}
+          />
         ))}
       </div>
 

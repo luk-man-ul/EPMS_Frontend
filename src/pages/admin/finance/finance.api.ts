@@ -84,6 +84,32 @@ export const getProjectProfit = async (projectId: string): Promise<ProjectProfit
   return res.data
 }
 
+// ── Project aggregate ─────────────────────────────────────────────────────────
+
+export interface ProjectProfitSummary {
+  projectId: string
+  projectName: string
+  revenue: number
+  expense: number
+  profit: number
+  profitMargin: number
+  revenueCount: number
+  expenseCount: number
+}
+
+export interface AllProjectsProfitData {
+  projects: ProjectProfitSummary[]
+  totalRevenue: number
+  totalExpense: number
+  totalProfit: number
+  topProject: ProjectProfitSummary | null
+}
+
+export const getAllProjectsProfit = async (): Promise<AllProjectsProfitData> => {
+  const res = await api.get('/finance/projects/summary')
+  return res.data
+}
+
 export interface EmployeeCostData {
   employeeId: string
   totalSalary: number
@@ -91,6 +117,27 @@ export interface EmployeeCostData {
 
 export const getEmployeeCost = async (employeeId: string): Promise<EmployeeCostData> => {
   const res = await api.get(`/finance/employee/${employeeId}`)
+  return res.data
+}
+
+// ── Employee aggregate ────────────────────────────────────────────────────────
+
+export interface EmployeeCostSummary {
+  employeeId: string
+  employeeName: string
+  totalSalary: number
+  salaryCount: number
+}
+
+export interface AllEmployeesCostData {
+  employees: EmployeeCostSummary[]
+  totalPayroll: number
+  employeeCount: number
+  topEarner: EmployeeCostSummary | null
+}
+
+export const getAllEmployeesCost = async (): Promise<AllEmployeesCostData> => {
+  const res = await api.get('/finance/employees/summary')
   return res.data
 }
 
