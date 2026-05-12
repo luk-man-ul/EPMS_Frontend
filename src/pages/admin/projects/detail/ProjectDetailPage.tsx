@@ -94,7 +94,7 @@ const ProjectDetailPage = () => {
   ]
 
   return (
-    <div style={{ padding: '32px', maxWidth: '1600px', margin: '0 auto' }}>
+    <div style={{ width: '100%' }}>
       
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
