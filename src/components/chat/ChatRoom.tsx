@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { socketService } from '../../services/socket';
 import type { ChatMessage } from './types';
@@ -181,6 +182,33 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
     }, 100);
   };
 
+  // ── Format date label for dividers ─────────────────────────────────────────
+  const formatDateLabel = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    const isSameDay = (a: Date, b: Date) =>
+      a.getDate() === b.getDate() &&
+      a.getMonth() === b.getMonth() &&
+      a.getFullYear() === b.getFullYear();
+
+    if (isSameDay(date, today)) return 'Today';
+    if (isSameDay(date, yesterday)) return 'Yesterday';
+
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yy = String(date.getFullYear()).slice(-2);
+    return `${dd}/${mm}/${yy}`;
+  };
+
+  // ── Group messages by calendar date ─────────────────────────────────────────
+  const getDateKey = (dateStr: string): string => {
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  };
+
   const typingUserNames = Array.from(typingUsers.keys())
     .filter((userId) => userId !== user?.id)
     .map((userId) => {
@@ -211,15 +239,49 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
             <p>No messages yet. Start the conversation!</p>
           </div>
         ) : (
-          messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              isOwnMessage={message.senderId === user?.id}
-              onEditRequest={handleEditRequest}
-              onDelete={handleDeleteMessage}
-            />
-          ))
+          (() => {
+            const rendered: React.ReactNode[] = [];
+            let lastDateKey = '';
+            messages.forEach((message) => {
+              const dateKey = getDateKey(message.createdAt);
+              if (dateKey !== lastDateKey) {
+                lastDateKey = dateKey;
+                rendered.push(
+                  <div key={`divider-${dateKey}`} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    margin: '16px 0 8px',
+                    padding: '0 16px',
+                  }}>
+                    <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }} />
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: '#9ca3af',
+                      whiteSpace: 'nowrap',
+                      padding: '2px 10px',
+                      background: '#f3f4f6',
+                      borderRadius: '999px',
+                    }}>
+                      {formatDateLabel(message.createdAt)}
+                    </span>
+                    <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }} />
+                  </div>
+                );
+              }
+              rendered.push(
+                <MessageBubble
+                  key={message.id}
+                  message={message}
+                  isOwnMessage={message.senderId === user?.id}
+                  onEditRequest={handleEditRequest}
+                  onDelete={handleDeleteMessage}
+                />
+              );
+            });
+            return rendered;
+          })()
         )}
         <div ref={messagesEndRef} />
       </div>
