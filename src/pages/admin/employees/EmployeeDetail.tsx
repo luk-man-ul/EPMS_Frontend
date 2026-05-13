@@ -284,9 +284,9 @@ function getPrimaryRole(emp: Employee): string {
 
 const styles = {
   page: {
-    padding: '32px',
-    maxWidth: 1100,
-    margin: '0 auto',
+    padding: '0',
+    maxWidth: '100%',
+    margin: '0',
     display: 'flex',
     flexDirection: 'column' as const,
     gap: 20,

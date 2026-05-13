@@ -121,7 +121,7 @@ const TaskDetailPage = () => {
   const avatarInitials = (name: string) => name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 24px' }}>
+    <div style={{ width: '100%' }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
 
       {/* TOP BAR */}

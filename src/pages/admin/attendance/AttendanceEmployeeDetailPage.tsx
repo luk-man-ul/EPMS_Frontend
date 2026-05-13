@@ -83,7 +83,7 @@ const AttendanceEmployeeDetailPage = () => {
     : '?'
 
   return (
-    <div style={{ padding: '32px', maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
       <button onClick={() => navigate(-1)} style={backBtnStyle}>
         <ArrowLeft size={16} /> Back to Attendance
