@@ -9,7 +9,6 @@ interface ProjectRow {
   tasksCompleted: number
   totalTasks: number
   teamSize: number
-  budget: number | null
 }
 
 const statusStyle: Record<string, { bg: string; color: string }> = {
@@ -24,34 +23,55 @@ const formatStatus = (s: string) =>
   s.charAt(0) + s.slice(1).toLowerCase().replace(/_/g, ' ')
 
 const ProjectPerformanceReport = () => {
-  const [projects, setProjects] = useState<ProjectRow[]>([])
+  const [allProjects, setAllProjects] = useState<ProjectRow[]>([])
+  const [filtered, setFiltered] = useState<ProjectRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Filter state
+  const [statusFilter, setStatusFilter] = useState('')
+  const [searchFilter, setSearchFilter] = useState('')
+
   useEffect(() => {
-    const fetchProjects = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true)
-        // GET /projects returns all projects for admin with tasks + members included
-        const res = await api.get('/projects')
-        const raw = res.data.data || res.data || []
 
-        const mapped: ProjectRow[] = raw.map((p: any) => {
-          const totalTasks = p.tasks?.length ?? 0
-          const completedTasks = p.tasks?.filter((t: any) => t.status === 'COMPLETED').length ?? 0
+        // Fetch all projects
+        const projectsRes = await api.get('/projects')
+        const rawProjects = projectsRes.data.data || projectsRes.data || []
+
+        // Fetch all tasks in one call (limit high enough to get all)
+        const tasksRes = await api.get('/tasks', { params: { limit: 1000, page: 1 } })
+        const allTasks: any[] = tasksRes.data.data || tasksRes.data || []
+
+        // Group tasks by projectId
+        const tasksByProject: Record<string, { total: number; completed: number }> = {}
+        allTasks.forEach((t: any) => {
+          if (!t.projectId) return
+          if (!tasksByProject[t.projectId]) tasksByProject[t.projectId] = { total: 0, completed: 0 }
+          // Exclude PROPOSED/REJECTED/CANCELLED from task counts (same logic as backend)
+          if (!['PROPOSED', 'REJECTED', 'CANCELLED'].includes(t.status)) {
+            tasksByProject[t.projectId].total++
+            if (t.status === 'COMPLETED') tasksByProject[t.projectId].completed++
+          }
+        })
+
+        const mapped: ProjectRow[] = rawProjects.map((p: any) => {
+          const tc = tasksByProject[p.id] || { total: 0, completed: 0 }
           return {
             id: p.id,
             name: p.name,
             status: p.status,
-            progress: p.progress ?? (totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0),
-            tasksCompleted: completedTasks,
-            totalTasks,
+            progress: p.progress ?? 0,
+            tasksCompleted: tc.completed,
+            totalTasks: tc.total,
             teamSize: p.teamSize ?? p.members?.length ?? 0,
-            budget: p.budget ?? null,
           }
         })
 
-        setProjects(mapped)
+        setAllProjects(mapped)
+        setFiltered(mapped)
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to load projects')
       } finally {
@@ -59,22 +79,29 @@ const ProjectPerformanceReport = () => {
       }
     }
 
-    fetchProjects()
+    fetchData()
   }, [])
 
-  // ── Derived summary stats ──────────────────────────────────────────────────
-  const totalProjects = projects.length
-  const avgProgress = totalProjects > 0
-    ? Math.round(projects.reduce((s, p) => s + p.progress, 0) / totalProjects)
-    : 0
-  const totalBudget = projects.reduce((s, p) => s + (p.budget ?? 0), 0)
+  // Apply filters whenever filter state or allProjects changes
+  useEffect(() => {
+    let result = allProjects
+    if (statusFilter) {
+      result = result.filter(p => p.status === statusFilter)
+    }
+    if (searchFilter.trim()) {
+      const lower = searchFilter.toLowerCase()
+      result = result.filter(p => p.name.toLowerCase().includes(lower))
+    }
+    setFiltered(result)
+  }, [statusFilter, searchFilter, allProjects])
 
-  const formatBudget = (n: number) => {
-    if (n === 0) return '—'
-    if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`
-    if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`
-    return `$${n}`
-  }
+  // ── Derived summary stats (always from filtered list) ─────────────────────
+  const totalProjects = filtered.length
+  const activeProjects = filtered.filter(p => p.status === 'ACTIVE').length
+  const completedProjects = filtered.filter(p => p.status === 'COMPLETED').length
+  const avgProgress = totalProjects > 0
+    ? Math.round(filtered.reduce((s, p) => s + p.progress, 0) / totalProjects)
+    : 0
 
   // ── Loading / error states ─────────────────────────────────────────────────
   if (loading) {
@@ -95,10 +122,81 @@ const ProjectPerformanceReport = () => {
 
   return (
     <div>
-      {/* ── Summary Cards (3 only) ─────────────────────────────────────────── */}
+      {/* ── Filters ───────────────────────────────────────────────────────── */}
+      <div style={{
+        background: '#fff',
+        border: '1px solid #e5e5e5',
+        borderRadius: '12px',
+        padding: '16px 20px',
+        marginBottom: '20px',
+        display: 'flex',
+        gap: '12px',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+      }}>
+        {/* Search by name */}
+        <input
+          type="text"
+          placeholder="Search project name..."
+          value={searchFilter}
+          onChange={e => setSearchFilter(e.target.value)}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '8px',
+            border: '1px solid #e5e5e5',
+            fontSize: '14px',
+            outline: 'none',
+            minWidth: '200px',
+          }}
+        />
+
+        {/* Status filter */}
+        <select
+          value={statusFilter}
+          onChange={e => setStatusFilter(e.target.value)}
+          style={{
+            padding: '8px 14px',
+            borderRadius: '8px',
+            border: '1px solid #e5e5e5',
+            background: '#fff',
+            fontSize: '14px',
+            color: '#1a1a1a',
+            cursor: 'pointer',
+            outline: 'none',
+          }}
+        >
+          <option value="">All Statuses</option>
+          <option value="ACTIVE">Active</option>
+          <option value="PLANNING">Planning</option>
+          <option value="ON_HOLD">On Hold</option>
+          <option value="COMPLETED">Completed</option>
+          <option value="ARCHIVED">Archived</option>
+        </select>
+
+        {/* Clear */}
+        {(statusFilter || searchFilter) && (
+          <button
+            onClick={() => { setStatusFilter(''); setSearchFilter('') }}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '8px',
+              border: '1px solid #e5e5e5',
+              background: '#fff',
+              fontSize: '13px',
+              color: '#6b7280',
+              cursor: 'pointer',
+              fontWeight: 500,
+            }}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* ── Summary Cards (4 cards) ────────────────────────────────────────── */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateColumns: 'repeat(4, 1fr)',
         gap: '16px',
         marginBottom: '24px',
       }}>
@@ -114,16 +212,22 @@ const ProjectPerformanceReport = () => {
           <div style={{ fontSize: '32px', fontWeight: 700, color: '#1a1a1a' }}>{avgProgress}%</div>
         </div>
 
-        {/* Total Budget */}
-        <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '20px' }}>
-          <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>Total Budget</div>
-          <div style={{ fontSize: '32px', fontWeight: 700, color: '#1a1a1a' }}>{formatBudget(totalBudget)}</div>
+        {/* Active Projects */}
+        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '20px' }}>
+          <div style={{ fontSize: '13px', color: '#16a34a', marginBottom: '8px', fontWeight: 500 }}>Active Projects</div>
+          <div style={{ fontSize: '32px', fontWeight: 700, color: '#16a34a' }}>{activeProjects}</div>
+        </div>
+
+        {/* Completed Projects */}
+        <div style={{ background: '#1a1a1a', borderRadius: '12px', padding: '20px' }}>
+          <div style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '8px', fontWeight: 500 }}>Completed Projects</div>
+          <div style={{ fontSize: '32px', fontWeight: 700, color: '#fff' }}>{completedProjects}</div>
         </div>
       </div>
 
       {/* ── Project Table ──────────────────────────────────────────────────── */}
       <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', overflow: 'hidden' }}>
-        {projects.length === 0 ? (
+        {filtered.length === 0 ? (
           <div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}>
             No projects found
           </div>
@@ -139,7 +243,7 @@ const ProjectPerformanceReport = () => {
               </tr>
             </thead>
             <tbody>
-              {projects.map((project) => {
+              {filtered.map((project) => {
                 const ss = statusStyle[project.status] || { bg: '#f3f4f6', color: '#6b7280' }
                 return (
                   <tr
