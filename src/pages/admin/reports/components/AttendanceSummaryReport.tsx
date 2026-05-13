@@ -111,13 +111,53 @@ function getPresetRange(preset: PresetKey): DateRange | null {
   }
 }
 
-// ─── API fetch ────────────────────────────────────────────────────────────────
+// ─── IST-safe "today" string ─────────────────────────────────────────────────
+
+/**
+ * Returns today's date as YYYY-MM-DD in IST (UTC+5:30).
+ * Avoids the UTC day-shift that toISOString() causes in IST.
+ * Used to cap the current month's endDate to today rather than the full
+ * month-end, so the attendance rate denominator only covers elapsed days.
+ */
+function todayIST(): string {
+  // Shift UTC time forward by IST offset (5h 30m) then read UTC date fields
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
+  const ist = new Date(Date.now() + IST_OFFSET_MS)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${ist.getUTCFullYear()}-${pad(ist.getUTCMonth() + 1)}-${pad(ist.getUTCDate())}`
+}
+
+/**
+ * Returns true when the given (year, month) is the current calendar month in IST.
+ * month is 0-indexed (JS convention).
+ */
+function isCurrentMonth(year: number, month: number): boolean {
+  const today = todayIST()                    // YYYY-MM-DD in IST
+  const [ty, tm] = today.split('-').map(Number)
+  return ty === year && tm - 1 === month      // tm is 1-indexed, month is 0-indexed
+}
 
 async function fetchMonthStats(
   year: number,
   month: number,
 ): Promise<MonthStats> {
-  const { startDate, endDate } = getMonthRange(year, month)
+  const { startDate, endDate: fullMonthEnd } = getMonthRange(year, month)
+
+  /**
+   * Current-month correction:
+   * For a month still in progress, using the full month-end as endDate causes
+   * the backend to count future working days as ABSENT, inflating the denominator
+   * and deflating the attendance rate.
+   *
+   * Fix: cap endDate to today (IST) for the current month.
+   * Past months always use their full month-end — their data is complete.
+   *
+   * Example (today = May 2):
+   *   May  → endDate = "2026-05-02"  (elapsed days only)
+   *   April → endDate = "2026-04-30" (full month, unchanged)
+   */
+  const endDate = isCurrentMonth(year, month) ? todayIST() : fullMonthEnd
+
   const res = await api.get('/attendance/stats', { params: { startDate, endDate } })
   const d = res.data
 
@@ -129,8 +169,14 @@ async function fetchMonthStats(
       ? Math.round((d.present / (d.totalEmployees * d.meta.totalDays)) * 1000) / 10
       : 0)
 
+  // Label: current month gets an "(in progress)" suffix so users know the
+  // rate reflects elapsed days only, not the full month.
+  const label = isCurrentMonth(year, month)
+    ? `${monthLabel(year, month)} (in progress)`
+    : monthLabel(year, month)
+
   return {
-    month:            monthLabel(year, month),
+    month:            label,
     startDate,
     endDate,
     totalEmployees:   d.totalEmployees   ?? 0,
@@ -290,6 +336,9 @@ const AttendanceSummaryReport = () => {
     setError(null)
     try {
       const now = new Date()
+      // Build exactly 3 month targets: current month + 2 prior months.
+      // Sorted oldest → newest so index 0 = 2 months ago, index 2 = current month.
+      // This order is required for computeTrend (each month compared to its predecessor).
       const targets: { year: number; month: number }[] = []
       for (let i = 2; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
@@ -298,7 +347,8 @@ const AttendanceSummaryReport = () => {
       const results = await Promise.all(
         targets.map(({ year, month }) => fetchMonthStats(year, month))
       )
-      setMonths(results)
+      // Reverse so cards render newest → oldest (current month first)
+      setMonths(results.slice().reverse())
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load attendance data')
     } finally {
@@ -360,14 +410,23 @@ const AttendanceSummaryReport = () => {
     if (preset !== 'custom') loadPreset(preset)
   }
 
-  // ── Derived: trends (only meaningful for last3Months multi-card view) ──────
+  // ── Derived: trends ───────────────────────────────────────────────────────
+  // months[] is newest → oldest: [current, prev1, prev2]
+  // Trend for index i = comparison of months[i] vs months[i+1] (the older month).
+  // Only meaningful for last3Months multi-card view.
   const trends: (MonthTrend | undefined)[] = months.map((m, i) =>
-    i > 0 ? computeTrend(m, months[i - 1]) : undefined
+    i < months.length - 1 ? computeTrend(m, months[i + 1]) : undefined
   )
 
-  // ── Visible cards ──────────────────────────────────────────────────────────
-  const visibleMonths = showAll ? months : months.slice(0, 2)
-  const hasMore = months.length > 2
+  // ── KPI cards: always show all months (capped at 3 for last3Months preset) ─
+  // No "Show More" toggle needed — 3 cards is the fixed KPI snapshot limit.
+  // The showAll / hasMore logic is preserved for custom ranges that may return
+  // more than 3 buckets in future (e.g. a 6-month custom range).
+  const KPI_CARD_LIMIT = 3
+  const visibleMonths = activePreset === 'last3Months'
+    ? months                          // always show all 3 — no toggle
+    : showAll ? months : months.slice(0, KPI_CARD_LIMIT)
+  const hasMore = activePreset !== 'last3Months' && months.length > KPI_CARD_LIMIT
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -514,12 +573,14 @@ const AttendanceSummaryReport = () => {
             marginBottom: hasMore ? '12px' : '24px',
           }}>
             {visibleMonths.map((m, index) => {
-              const isDarkIndex = showAll ? months.length - 1 : visibleMonths.length - 1
-              const isDark = index === isDarkIndex
+              // Highlight the most recent (current) month — always index 0
+              // since months[] is sorted newest → oldest.
+              const isDark = index === 0
               const textColor    = isDark ? '#fff'                    : '#1a1a1a'
               const subColor     = isDark ? '#9ca3af'                 : '#666'
               const dividerColor = isDark ? 'rgba(255,255,255,0.1)'  : '#f5f5f5'
-              const trend        = trends[showAll ? index : (months.length - visibleMonths.length + index)]
+              // trends[] is parallel to months[] (same newest→oldest order)
+              const trend = trends[index]
 
               return (
                 <div
