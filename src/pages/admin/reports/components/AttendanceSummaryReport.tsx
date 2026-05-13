@@ -32,6 +32,7 @@ const AttendanceSummaryReport = () => {
   const [months, setMonths] = useState<MonthStats[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showAll, setShowAll] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -99,6 +100,9 @@ const AttendanceSummaryReport = () => {
     )
   }
 
+  const visibleMonths = showAll ? months : months.slice(0, 2)
+  const hasMore = months.length > 2
+
   return (
     <div>
       {/* ── Monthly Cards ─────────────────────────────────────────────────── */}
@@ -106,10 +110,11 @@ const AttendanceSummaryReport = () => {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
         gap: '20px',
-        marginBottom: '24px',
+        marginBottom: hasMore ? '12px' : '24px',
       }}>
-        {months.map((m, index) => {
-          const isDark = index === months.length - 1
+        {visibleMonths.map((m, index) => {
+          const isDarkIndex = showAll ? months.length - 1 : visibleMonths.length - 1
+          const isDark = index === isDarkIndex
           const textColor = isDark ? '#fff' : '#1a1a1a'
           const subColor = isDark ? '#9ca3af' : '#666'
           const dividerColor = isDark ? 'rgba(255,255,255,0.1)' : '#f5f5f5'
@@ -167,13 +172,43 @@ const AttendanceSummaryReport = () => {
         })}
       </div>
 
+      {/* ── More / Less toggle for cards ──────────────────────────────────── */}
+      {hasMore && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
+          <button
+            onClick={() => setShowAll(prev => !prev)}
+            style={{
+              padding: '6px 16px',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: '#1a1a1a',
+              background: '#fff',
+              border: '1px solid #e5e5e5',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = '#f5f5f5'
+              e.currentTarget.style.borderColor = '#d4d4d4'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = '#fff'
+              e.currentTarget.style.borderColor = '#e5e5e5'
+            }}
+          >
+            {showAll ? 'Show Less' : 'More'}
+          </button>
+        </div>
+      )}
+
       {/* ── Breakdown bars ────────────────────────────────────────────────── */}
       <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '24px' }}>
         <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a', marginBottom: '20px' }}>
           Monthly Attendance Breakdown
         </h3>
 
-        {months.map((m, index) => {
+        {visibleMonths.map((m, index) => {
           const total = m.present + m.absent + m.late + m.halfDay + m.onLeave + m.wfh
           const pct = (n: number) => total > 0 ? ((n / total) * 100).toFixed(1) : '0.0'
 
@@ -187,7 +222,7 @@ const AttendanceSummaryReport = () => {
           ]
 
           return (
-            <div key={m.month} style={{ marginBottom: index < months.length - 1 ? '28px' : 0 }}>
+            <div key={m.month} style={{ marginBottom: index < visibleMonths.length - 1 ? '28px' : 0 }}>
               <div style={{ fontSize: '14px', fontWeight: 600, color: '#1a1a1a', marginBottom: '14px' }}>
                 {m.month}
                 <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 400, marginLeft: '8px' }}>
@@ -217,12 +252,42 @@ const AttendanceSummaryReport = () => {
                 ))}
               </div>
 
-              {index < months.length - 1 && (
+              {index < visibleMonths.length - 1 && (
                 <div style={{ height: '1px', background: '#f3f4f6', marginTop: '24px' }} />
               )}
             </div>
           )
         })}
+
+        {/* More / Less toggle inside breakdown */}
+        {hasMore && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #f3f4f6' }}>
+            <button
+              onClick={() => setShowAll(prev => !prev)}
+              style={{
+                padding: '6px 16px',
+                fontSize: '13px',
+                fontWeight: 500,
+                color: '#1a1a1a',
+                background: '#fff',
+                border: '1px solid #e5e5e5',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = '#f5f5f5'
+                e.currentTarget.style.borderColor = '#d4d4d4'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = '#fff'
+                e.currentTarget.style.borderColor = '#e5e5e5'
+              }}
+            >
+              {showAll ? 'Show Less' : 'More'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
