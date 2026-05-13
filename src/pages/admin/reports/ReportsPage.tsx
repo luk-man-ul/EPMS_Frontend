@@ -3,24 +3,17 @@ import ReportFilters from './components/ReportFilters'
 import ProjectPerformanceReport from './components/ProjectPerformanceReport'
 import EmployeeProductivityReport from './components/EmployeeProductivityReport'
 import AttendanceSummaryReport from './components/AttendanceSummaryReport'
-import FinancialReport from './components/FinancialReport'
-import ProfitLossReport from './components/ProfitLossReport'
+import FinancialAnalyticsReport from './components/FinancialReport'
 import type { ReportCategory } from './types/report.types'
 
 const ReportsPage = () => {
   const [activeReport, setActiveReport] = useState<ReportCategory>('PROJECT_PERFORMANCE')
-  const [filters, setFilters] = useState({})
-
-  const handleFilterChange = (newFilters: any) => {
-    setFilters({ ...filters, ...newFilters })
-  }
 
   const reports = [
-    { id: 'PROJECT_PERFORMANCE' as ReportCategory, label: 'Project Performance', icon: '📊' },
+    { id: 'PROJECT_PERFORMANCE'  as ReportCategory, label: 'Project Performance',   icon: '📊' },
     { id: 'EMPLOYEE_PRODUCTIVITY' as ReportCategory, label: 'Employee Productivity', icon: '👥' },
-    { id: 'ATTENDANCE_SUMMARY' as ReportCategory, label: 'Attendance Summary', icon: '📅' },
-    { id: 'FINANCIAL_REPORTS' as ReportCategory, label: 'Financial Reports', icon: '💰' },
-    { id: 'PROFIT_LOSS' as ReportCategory, label: 'Profit & Loss', icon: '📈' }
+    { id: 'ATTENDANCE_SUMMARY'   as ReportCategory, label: 'Attendance Summary',    icon: '📅' },
+    { id: 'FINANCIAL_ANALYTICS'  as ReportCategory, label: 'Financial Analytics',   icon: '💰' },
   ]
 
   return (
@@ -98,15 +91,14 @@ const ReportsPage = () => {
       </div>
 
       {/* Filters */}
-      <ReportFilters onFilterChange={handleFilterChange} />
+      <ReportFilters onFilterChange={() => {}} />
 
       {/* Report Content */}
       <div>
-        {activeReport === 'PROJECT_PERFORMANCE' && <ProjectPerformanceReport />}
+        {activeReport === 'PROJECT_PERFORMANCE'   && <ProjectPerformanceReport />}
         {activeReport === 'EMPLOYEE_PRODUCTIVITY' && <EmployeeProductivityReport />}
-        {activeReport === 'ATTENDANCE_SUMMARY' && <AttendanceSummaryReport />}
-        {activeReport === 'FINANCIAL_REPORTS' && <FinancialReport />}
-        {activeReport === 'PROFIT_LOSS' && <ProfitLossReport />}
+        {activeReport === 'ATTENDANCE_SUMMARY'    && <AttendanceSummaryReport />}
+        {activeReport === 'FINANCIAL_ANALYTICS'   && <FinancialAnalyticsReport />}
       </div>
     </div>
   )

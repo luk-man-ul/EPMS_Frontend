@@ -1,4 +1,4 @@
-export type ReportCategory = 'PROJECT_PERFORMANCE' | 'EMPLOYEE_PRODUCTIVITY' | 'ATTENDANCE_SUMMARY' | 'FINANCIAL_REPORTS' | 'PROFIT_LOSS'
+export type ReportCategory = 'PROJECT_PERFORMANCE' | 'EMPLOYEE_PRODUCTIVITY' | 'ATTENDANCE_SUMMARY' | 'FINANCIAL_ANALYTICS'
 
 export interface ProjectPerformance {
   projectName: string
