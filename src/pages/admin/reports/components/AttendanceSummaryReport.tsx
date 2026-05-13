@@ -381,7 +381,7 @@ const AttendanceSummaryReport = () => {
         padding: '16px 20px',
         marginBottom: '20px',
       }}>
-        {/* Preset buttons */}
+        {/* Preset buttons + module CTA */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
           {PRESETS.map(p => (
             <button
@@ -402,6 +402,35 @@ const AttendanceSummaryReport = () => {
               {p.label}
             </button>
           ))}
+
+          {/* CTA — same style as Financial Analytics "Open Finance module →" */}
+          <a
+            href="/admin/attendance"
+            style={{
+              marginLeft: 'auto',
+              padding: '7px 14px',
+              borderRadius: '8px',
+              border: '1px solid #e5e5e5',
+              background: '#fff',
+              color: '#1a1a1a',
+              fontSize: '13px',
+              fontWeight: 500,
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = '#f5f5f5'
+              e.currentTarget.style.borderColor = '#d4d4d4'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = '#fff'
+              e.currentTarget.style.borderColor = '#e5e5e5'
+            }}
+          >
+            Open Attendance module →
+          </a>
         </div>
 
         {/* Custom range inputs */}
