@@ -91,10 +91,24 @@ const STATUS_LABEL: Record<string, string> = {
   WORKED_HOLIDAY: 'Worked on Holiday',
 }
 
+/**
+ * Statuses that represent actual work performed.
+ * Only these should render as WORKED_WEEKEND or WORKED_HOLIDAY.
+ * ABSENT and LEAVE on a non-working day are stale/invalid rows and must
+ * render as the plain day type (WEEKEND / HOLIDAY), not as "worked".
+ */
+const WORK_STATUSES = new Set<string>(['PRESENT', 'LATE', 'HALF_DAY', 'WFH'])
+
 /** Derive a display key from dayType + status */
 function displayKey(day: CalendarDay): string {
-  if (day.dayType === 'HOLIDAY') return day.status ? 'WORKED_HOLIDAY' : 'HOLIDAY'
-  if (day.dayType === 'WEEKEND') return day.status ? 'WORKED_WEEKEND' : 'WEEKEND'
+  if (day.dayType === 'HOLIDAY') {
+    // Only show WORKED_HOLIDAY when the employee actually performed work
+    return (day.status && WORK_STATUSES.has(day.status)) ? 'WORKED_HOLIDAY' : 'HOLIDAY'
+  }
+  if (day.dayType === 'WEEKEND') {
+    // Only show WORKED_WEEKEND when the employee actually performed work
+    return (day.status && WORK_STATUSES.has(day.status)) ? 'WORKED_WEEKEND' : 'WEEKEND'
+  }
   return day.status ?? ''
 }
 
