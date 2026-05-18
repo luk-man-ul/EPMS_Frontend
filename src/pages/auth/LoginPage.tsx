@@ -14,7 +14,6 @@ const LoginPage = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
   const [formLoading, setFormLoading] = useState(false)
 
@@ -34,7 +33,7 @@ const LoginPage = () => {
         method:      'POST',
         credentials: 'include',   // required so the browser stores the httpOnly refresh_token cookie
         headers:     { 'Content-Type': 'application/json' },
-        body:        JSON.stringify({ email, password, rememberMe }),
+        body:        JSON.stringify({ email, password }),
       })
 
       const data = await response.json()
@@ -48,7 +47,7 @@ const LoginPage = () => {
       // Pass response to AuthContext — stores access token in memory,
       // user snapshot in localStorage. The refresh_token is already in
       // the httpOnly cookie set by the backend.
-      setAuthUser(data, rememberMe)
+      setAuthUser(data)
 
       const role = data.user.role
       if (role === 'ADMIN') {
@@ -178,18 +177,6 @@ const LoginPage = () => {
                   )}
                 </button>
               </div>
-            </div>
-
-            <div className="form-options">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  className="checkbox-input"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                />
-                <span className="checkbox-text">Remember me</span>
-              </label>
             </div>
 
             <Button

@@ -24,7 +24,7 @@ interface AuthContextType {
   user:         User | null;
   accessToken:  string | null;
   loading:      boolean;
-  login:        (data: LoginResponse, rememberMe?: boolean) => void;
+  login:        (data: LoginResponse) => void;
   logout:       () => Promise<void>;
   setTokens:    (accessToken: string, user: User) => void;
 }
@@ -44,15 +44,13 @@ interface AuthProviderProps {
 // Phase 3 change:
 //   - access_token is stored IN MEMORY ONLY (never in localStorage/sessionStorage)
 //   - user snapshot is stored in localStorage (for display only, not for auth)
-//   - rememberMe preference is stored in localStorage (controls cookie expiry)
 //
 // The refresh_token lives in an httpOnly cookie — JS cannot read it.
 // The uid cookie (non-httpOnly) is set by the backend to identify the user
 // for the /auth/refresh call.
 //////////////////////////////////////////////////////////
 
-const STORAGE_KEY_USER       = 'user';
-const STORAGE_KEY_REMEMBER   = 'rememberMe';
+const STORAGE_KEY_USER = 'user';
 
 const readStoredUser = (): User | null => {
   try {
@@ -69,7 +67,6 @@ const writeStoredUser = (user: User): void => {
 const clearStoredUser = (): void => {
   try {
     localStorage.removeItem(STORAGE_KEY_USER);
-    localStorage.removeItem(STORAGE_KEY_REMEMBER);
     // Also clear legacy token keys from old auth system
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');
@@ -116,12 +113,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // The backend has already set the httpOnly refresh_token cookie.
   //////////////////////////////////////////////////////////
 
-  const login = useCallback((data: LoginResponse, rememberMe = false) => {
+  const login = useCallback((data: LoginResponse) => {
     try {
       clearStoredUser();
       if (data?.access_token && data?.user) {
         setTokens(data.access_token, data.user);
-        localStorage.setItem(STORAGE_KEY_REMEMBER, rememberMe ? '1' : '0');
       } else {
         console.error('[AuthContext] Invalid login data:', data);
       }
