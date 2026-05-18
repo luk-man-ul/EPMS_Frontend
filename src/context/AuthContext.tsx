@@ -1,27 +1,81 @@
-import { createContext, useContext, useState, useLayoutEffect } from "react";
-import type { ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from 'react';
+import type { ReactNode } from 'react';
+import { setAccessToken as setApiToken } from '../utils/api';
 
 //////////////////////////////////////////////////////////
 // TYPES
 //////////////////////////////////////////////////////////
 
-interface User {
-  id: string;
-  email: string;
-  role: string;
+export interface User {
+  id:          string;
+  email:       string;
+  role:        string;
   permissions: string[];
 }
 
 interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  login: (data: any, rememberMe?: boolean) => void;
-  logout: () => void;
+  user:         User | null;
+  accessToken:  string | null;
+  loading:      boolean;
+  login:        (data: LoginResponse, rememberMe?: boolean) => void;
+  logout:       () => Promise<void>;
+  setTokens:    (accessToken: string, user: User) => void;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  user:         User;
 }
 
 interface AuthProviderProps {
   children: ReactNode;
 }
+
+//////////////////////////////////////////////////////////
+// STORAGE HELPERS
+//
+// Phase 3 change:
+//   - access_token is stored IN MEMORY ONLY (never in localStorage/sessionStorage)
+//   - user snapshot is stored in localStorage (for display only, not for auth)
+//   - rememberMe preference is stored in localStorage (controls cookie expiry)
+//
+// The refresh_token lives in an httpOnly cookie — JS cannot read it.
+// The uid cookie (non-httpOnly) is set by the backend to identify the user
+// for the /auth/refresh call.
+//////////////////////////////////////////////////////////
+
+const STORAGE_KEY_USER       = 'user';
+const STORAGE_KEY_REMEMBER   = 'rememberMe';
+
+const readStoredUser = (): User | null => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_USER);
+    if (raw && raw !== 'undefined' && raw !== 'null') return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return null;
+};
+
+const writeStoredUser = (user: User): void => {
+  try { localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user)); } catch { /* ignore */ }
+};
+
+const clearStoredUser = (): void => {
+  try {
+    localStorage.removeItem(STORAGE_KEY_USER);
+    localStorage.removeItem(STORAGE_KEY_REMEMBER);
+    // Also clear legacy token keys from old auth system
+    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+  } catch { /* ignore */ }
+};
 
 //////////////////////////////////////////////////////////
 // CONTEXT
@@ -30,111 +84,147 @@ interface AuthProviderProps {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 //////////////////////////////////////////////////////////
-// STORAGE HELPERS
-// - localStorage  → persists across browser restarts (rememberMe = true)
-// - sessionStorage → cleared when tab/browser closes  (rememberMe = false)
-//////////////////////////////////////////////////////////
-
-const STORAGE_KEY_TOKEN = "token";
-const STORAGE_KEY_USER  = "user";
-
-/** Read token from either storage (localStorage takes priority) */
-const readToken = (): string | null => {
-  try {
-    const ls = localStorage.getItem(STORAGE_KEY_TOKEN);
-    if (ls && ls !== "undefined" && ls !== "null") return ls;
-    const ss = sessionStorage.getItem(STORAGE_KEY_TOKEN);
-    if (ss && ss !== "undefined" && ss !== "null") return ss;
-  } catch { /* ignore */ }
-  return null;
-};
-
-/** Read user from either storage (localStorage takes priority) */
-const readUser = (): User | null => {
-  try {
-    const ls = localStorage.getItem(STORAGE_KEY_USER);
-    if (ls && ls !== "undefined" && ls !== "null") return JSON.parse(ls);
-    const ss = sessionStorage.getItem(STORAGE_KEY_USER);
-    if (ss && ss !== "undefined" && ss !== "null") return JSON.parse(ss);
-  } catch { /* ignore */ }
-  return null;
-};
-
-/** Write token + user to the appropriate storage */
-const writeSession = (token: string, user: User, rememberMe: boolean) => {
-  const storage = rememberMe ? localStorage : sessionStorage;
-  storage.setItem(STORAGE_KEY_TOKEN, token);
-  storage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
-};
-
-/** Clear token + user from BOTH storages */
-const clearSession = () => {
-  localStorage.removeItem(STORAGE_KEY_TOKEN);
-  localStorage.removeItem(STORAGE_KEY_USER);
-  sessionStorage.removeItem(STORAGE_KEY_TOKEN);
-  sessionStorage.removeItem(STORAGE_KEY_USER);
-};
-
-//////////////////////////////////////////////////////////
 // PROVIDER
 //////////////////////////////////////////////////////////
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  // loading = true on first render so ProtectedRoute waits before redirecting.
-  // useLayoutEffect fires synchronously before paint and flips it to false
-  // after the storage read completes — no async work, no flicker.
+  // Access token lives ONLY in memory — never written to any storage
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+
+  // User snapshot — restored from localStorage for display, validated by silent refresh
+  const [user, setUser] = useState<User | null>(null);
+
+  // loading = true until silent refresh attempt completes on mount
   const [loading, setLoading] = useState(true);
 
-  // Initialize user from storage (synchronous read)
-  const [user, setUser] = useState<User | null>(() => {
-    const token = readToken();
-    const storedUser = readUser();
-    return token && storedUser ? storedUser : null;
-  });
+  // Prevent concurrent silent refresh calls
+  const refreshingRef = useRef(false);
 
-  // Flip loading off after the first synchronous render cycle.
-  // useLayoutEffect runs before the browser paints, so ProtectedRoute
-  // never renders a redirect on the frame where user is still being read.
-  useLayoutEffect(() => {
-    setLoading(false);
+  //////////////////////////////////////////////////////////
+  // setTokens — called after login or successful refresh
+  //////////////////////////////////////////////////////////
+
+  const setTokens = useCallback((token: string, userData: User) => {
+    setAccessToken(token);
+    setApiToken(token);          // sync to axios interceptor
+    setUser(userData);
+    writeStoredUser(userData);
   }, []);
 
   //////////////////////////////////////////////////////////
-  // LOGIN
-  // rememberMe = true  → localStorage  (survives browser restart)
-  // rememberMe = false → sessionStorage (cleared on tab close)
+  // login — called by LoginPage after successful POST /auth/login
+  // The backend has already set the httpOnly refresh_token cookie.
   //////////////////////////////////////////////////////////
 
-  const login = (data: any, rememberMe = false) => {
+  const login = useCallback((data: LoginResponse, rememberMe = false) => {
     try {
-      clearSession(); // always start clean
-
+      clearStoredUser();
       if (data?.access_token && data?.user) {
-        writeSession(data.access_token, data.user, rememberMe);
-        setUser(data.user);
+        setTokens(data.access_token, data.user);
+        localStorage.setItem(STORAGE_KEY_REMEMBER, rememberMe ? '1' : '0');
       } else {
-        console.error("Invalid login data:", data);
+        console.error('[AuthContext] Invalid login data:', data);
       }
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error('[AuthContext] login failed:', error);
     }
-  };
+  }, [setTokens]);
 
   //////////////////////////////////////////////////////////
-  // LOGOUT
+  // logout — calls backend to revoke refresh token, then clears state
   //////////////////////////////////////////////////////////
 
-  const logout = () => {
+  const logout = useCallback(async () => {
     try {
-      clearSession();
+      // Call backend logout — revokes DB token + clears httpOnly cookie
+      await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
+        method:      'POST',
+        credentials: 'include',   // sends cookies
+        headers:     accessToken
+          ? { Authorization: `Bearer ${accessToken}` }
+          : {},
+      });
+    } catch {
+      // Ignore network errors — still clear local state
+    } finally {
+      setAccessToken(null);
+      setApiToken(null);         // clear axios interceptor token
       setUser(null);
-    } catch (error) {
-      console.error("Logout failed:", error);
+      clearStoredUser();
     }
-  };
+  }, [accessToken]);
+
+  //////////////////////////////////////////////////////////
+  // silentRefresh — called on app mount to restore session
+  // Uses the httpOnly refresh_token cookie automatically.
+  //////////////////////////////////////////////////////////
+
+  const silentRefresh = useCallback(async (): Promise<boolean> => {
+    if (refreshingRef.current) return false;
+    refreshingRef.current = true;
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
+        method:      'POST',
+        credentials: 'include',   // sends httpOnly cookie
+      });
+
+      if (!res.ok) return false;
+
+      const data: LoginResponse = await res.json();
+      if (data?.access_token && data?.user) {
+        setTokens(data.access_token, data.user);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    } finally {
+      refreshingRef.current = false;
+    }
+  }, [setTokens]);
+
+  //////////////////////////////////////////////////////////
+  // On mount: attempt silent refresh to restore session.
+  // If it fails, user stays logged out.
+  // loading flips to false after the attempt completes.
+  //////////////////////////////////////////////////////////
+
+  useEffect(() => {
+    // Pre-populate user from localStorage for instant display while refresh runs
+    const storedUser = readStoredUser();
+    if (storedUser) setUser(storedUser);
+
+    silentRefresh().finally(() => setLoading(false));
+
+    // Listen for token refreshes triggered by the axios interceptor.
+    // When the interceptor silently refreshes a token mid-flight, it dispatches
+    // this event so React state stays in sync without a full re-mount.
+    const handleTokenRefreshed = (e: Event) => {
+      const { accessToken: newToken, user: newUser } = (e as CustomEvent).detail;
+      if (newToken && newUser) setTokens(newToken, newUser);
+    };
+
+    // Listen for session expiry triggered by the axios interceptor.
+    const handleSessionExpired = () => {
+      setAccessToken(null);
+      setApiToken(null);
+      setUser(null);
+      clearStoredUser();
+    };
+
+    window.addEventListener('auth:token-refreshed', handleTokenRefreshed);
+    window.addEventListener('auth:session-expired', handleSessionExpired);
+
+    return () => {
+      window.removeEventListener('auth:token-refreshed', handleTokenRefreshed);
+      window.removeEventListener('auth:session-expired', handleSessionExpired);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, accessToken, loading, login, logout, setTokens }}>
       {children}
     </AuthContext.Provider>
   );
@@ -146,8 +236,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };

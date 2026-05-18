@@ -31,9 +31,10 @@ const LoginPage = () => {
 
     try {
       const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, rememberMe }),
+        method:      'POST',
+        credentials: 'include',   // required so the browser stores the httpOnly refresh_token cookie
+        headers:     { 'Content-Type': 'application/json' },
+        body:        JSON.stringify({ email, password, rememberMe }),
       })
 
       const data = await response.json()
@@ -44,12 +45,12 @@ const LoginPage = () => {
         return
       }
 
-      // Save via AuthContext — pass rememberMe so storage is chosen correctly
+      // Pass response to AuthContext — stores access token in memory,
+      // user snapshot in localStorage. The refresh_token is already in
+      // the httpOnly cookie set by the backend.
       setAuthUser(data, rememberMe)
 
-      // Redirect based on role (correct routes)
       const role = data.user.role
-
       if (role === 'ADMIN') {
         navigate('/admin/dashboard', { replace: true })
       } else if (role === 'TEAM_LEAD' || role === 'EMPLOYEE') {
