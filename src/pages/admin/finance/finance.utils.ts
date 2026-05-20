@@ -7,7 +7,8 @@ export const formatCurrency = (value: number): string =>
   new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(value)
 
 export const formatDate = (dateStr: string): string =>

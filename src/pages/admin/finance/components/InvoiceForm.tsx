@@ -84,6 +84,10 @@ const InvoiceForm = (props: Props) => {
       : [{ ...EMPTY_ITEM }],
   )
 
+  const [gstEnabled,    setGstEnabled]    = useState(false)
+  const [gstPercentage, setGstPercentage] = useState<number | ''>('')
+  const [gstType,       setGstType]       = useState<'CGST_SGST' | 'IGST' | ''>('')
+
   const [formError,  setFormError]  = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -98,6 +102,15 @@ const InvoiceForm = (props: Props) => {
   const availableRevenues = revenues.filter(
     (r) => !r.invoice || r.id === existing?.revenueId,
   )
+
+  // ── GST toggle ──────────────────────────────────────────────────────────────
+  const handleGstToggle = (checked: boolean) => {
+    setGstEnabled(checked)
+    if (!checked) {
+      setGstPercentage('')
+      setGstType('')
+    }
+  }
 
   // ── Validation ──────────────────────────────────────────────────────────────
   const validate = (): string | null => {
@@ -218,29 +231,76 @@ const InvoiceForm = (props: Props) => {
           </div>
         </div>
 
-        {/* Row 2: Client Name + GSTIN */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '14px', marginBottom: '14px' }}>
-          <div>
-            <label style={labelStyle}>Client Name *</label>
-            <input
-              type="text"
-              placeholder="Acme Corporation"
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <label style={labelStyle}>Client GSTIN</label>
-            <input
-              type="text"
-              placeholder="22AAAAA0000A1Z5"
-              value={clientGSTIN}
-              onChange={(e) => setClientGSTIN(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
+        {/* Row 2: Client Name */}
+        <div style={{ marginBottom: '14px' }}>
+          <label style={labelStyle}>Client Name *</label>
+          <input
+            type="text"
+            placeholder="Acme Corporation"
+            value={clientName}
+            onChange={(e) => setClientName(e.target.value)}
+            style={inputStyle}
+          />
         </div>
+
+        {/* Apply GST toggle */}
+        <div style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <input
+            type="checkbox"
+            id="gstEnabled"
+            checked={gstEnabled}
+            onChange={(e) => handleGstToggle(e.target.checked)}
+            style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+          />
+          <label htmlFor="gstEnabled" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer', fontSize: '13px', color: '#1a1a1a' }}>
+            Apply GST
+          </label>
+        </div>
+
+        {/* Conditional GST field group */}
+        {gstEnabled && (
+          <div style={{ marginBottom: '14px', padding: '14px', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e5e5e5' }}>
+            {/* Row: Client GSTIN */}
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>Client GSTIN</label>
+              <input
+                type="text"
+                placeholder="22AAAAA0000A1Z5"
+                value={clientGSTIN}
+                onChange={(e) => setClientGSTIN(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+            {/* Row: GST Percentage + GST Type */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div>
+                <label style={labelStyle}>GST Percentage (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  placeholder="18"
+                  value={gstPercentage}
+                  onChange={(e) => setGstPercentage(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>GST Type</label>
+                <select
+                  value={gstType}
+                  onChange={(e) => setGstType(e.target.value as 'CGST_SGST' | 'IGST' | '')}
+                  style={{ ...inputStyle, background: '#fff', cursor: 'pointer' }}
+                >
+                  <option value="">Select type</option>
+                  <option value="CGST_SGST">CGST + SGST (Intra-state)</option>
+                  <option value="IGST">IGST (Inter-state)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Row 3: Client Address */}
         <div style={{ marginBottom: '14px' }}>

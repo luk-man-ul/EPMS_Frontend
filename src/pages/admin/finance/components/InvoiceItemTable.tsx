@@ -18,6 +18,7 @@ interface EditableProps {
 interface ReadonlyProps {
   readonly: true
   items: Array<{ description: string; quantity: number; unitPrice: number; total: number }>
+  invoiceTotalAmount?: number   // authoritative total from backend
 }
 
 type Props = EditableProps | ReadonlyProps
@@ -185,7 +186,7 @@ const InvoiceItemTable = (props: Props) => {
 
   // ── Read-only mode ─────────────────────────────────────────────────────────
   const { items } = props
-  const grandTotal = items.reduce((s, r) => s + r.total, 0)
+  const grandTotal = props.invoiceTotalAmount ?? items.reduce((s, r) => s + r.total, 0)
 
   return (
     <div style={{ overflowX: 'auto' }}>

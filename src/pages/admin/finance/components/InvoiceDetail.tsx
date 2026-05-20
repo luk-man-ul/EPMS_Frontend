@@ -265,7 +265,7 @@ const InvoiceDetail = ({ invoice, onEdit, onBack, onPdfStored }: Props) => {
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#1a1a1a', marginBottom: '10px' }}>
             Line Items
           </div>
-          <InvoiceItemTable readonly={true} items={invoice.items} />
+          <InvoiceItemTable readonly={true} items={invoice.items} invoiceTotalAmount={invoice.totalAmount} />
         </div>
 
         {/* Totals summary */}

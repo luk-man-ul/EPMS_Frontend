@@ -18,9 +18,6 @@
  *   │  1 │ ...  │ —   │  2  │ 500  │  0% │ 1000   │
  *   ├─────────────────────────────────────────────┤
  *   │                        Subtotal:  ₹X,XXX    │
- *   │                        CGST (0%): ₹0        │
- *   │                        SGST (0%): ₹0        │
- *   │                        Discount:  ₹0        │
  *   │                        TOTAL:     ₹X,XXX    │
  *   ├─────────────────────────────────────────────┤
  *   │  Amount in words: Rupees X Thousand Only    │
@@ -32,7 +29,7 @@
  * RULES:
  * - Only @react-pdf/renderer primitives — NO React DOM elements.
  * - All branding comes from companyProfile config — never hardcoded here.
- * - GST/HSN/Discount fields are stubbed at 0 — ready for future implementation.
+ * - Grand total is read directly from invoice.totalAmount — no arithmetic in this component.
  */
 
 import {
@@ -446,12 +443,8 @@ interface Props {
 const BrandedInvoicePdfDocument = ({ invoice }: Props) => {
   const cp = companyProfile
 
-  // GST stubs — 0 until full GST implementation
-  const subtotal  = invoice.totalAmount
-  const cgst      = 0
-  const sgst      = 0
-  const discount  = 0
-  const grandTotal = subtotal + cgst + sgst - discount
+  // Grand total — read directly from backend-persisted value, no arithmetic
+  const grandTotal = invoice.totalAmount
 
   // Terms: use invoice.notes if provided, otherwise fall back to company default
   const terms = invoice.notes?.trim() || cp.termsAndConditions
@@ -553,7 +546,7 @@ const BrandedInvoicePdfDocument = ({ invoice }: Props) => {
             <Text style={[s.cHsn,   s.thText]}>HSN</Text>
             <Text style={[s.cQty,   s.thText]}>Qty</Text>
             <Text style={[s.cRate,  s.thText]}>Rate</Text>
-            <Text style={[s.cGst,   s.thText]}>GST</Text>
+            {invoice.gstEnabled ? <Text style={[s.cGst, s.thText]}>GST</Text> : null}
             <Text style={[s.cTotal, s.thText]}>Amount</Text>
           </View>
 
@@ -568,7 +561,7 @@ const BrandedInvoicePdfDocument = ({ invoice }: Props) => {
               <Text style={[s.cHsn,   s.tdText, { textAlign: 'center' }]}>—</Text>
               <Text style={[s.cQty,   s.tdText]}>{item.quantity}</Text>
               <Text style={[s.cRate,  s.tdText]}>{formatPdfMoney(item.unitPrice)}</Text>
-              <Text style={[s.cGst,   s.tdText]}>0%</Text>
+              {invoice.gstEnabled ? <Text style={[s.cGst, s.tdText]}>{invoice.gstPercentage ?? 0}%</Text> : null}
               <Text style={[s.cTotal, s.tdTextBold]}>{formatPdfMoney(item.total)}</Text>
             </View>
           ))}
@@ -581,20 +574,26 @@ const BrandedInvoicePdfDocument = ({ invoice }: Props) => {
           <View style={s.totalsBox}>
             <View style={s.totalsLine}>
               <Text style={s.totalsLabel}>Subtotal</Text>
-              <Text style={s.totalsValue}>{formatPdfMoney(subtotal)}</Text>
+              <Text style={s.totalsValue}>{formatPdfMoney(grandTotal)}</Text>
             </View>
-            <View style={s.totalsLine}>
-              <Text style={s.totalsLabel}>CGST (0%)</Text>
-              <Text style={s.totalsValue}>{formatPdfMoney(cgst)}</Text>
-            </View>
-            <View style={s.totalsLine}>
-              <Text style={s.totalsLabel}>SGST (0%)</Text>
-              <Text style={s.totalsValue}>{formatPdfMoney(sgst)}</Text>
-            </View>
-            <View style={s.totalsLine}>
-              <Text style={s.totalsLabel}>Discount</Text>
-              <Text style={s.totalsValue}>— {formatPdfMoney(discount)}</Text>
-            </View>
+            {invoice.gstEnabled && invoice.gstType === 'CGST_SGST' ? (
+              <>
+                <View style={s.totalsLine}>
+                  <Text style={s.totalsLabel}>CGST ({(invoice.gstPercentage ?? 0) / 2}%)</Text>
+                  <Text style={s.totalsValue}>{formatPdfMoney(0)}</Text>
+                </View>
+                <View style={s.totalsLine}>
+                  <Text style={s.totalsLabel}>SGST ({(invoice.gstPercentage ?? 0) / 2}%)</Text>
+                  <Text style={s.totalsValue}>{formatPdfMoney(0)}</Text>
+                </View>
+              </>
+            ) : null}
+            {invoice.gstEnabled && invoice.gstType === 'IGST' ? (
+              <View style={s.totalsLine}>
+                <Text style={s.totalsLabel}>IGST ({invoice.gstPercentage ?? 0}%)</Text>
+                <Text style={s.totalsValue}>{formatPdfMoney(0)}</Text>
+              </View>
+            ) : null}
           </View>
         </View>
 

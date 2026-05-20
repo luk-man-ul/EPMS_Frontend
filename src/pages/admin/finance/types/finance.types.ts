@@ -149,4 +149,8 @@ export interface Invoice {
     paymentMethod?: PaymentMethod | null
   } | null
   items: InvoiceItem[]
+  // Phase 1 GST UI fields — frontend only, never persisted
+  gstEnabled?:    boolean
+  gstPercentage?: number
+  gstType?:       'CGST_SGST' | 'IGST'
 }
