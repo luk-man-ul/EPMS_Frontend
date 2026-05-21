@@ -1,17 +1,7 @@
 import { io, Socket } from 'socket.io-client';
+import { getAccessToken } from '../utils/api';
 
 const SOCKET_URL = import.meta.env.VITE_API_URL;
-
-/** Read the JWT token from whichever storage it was saved to. */
-function getToken(): string | null {
-  try {
-    const ls = localStorage.getItem('token');
-    if (ls && ls !== 'undefined' && ls !== 'null') return ls;
-    const ss = sessionStorage.getItem('token');
-    if (ss && ss !== 'undefined' && ss !== 'null') return ss;
-  } catch { /* ignore */ }
-  return null;
-}
 
 class SocketService {
   private socket: Socket | null = null;
@@ -32,7 +22,7 @@ class SocketService {
       this.socket = null;
     }
 
-    const token = getToken();
+    const token = getAccessToken();
 
     this.socket = io(`${SOCKET_URL}/chat`, {
       // Pass JWT in auth (preferred, secure) AND keep userId/userRole in query

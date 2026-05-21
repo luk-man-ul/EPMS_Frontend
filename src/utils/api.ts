@@ -26,20 +26,32 @@ export const getAccessToken = (): string | null => _accessToken;
 // ─── Refresh state ────────────────────────────────────────────────────────────
 // Prevents multiple concurrent refresh calls when several requests 401 at once.
 // All queued requests wait for the single refresh to complete, then retry.
+//
+// Each subscriber holds both resolve and reject so the promise can be settled
+// in either direction — no dangling promises, no artificial timeouts needed.
+
+interface RefreshSubscriber {
+  resolve: (token: string) => void;
+  reject:  (error: unknown) => void;
+}
 
 let _isRefreshing = false;
-let _refreshSubscribers: Array<(token: string) => void> = [];
+let _refreshSubscribers: RefreshSubscriber[] = [];
 
-const subscribeToRefresh = (cb: (token: string) => void) => {
-  _refreshSubscribers.push(cb);
+const subscribeToRefresh = (
+  resolve: (token: string) => void,
+  reject:  (error: unknown) => void,
+): void => {
+  _refreshSubscribers.push({ resolve, reject });
 };
 
-const notifyRefreshSubscribers = (newToken: string) => {
-  _refreshSubscribers.forEach((cb) => cb(newToken));
+const resolveRefreshSubscribers = (newToken: string): void => {
+  _refreshSubscribers.forEach(({ resolve }) => resolve(newToken));
   _refreshSubscribers = [];
 };
 
-const clearRefreshSubscribers = () => {
+const rejectRefreshSubscribers = (error: unknown): void => {
+  _refreshSubscribers.forEach(({ reject }) => reject(error));
   _refreshSubscribers = [];
 };
 
@@ -86,16 +98,19 @@ api.interceptors.response.use(
     originalRequest._retry = true;
 
     if (_isRefreshing) {
-      // Another request is already refreshing — queue this one
+      // Another request is already refreshing — queue this one.
+      // The promise is settled by resolveRefreshSubscribers / rejectRefreshSubscribers,
+      // so it never hangs regardless of whether the refresh succeeds or fails.
       return new Promise((resolve, reject) => {
-        subscribeToRefresh((newToken) => {
-          if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          }
-          resolve(api(originalRequest));
-        });
-        // If refresh fails, the subscriber will never be called — reject after timeout
-        setTimeout(() => reject(new Error('Refresh timeout')), 10_000);
+        subscribeToRefresh(
+          (newToken) => {
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            }
+            resolve(api(originalRequest));
+          },
+          (err) => reject(err),
+        );
       });
     }
 
@@ -122,7 +137,7 @@ api.interceptors.response.use(
       );
 
       // Retry all queued requests with the new token
-      notifyRefreshSubscribers(newToken);
+      resolveRefreshSubscribers(newToken);
 
       // Retry the original request
       if (originalRequest.headers) {
@@ -130,8 +145,9 @@ api.interceptors.response.use(
       }
       return api(originalRequest);
     } catch (refreshError) {
-      // Refresh failed — session is truly expired
-      clearRefreshSubscribers();
+      // Refresh failed — reject all queued subscribers immediately so their
+      // promises settle right now instead of hanging until a timeout.
+      rejectRefreshSubscribers(refreshError);
       _handleAuthFailure();
       return Promise.reject(refreshError);
     } finally {
