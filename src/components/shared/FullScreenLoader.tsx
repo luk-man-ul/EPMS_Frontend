@@ -134,11 +134,11 @@ const styles: Record<string, React.CSSProperties> = {
     width:          '44px',
     height:         '44px',
     borderRadius:   '12px',
-    background:     'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background:     'linear-gradient(135deg, #98a7eaff 0%, #764ba2 100%)',
     display:        'flex',
     alignItems:     'center',
     justifyContent: 'center',
-    boxShadow:      '0 4px 14px rgba(102, 126, 234, 0.35)',
+    boxShadow:      '0 4px 14px rgba(147, 162, 231, 0.35)',
     flexShrink:     0,
   },
 

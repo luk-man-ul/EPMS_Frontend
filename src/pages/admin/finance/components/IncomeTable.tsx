@@ -5,6 +5,7 @@ import IncomeRow from './IncomeRow'
 import { getProjectOptions } from '../lookup.api'
 import type { ProjectOption } from '../lookup.api'
 import { useToast } from '../../../../context/ToastContext'
+import { AddPaymentMethodModal } from './AddPaymentMethodModal'
 
 interface Props {
   showForm?: boolean
@@ -106,6 +107,18 @@ const IncomeTable = ({ showForm = false, onFormClose }: Props) => {
 
   return (
     <div>
+      {/* ── Add Payment Method Modal ── */}
+      {showPaymentModal && (
+        <AddPaymentMethodModal
+          onClose={() => setShowPaymentModal(false)}
+          onCreated={(newAccount) => {
+            setBankAccounts((prev) => [...prev, newAccount])
+            setForm((prev) => ({ ...prev, bankAccountId: newAccount.id }))
+            setShowPaymentModal(false)
+          }}
+        />
+      )}
+
       {/* ── Create Revenue Form ── */}
       {showForm && (
         <div style={{ padding: '24px', borderBottom: '1px solid #e5e5e5', background: '#fafafa' }}>

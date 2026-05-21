@@ -7,9 +7,10 @@ export type PaymentMethod = 'CASH' | 'ONLINE'
 export interface BankAccount {
   id: string
   name: string
-  bankName: string
-  accountNumber: string
-  ifscCode?: string
+  type: 'BANK_ACCOUNT' | 'CASH' | 'UPI' | 'PETTY_CASH' | 'OTHER'
+  bankName: string | null
+  accountNumber: string | null
+  ifscCode?: string | null
   isActive: boolean
 }
 

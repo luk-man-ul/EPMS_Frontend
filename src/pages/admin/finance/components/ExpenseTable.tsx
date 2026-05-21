@@ -5,6 +5,7 @@ import ExpenseRow from './ExpenseRow'
 import { getProjectOptions, getEmployeeOptions } from '../lookup.api'
 import type { ProjectOption, EmployeeOption } from '../lookup.api'
 import { useToast } from '../../../../context/ToastContext'
+import { AddPaymentMethodModal } from './AddPaymentMethodModal'
 
 interface Props {
   showForm?: boolean
@@ -129,6 +130,18 @@ const [showPaymentModal, setShowPaymentModal] = useState(false)
 
   return (
     <div>
+      {/* ── Add Payment Method Modal ── */}
+      {showPaymentModal && (
+        <AddPaymentMethodModal
+          onClose={() => setShowPaymentModal(false)}
+          onCreated={(newAccount) => {
+            setBankAccounts((prev) => [...prev, newAccount])
+            setForm((prev) => ({ ...prev, bankAccountId: newAccount.id }))
+            setShowPaymentModal(false)
+          }}
+        />
+      )}
+
       {/* ── Create Expense Form ── */}
       {showForm && (
         <div style={{ padding: '24px', borderBottom: '1px solid #e5e5e5', background: '#fafafa' }}>

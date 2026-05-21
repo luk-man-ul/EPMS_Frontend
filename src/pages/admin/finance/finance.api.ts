@@ -148,6 +148,26 @@ export const getBankAccounts = async (): Promise<BankAccount[]> => {
   return res.data
 }
 
+// ── Payment sources ───────────────────────────────────────────────────────────
+
+export type PaymentSourceType = 'BANK_ACCOUNT' | 'CASH' | 'UPI' | 'PETTY_CASH' | 'OTHER'
+
+export interface CreatePaymentSourcePayload {
+  name:     string
+  type:     PaymentSourceType
+  bankName?: string
+}
+
+export const getPaymentSources = async (): Promise<BankAccount[]> => {
+  const res = await api.get('/finance/payment-sources')
+  return res.data
+}
+
+export const createPaymentSource = async (data: CreatePaymentSourcePayload): Promise<BankAccount> => {
+  const res = await api.post('/finance/payment-sources', data)
+  return res.data
+}
+
 // ── Expense categories ────────────────────────────────────────────────────────
 
 export const getExpenseCategories = async (): Promise<ExpenseCategory[]> => {
