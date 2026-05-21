@@ -1,5 +1,6 @@
 import { Navigate, useLocation, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { FullScreenLoader } from './shared/FullScreenLoader'
 
 export interface ProtectedRouteProps {
   children?: React.ReactNode
@@ -30,9 +31,10 @@ export function ProtectedRoute({
   const { user, loading } = useAuth()
   const location = useLocation()
 
-  // Show loading state while checking authentication
+  // Show fullscreen loader while auth bootstrap is in progress.
+  // This replaces the blank white screen during silentRefresh() on hard reload.
   if (loading) {
-    return null
+    return <FullScreenLoader />
   }
 
   // Redirect to login if user is not authenticated

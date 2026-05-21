@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ToastProvider } from './context/ToastContext'
 import { useAuth } from './context/AuthContext'
+import { FullScreenLoader } from './components/shared/FullScreenLoader'
 
 import AdminRoutes from './routes/AdminRoutes'
 import AppWorkspaceRoutes from './routes/AppWorkspaceRoutes'
@@ -9,10 +10,12 @@ import LoginPage from './pages/auth/LoginPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import Unauthorized from './pages/Unauthorized'
 
-// Redirects authenticated users to their dashboard instead of login
+// Redirects authenticated users to their dashboard instead of login.
+// Shows the fullscreen loader while auth bootstrap is in progress so the
+// root path never flashes a blank screen before the redirect resolves.
 function RootRedirect() {
   const { user, loading } = useAuth()
-  if (loading) return null
+  if (loading) return <FullScreenLoader />
   if (!user) return <Navigate to="/auth/login" replace />
   if (user.role === 'ADMIN') return <Navigate to="/admin/dashboard" replace />
   return <Navigate to="/app/dashboard" replace />
