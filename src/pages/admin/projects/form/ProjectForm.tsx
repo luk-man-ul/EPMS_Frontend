@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import Select from 'react-select'
 import api from '../../../../utils/api'
-import { getAuthHeaders } from '../../../../utils/auth'
 import type { ProjectDetail } from '../types/project.types'
 
 interface Props {
@@ -140,13 +139,9 @@ const ProjectForm = ({
       }
 
       if (isEditMode && projectId) {
-        await api.patch(`/projects/${projectId}`, payload, {
-          headers: getAuthHeaders(),
-        })
+        await api.patch(`/projects/${projectId}`, payload)
       } else {
-        await api.post('/projects', payload, {
-          headers: getAuthHeaders(),
-        })
+        await api.post('/projects', payload)
       }
 
       onSuccess()
