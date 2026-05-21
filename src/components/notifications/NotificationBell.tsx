@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { Card, Badge, LoadingSpinner, ErrorMessage } from '../ui';
-import api from '../../utils/api';
+import api, { getAccessToken } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import './NotificationBell.css';
 
@@ -19,16 +19,6 @@ interface Notification {
 }
 
 const SOCKET_URL = import.meta.env.VITE_API_URL as string;
-
-function getToken(): string | null {
-  try {
-    const ls = localStorage.getItem('token');
-    if (ls && ls !== 'undefined' && ls !== 'null') return ls;
-    const ss = sessionStorage.getItem('token');
-    if (ss && ss !== 'undefined' && ss !== 'null') return ss;
-  } catch { /* ignore */ }
-  return null;
-}
 
 export function NotificationBell() {
   const { user } = useAuth();
@@ -87,7 +77,7 @@ export function NotificationBell() {
     const interval = setInterval(() => fetchNotifications(false), 60_000);
 
     // ── WebSocket connection to /notifications namespace ──────────────────
-    const token = getToken();
+    const token = getAccessToken();
     if (token) {
       const socket = io(`${SOCKET_URL}/notifications`, {
         auth: { token },

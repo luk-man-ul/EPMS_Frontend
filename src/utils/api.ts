@@ -3,6 +3,18 @@ import type { AxiosRequestConfig } from 'axios';
 import type { Task, SelfWorkMetrics } from '../types/task';
 import { TaskType } from '../types/enums';
 
+// ─── Shared refresh result type ───────────────────────────────────────────────
+
+export interface RefreshResult {
+  access_token: string;
+  user: {
+    id:          string;
+    email:       string;
+    role:        string;
+    permissions: string[];
+  };
+}
+
 // ─── Axios instance ───────────────────────────────────────────────────────────
 
 const api = axios.create({
@@ -24,18 +36,20 @@ export const setAccessToken = (token: string | null): void => {
 export const getAccessToken = (): string | null => _accessToken;
 
 // ─── Refresh state ────────────────────────────────────────────────────────────
-// Prevents multiple concurrent refresh calls when several requests 401 at once.
-// All queued requests wait for the single refresh to complete, then retry.
+// Single global mutex for all refresh callers — interceptor AND AuthContext.
 //
-// Each subscriber holds both resolve and reject so the promise can be settled
-// in either direction — no dangling promises, no artificial timeouts needed.
+// _refreshPromise holds the in-flight refresh call so every concurrent caller
+// (axios interceptor, AuthContext.silentRefresh, NotificationBell socket init)
+// awaits the SAME promise instead of firing independent POST /auth/refresh
+// requests. This eliminates the parallel refresh race entirely.
 
 interface RefreshSubscriber {
   resolve: (token: string) => void;
   reject:  (error: unknown) => void;
 }
 
-let _isRefreshing = false;
+let _isRefreshing    = false;
+let _refreshPromise: Promise<RefreshResult> | null = null;
 let _refreshSubscribers: RefreshSubscriber[] = [];
 
 const subscribeToRefresh = (
@@ -55,6 +69,64 @@ const rejectRefreshSubscribers = (error: unknown): void => {
   _refreshSubscribers = [];
 };
 
+// ─── Shared refresh function ──────────────────────────────────────────────────
+//
+// Callers:
+//   - axios response interceptor (on 401)
+//   - AuthContext.silentRefresh() (on app mount)
+//
+// Guarantees:
+//   - Only ONE POST /auth/refresh is ever in-flight at a time
+//   - All concurrent callers await the same promise
+//   - On success: updates _accessToken, dispatches auth:token-refreshed
+//   - On failure: dispatches auth:session-expired, redirects to login
+//   - _refreshPromise is always cleared in finally so the next call starts fresh
+
+export const refreshAccessToken = (): Promise<RefreshResult> => {
+  // If a refresh is already in-flight, return the same promise — don't fire again
+  if (_refreshPromise) return _refreshPromise;
+
+  _isRefreshing = true;
+
+  _refreshPromise = axios
+    .post<RefreshResult>(
+      `${import.meta.env.VITE_API_URL}/auth/refresh`,
+      {},
+      { withCredentials: true },
+    )
+    .then((res) => {
+      const newToken = res.data.access_token;
+      const newUser  = res.data.user;
+
+      // Update in-memory token — single source of truth
+      _accessToken = newToken;
+
+      // Notify AuthContext so React state stays in sync
+      window.dispatchEvent(
+        new CustomEvent('auth:token-refreshed', {
+          detail: { accessToken: newToken, user: newUser },
+        }),
+      );
+
+      // Unblock all queued interceptor requests
+      resolveRefreshSubscribers(newToken);
+
+      return res.data;
+    })
+    .catch((err) => {
+      // Reject all queued interceptor requests immediately
+      rejectRefreshSubscribers(err);
+      _handleAuthFailure();
+      return Promise.reject(err);
+    })
+    .finally(() => {
+      _isRefreshing   = false;
+      _refreshPromise = null;   // clear so next expiry starts a fresh call
+    });
+
+  return _refreshPromise;
+};
+
 // ─── Request interceptor ─────────────────────────────────────────────────────
 // Attaches the in-memory access token to every request.
 
@@ -68,9 +140,10 @@ api.interceptors.request.use((config) => {
 
 // ─── Response interceptor ────────────────────────────────────────────────────
 // On 401:
-//   1. If not already refreshing, call POST /auth/refresh (uses httpOnly cookie).
-//   2. On success: update in-memory token, retry all queued requests once.
-//   3. On failure: clear auth state and redirect to login.
+//   1. If not already refreshing, call refreshAccessToken() — the shared mutex
+//      ensures only one POST /auth/refresh is ever in-flight globally.
+//   2. On success: token is already updated by refreshAccessToken(); retry request.
+//   3. On failure: refreshAccessToken() already called _handleAuthFailure().
 // The _retry flag prevents infinite loops — a request is only retried once.
 
 api.interceptors.response.use(
@@ -98,9 +171,8 @@ api.interceptors.response.use(
     originalRequest._retry = true;
 
     if (_isRefreshing) {
-      // Another request is already refreshing — queue this one.
-      // The promise is settled by resolveRefreshSubscribers / rejectRefreshSubscribers,
-      // so it never hangs regardless of whether the refresh succeeds or fails.
+      // refreshAccessToken() is already in-flight — queue this request.
+      // It will be resolved/rejected when the shared promise settles.
       return new Promise((resolve, reject) => {
         subscribeToRefresh(
           (newToken) => {
@@ -114,51 +186,30 @@ api.interceptors.response.use(
       });
     }
 
-    _isRefreshing = true;
-
     try {
-      // Call refresh endpoint — httpOnly cookie is sent automatically
-      const refreshRes = await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/refresh`,
-        {},
-        { withCredentials: true },
-      );
+      // Kick off (or join) the single shared refresh
+      const result = await refreshAccessToken();
+      const newToken = result.access_token;
 
-      const newToken: string = refreshRes.data.access_token;
-      const newUser           = refreshRes.data.user;
-
-      // Update in-memory token
-      _accessToken = newToken;
-
-      // Notify AuthContext so React state stays in sync
-      // We dispatch a custom event — AuthContext listens for it
-      window.dispatchEvent(
-        new CustomEvent('auth:token-refreshed', { detail: { accessToken: newToken, user: newUser } }),
-      );
-
-      // Retry all queued requests with the new token
-      resolveRefreshSubscribers(newToken);
-
-      // Retry the original request
       if (originalRequest.headers) {
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
       }
       return api(originalRequest);
     } catch (refreshError) {
-      // Refresh failed — reject all queued subscribers immediately so their
-      // promises settle right now instead of hanging until a timeout.
-      rejectRefreshSubscribers(refreshError);
-      _handleAuthFailure();
+      // refreshAccessToken() already handled failure — just propagate
       return Promise.reject(refreshError);
-    } finally {
-      _isRefreshing = false;
     }
   },
 );
 
 // ─── Auth failure handler ─────────────────────────────────────────────────────
+// Called when a refresh attempt fails mid-session (token expired, revoked, etc.)
+// Only redirects to login if there was an active session to lose (_accessToken
+// was set). On initial app mount with no cookie, _accessToken is already null
+// so we skip the redirect — AuthContext handles that case via loading=false.
 
 function _handleAuthFailure(): void {
+  const hadSession = _accessToken !== null;
   _accessToken = null;
   // Clear legacy storage keys (migration safety)
   localStorage.removeItem('token');
@@ -167,7 +218,11 @@ function _handleAuthFailure(): void {
   sessionStorage.removeItem('user');
   // Notify AuthContext to clear React state
   window.dispatchEvent(new CustomEvent('auth:session-expired'));
-  window.location.href = '/auth/login';
+  // Only hard-redirect if the user had an active session — avoids spurious
+  // redirects when the initial silent refresh finds no cookie on first visit.
+  if (hadSession) {
+    window.location.href = '/auth/login';
+  }
 }
 
 // ─── DTO interfaces ───────────────────────────────────────────────────────────

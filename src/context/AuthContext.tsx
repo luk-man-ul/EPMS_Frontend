@@ -3,11 +3,10 @@ import {
   useContext,
   useState,
   useEffect,
-  useRef,
   useCallback,
 } from 'react';
 import type { ReactNode } from 'react';
-import { setAccessToken as setApiToken } from '../utils/api';
+import { setAccessToken as setApiToken, refreshAccessToken } from '../utils/api';
 
 //////////////////////////////////////////////////////////
 // TYPES
@@ -94,9 +93,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // loading = true until silent refresh attempt completes on mount
   const [loading, setLoading] = useState(true);
 
-  // Prevent concurrent silent refresh calls
-  const refreshingRef = useRef(false);
-
   //////////////////////////////////////////////////////////
   // setTokens — called after login or successful refresh
   //////////////////////////////////////////////////////////
@@ -160,34 +156,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [accessToken]);
 
   //////////////////////////////////////////////////////////
-  // silentRefresh — called on app mount to restore session
-  // Uses the httpOnly refresh_token cookie automatically.
+  // silentRefresh — called on app mount to restore session.
+  // Delegates entirely to refreshAccessToken() from api.ts so this call
+  // participates in the same global mutex as the axios interceptor.
+  // No independent fetch — guaranteed single POST /auth/refresh at any time.
+  //
+  // Note: refreshAccessToken() dispatches auth:token-refreshed on success,
+  // which the event listener below will catch and call setTokens(). We do NOT
+  // call setTokens() here again to avoid a redundant double-set.
   //////////////////////////////////////////////////////////
 
   const silentRefresh = useCallback(async (): Promise<boolean> => {
-    if (refreshingRef.current) return false;
-    refreshingRef.current = true;
-
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
-        method:      'POST',
-        credentials: 'include',   // sends httpOnly cookie
-      });
-
-      if (!res.ok) return false;
-
-      const data: LoginResponse = await res.json();
-      if (data?.access_token && data?.user) {
-        setTokens(data.access_token, data.user);
-        return true;
-      }
-      return false;
+      const data = await refreshAccessToken();
+      return !!(data?.access_token && data?.user);
     } catch {
+      // Refresh failed — no valid session. Stay on login page.
+      // _handleAuthFailure() in api.ts handles mid-session failures (redirect),
+      // but on initial mount a missing cookie is normal — don't redirect here.
       return false;
-    } finally {
-      refreshingRef.current = false;
     }
-  }, [setTokens]);
+  }, []);
 
   //////////////////////////////////////////////////////////
   // On mount: attempt silent refresh to restore session.
