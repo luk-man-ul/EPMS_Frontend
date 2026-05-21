@@ -175,6 +175,11 @@ export const getExpenseCategories = async (): Promise<ExpenseCategory[]> => {
   return res.data
 }
 
+export const createExpenseCategory = async (name: string): Promise<ExpenseCategory> => {
+  const res = await api.post('/finance/expense-categories', { name })
+  return res.data
+}
+
 // ── Ledger ────────────────────────────────────────────────────────────────────
 
 export interface LedgerQueryParams {

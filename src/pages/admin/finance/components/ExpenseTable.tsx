@@ -6,6 +6,7 @@ import { getProjectOptions, getEmployeeOptions } from '../lookup.api'
 import type { ProjectOption, EmployeeOption } from '../lookup.api'
 import { useToast } from '../../../../context/ToastContext'
 import { AddPaymentMethodModal } from './AddPaymentMethodModal'
+import { AddExpenseCategoryModal } from './AddExpenseCategoryModal'
 
 interface Props {
   showForm?: boolean
@@ -47,7 +48,8 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
   const [categories,   setCategories]   = useState<ExpenseCategory[]>([])
 
   // ── Form state ──────────────────────────────────────────
-const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showPaymentModal,  setShowPaymentModal]  = useState(false)
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
 
   const [form,       setForm]       = useState(EMPTY_FORM)
   const [formError,  setFormError]  = useState<string | null>(null)
@@ -142,6 +144,18 @@ const [showPaymentModal, setShowPaymentModal] = useState(false)
         />
       )}
 
+      {/* ── Add Expense Category Modal ── */}
+      {showCategoryModal && (
+        <AddExpenseCategoryModal
+          onClose={() => setShowCategoryModal(false)}
+          onCreated={(newCategory) => {
+            setCategories((prev) => [...prev, newCategory].sort((a, b) => a.name.localeCompare(b.name)))
+            setForm((prev) => ({ ...prev, categoryId: newCategory.id }))
+            setShowCategoryModal(false)
+          }}
+        />
+      )}
+
       {/* ── Create Expense Form ── */}
       {showForm && (
         <div style={{ padding: '24px', borderBottom: '1px solid #e5e5e5', background: '#fafafa' }}>
@@ -166,13 +180,20 @@ const [showPaymentModal, setShowPaymentModal] = useState(false)
                 </label>
                 <select
                   value={form.categoryId}
-                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value === '__add_category__') {
+                      setShowCategoryModal(true)
+                      return
+                    }
+                    handleCategoryChange(e.target.value)
+                  }}
                   style={{ ...inputStyle, background: '#fff', cursor: 'pointer' }}
                 >
                   <option value="">Select category</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
+                  <option value="__add_category__">+ Add Category</option>
                 </select>
               </div>
 
