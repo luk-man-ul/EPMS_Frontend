@@ -26,7 +26,6 @@ const EMPTY_FORM = {
   amount: '',
   receivedDate: '',
   description: '',
-  paymentMethod: '' as '' | 'CASH' | 'ONLINE',
   bankAccountId: '',
 }
 
@@ -39,6 +38,8 @@ const IncomeTable = ({ showForm = false, onFormClose }: Props) => {
   const [error, setError] = useState<string | null>(null)
 
   // ── Dropdown data ───────────────────────────────────────
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+
   const [projects, setProjects] = useState<ProjectOption[]>([])
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])
 
@@ -66,9 +67,7 @@ const IncomeTable = ({ showForm = false, onFormClose }: Props) => {
   }, [])
 
   // ── Clear bankAccountId when switching away from ONLINE ─
-  const handlePaymentMethodChange = (method: '' | 'CASH' | 'ONLINE') => {
-    setForm({ ...form, paymentMethod: method, bankAccountId: method === 'ONLINE' ? form.bankAccountId : '' })
-  }
+
 
   // ── Form submit ─────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,9 +85,8 @@ const IncomeTable = ({ showForm = false, onFormClose }: Props) => {
         amount:        Number(form.amount),
         receivedDate:  form.receivedDate,
         description:   form.description || undefined,
-        paymentMethod: form.paymentMethod || undefined,
-        bankAccountId: form.paymentMethod === 'ONLINE' && form.bankAccountId ? form.bankAccountId : undefined,
-      })
+        bankAccountId: form.bankAccountId || undefined,
+     })
       showToast('success', 'Revenue record created')
       setForm(EMPTY_FORM)
       onFormClose?.()
@@ -123,7 +121,7 @@ const IncomeTable = ({ showForm = false, onFormClose }: Props) => {
 
           <form onSubmit={handleSubmit}>
             {/* Row 1: Project · Amount · Received Date · Description */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 2fr', gap: '12px', alignItems: 'end' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px', alignItems: 'end' }}>
 
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#666', marginBottom: '6px' }}>
@@ -183,48 +181,55 @@ const IncomeTable = ({ showForm = false, onFormClose }: Props) => {
             </div>
 
             {/* Row 2: Payment Method · Bank Account (conditional) */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: form.paymentMethod === 'ONLINE' ? '1fr 2fr' : '1fr',
-              gap: '12px',
-              marginTop: '12px',
-              alignItems: 'end',
-              maxWidth: form.paymentMethod === 'ONLINE' ? '50%' : '25%',
-            }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#666', marginBottom: '6px' }}>
-                  Payment Method
-                </label>
-                <select
-                  value={form.paymentMethod}
-                  onChange={(e) => handlePaymentMethodChange(e.target.value as '' | 'CASH' | 'ONLINE')}
-                  style={{ ...inputStyle, background: '#fff', cursor: 'pointer' }}
-                >
-                  <option value="">Not specified</option>
-                  <option value="CASH">Cash</option>
-                  <option value="ONLINE">Online</option>
-                </select>
-              </div>
+           <div style={{
+  marginTop: '12px',
+  maxWidth: '50%',
+}}>
+  <div>
+    <label style={{
+      display: 'block',
+      fontSize: '12px',
+      fontWeight: 500,
+      color: '#666',
+      marginBottom: '6px'
+    }}>
+      Payment Method
+    </label>
 
-              {/* Bank account — only shown when ONLINE */}
-              {form.paymentMethod === 'ONLINE' && (
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#666', marginBottom: '6px' }}>
-                    Bank Account
-                  </label>
-                  <select
-                    value={form.bankAccountId}
-                    onChange={(e) => setForm({ ...form, bankAccountId: e.target.value })}
-                    style={{ ...inputStyle, background: '#fff', cursor: 'pointer' }}
-                  >
-                    <option value="">Select bank account</option>
-                    {bankAccounts.map((b) => (
-                      <option key={b.id} value={b.id}>{b.name} — {b.bankName}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
+    <select
+      value={form.bankAccountId}
+      onChange={(e) => {
+        if (e.target.value === '__add_new__') {
+          setShowPaymentModal(true)
+          return
+        }
+
+        setForm({
+          ...form,
+          bankAccountId: e.target.value,
+        })
+      }}
+      style={{
+        ...inputStyle,
+        background: '#fff',
+        cursor: 'pointer'
+      }}
+    >
+      <option value="">Select payment method</option>
+
+      {bankAccounts.map((b) => (
+        <option key={b.id} value={b.id}>
+          {b.name}
+          {b.bankName ? ` — ${b.bankName}` : ''}
+        </option>
+      ))}
+
+      <option value="__add_new__">
+        + Add Payment Method
+      </option>
+    </select>
+  </div>
+</div>
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: '8px', marginTop: '16px', justifyContent: 'flex-end' }}>

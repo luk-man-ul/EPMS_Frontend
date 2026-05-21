@@ -127,27 +127,36 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [setTokens]);
 
   //////////////////////////////////////////////////////////
-  // logout — calls backend to revoke refresh token, then clears state
+  // logout — optimistic: clears local state immediately, fires backend
+  // revocation in the background without blocking the caller.
+  //
+  // Security: access token is cleared from memory instantly so no further
+  // authenticated requests can be made. The backend revocation (cookie clear,
+  // DB token revoke, tokenVersion increment) continues asynchronously.
+  // The 15-minute access token TTL bounds any residual risk window.
   //////////////////////////////////////////////////////////
 
   const logout = useCallback(async () => {
-    try {
-      // Call backend logout — revokes DB token + clears httpOnly cookie
-      await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
-        method:      'POST',
-        credentials: 'include',   // sends cookies
-        headers:     accessToken
-          ? { Authorization: `Bearer ${accessToken}` }
-          : {},
-      });
-    } catch {
-      // Ignore network errors — still clear local state
-    } finally {
-      setAccessToken(null);
-      setApiToken(null);         // clear axios interceptor token
-      setUser(null);
-      clearStoredUser();
-    }
+    // Capture token before clearing state (needed for the background request)
+    const tokenForRevocation = accessToken;
+
+    // 1. Clear local auth state IMMEDIATELY — user is logged out at this point
+    setAccessToken(null);
+    setApiToken(null);         // clear axios interceptor token
+    setUser(null);
+    clearStoredUser();
+
+    // 2. Fire backend revocation in the background — do NOT await
+    // Backend will: revoke DB refresh token, increment tokenVersion, clear cookies
+    fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
+      method:      'POST',
+      credentials: 'include',   // sends cookies
+      headers:     tokenForRevocation
+        ? { Authorization: `Bearer ${tokenForRevocation}` }
+        : {},
+    }).catch(() => {
+      // Ignore network errors — local state is already cleared
+    });
   }, [accessToken]);
 
   //////////////////////////////////////////////////////////

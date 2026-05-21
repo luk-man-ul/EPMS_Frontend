@@ -197,8 +197,8 @@ const AppHeader = ({ onMenuClick }: { onMenuClick?: () => void }) => {
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const handleLogout = async () => {
-    await authLogout()
+  const handleLogout = () => {
+    authLogout()
     navigate('/auth/login')
   }
 
