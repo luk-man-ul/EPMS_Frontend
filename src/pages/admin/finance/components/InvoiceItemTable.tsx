@@ -126,6 +126,7 @@ const InvoiceItemTable = (props: Props) => {
                         placeholder="0.00"
                         value={row.unitPrice}
                         onChange={(e) => updateRow(idx, 'unitPrice', e.target.value)}
+                        onWheel={(e) => e.currentTarget.blur()}
                         style={cellInput}
                       />
                     </td>
