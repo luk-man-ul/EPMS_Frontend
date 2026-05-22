@@ -217,6 +217,7 @@ export interface CreateInvoicePayload {
   dueDate: string
   notes?: string
   revenueId?: string
+  taxPercentage?: number   // 0 or omit = no GST; backend computes subtotal/taxAmount/totalAmount
   items: InvoiceItemPayload[]
 }
 
@@ -228,6 +229,7 @@ export interface UpdateInvoicePayload {
   dueDate?: string
   status?: string
   notes?: string
+  taxPercentage?: number   // pass 0 to remove GST; omit to keep existing
   items?: InvoiceItemPayload[]
 }
 

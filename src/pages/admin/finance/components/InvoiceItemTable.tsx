@@ -18,7 +18,8 @@ interface EditableProps {
 interface ReadonlyProps {
   readonly: true
   items: Array<{ description: string; quantity: number; unitPrice: number; total: number }>
-  invoiceTotalAmount?: number   // authoritative total from backend
+  /** Authoritative subtotal from backend (sum of item totals, before GST) */
+  invoiceSubtotal?: number
 }
 
 type Props = EditableProps | ReadonlyProps
@@ -58,7 +59,8 @@ const td: React.CSSProperties = {
 const InvoiceItemTable = (props: Props) => {
   // ── Editable mode ──────────────────────────────────────────────────────────
   if (!props.readonly) {
-    const { items, onChange } = props
+    const editProps = props as EditableProps
+    const { items, onChange } = editProps
 
     const previewTotal = useMemo(
       () => items.reduce((sum, r) => sum + (parseFloat(r.quantity) || 0) * (parseFloat(r.unitPrice) || 0), 0),
@@ -186,7 +188,7 @@ const InvoiceItemTable = (props: Props) => {
 
   // ── Read-only mode ─────────────────────────────────────────────────────────
   const { items } = props
-  const grandTotal = props.invoiceTotalAmount ?? items.reduce((s, r) => s + r.total, 0)
+  const subtotal = props.invoiceSubtotal ?? items.reduce((s, r) => s + r.total, 0)
 
   return (
     <div style={{ overflowX: 'auto' }}>
@@ -212,10 +214,10 @@ const InvoiceItemTable = (props: Props) => {
         <tfoot>
           <tr>
             <td colSpan={3} style={{ ...td, textAlign: 'right', fontWeight: 600, borderTop: '2px solid #e5e5e5', paddingTop: '12px' }}>
-              Total Amount
+              Subtotal
             </td>
             <td style={{ ...td, textAlign: 'right', fontWeight: 700, fontSize: '15px', borderTop: '2px solid #e5e5e5', paddingTop: '12px', color: '#1a1a1a' }}>
-              {formatCurrency(grandTotal)}
+              {formatCurrency(subtotal)}
             </td>
           </tr>
         </tfoot>

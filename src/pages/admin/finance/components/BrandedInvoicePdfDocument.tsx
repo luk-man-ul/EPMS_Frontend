@@ -443,8 +443,13 @@ interface Props {
 const BrandedInvoicePdfDocument = ({ invoice }: Props) => {
   const cp = companyProfile
 
-  // Grand total — read directly from backend-persisted value, no arithmetic
-  const grandTotal = invoice.totalAmount
+  // ── All monetary values read directly from backend-persisted fields ──────────
+  // NEVER recalculate totals here — backend is the single source of truth.
+  const subtotal   = invoice.subtotal   ?? invoice.totalAmount   // pre-GST total
+  const taxPct     = invoice.taxPercentage ?? 0                  // e.g. 18
+  const taxAmount  = invoice.taxAmount  ?? 0                     // computed by backend
+  const grandTotal = invoice.totalAmount                         // authoritative grand total
+  const hasGst     = taxPct > 0 && taxAmount > 0
 
   // Terms: use invoice.notes if provided, otherwise fall back to company default
   const terms = invoice.notes?.trim() || cp.termsAndConditions
@@ -546,7 +551,7 @@ const BrandedInvoicePdfDocument = ({ invoice }: Props) => {
             <Text style={[s.cHsn,   s.thText]}>HSN</Text>
             <Text style={[s.cQty,   s.thText]}>Qty</Text>
             <Text style={[s.cRate,  s.thText]}>Rate</Text>
-            {invoice.gstEnabled ? <Text style={[s.cGst, s.thText]}>GST</Text> : null}
+            {hasGst ? <Text style={[s.cGst, s.thText]}>GST</Text> : null}
             <Text style={[s.cTotal, s.thText]}>Amount</Text>
           </View>
 
@@ -561,7 +566,7 @@ const BrandedInvoicePdfDocument = ({ invoice }: Props) => {
               <Text style={[s.cHsn,   s.tdText, { textAlign: 'center' }]}>—</Text>
               <Text style={[s.cQty,   s.tdText]}>{item.quantity}</Text>
               <Text style={[s.cRate,  s.tdText]}>{formatPdfMoney(item.unitPrice)}</Text>
-              {invoice.gstEnabled ? <Text style={[s.cGst, s.tdText]}>{invoice.gstPercentage ?? 0}%</Text> : null}
+              {hasGst ? <Text style={[s.cGst, s.tdText]}>{taxPct}%</Text> : null}
               <Text style={[s.cTotal, s.tdTextBold]}>{formatPdfMoney(item.total)}</Text>
             </View>
           ))}
@@ -572,26 +577,28 @@ const BrandedInvoicePdfDocument = ({ invoice }: Props) => {
         ══════════════════════════════════════════════════ */}
         <View style={s.totalsWrapper}>
           <View style={s.totalsBox}>
+            {/* Subtotal */}
             <View style={s.totalsLine}>
               <Text style={s.totalsLabel}>Subtotal</Text>
-              <Text style={s.totalsValue}>{formatPdfMoney(grandTotal)}</Text>
+              <Text style={s.totalsValue}>{formatPdfMoney(subtotal)}</Text>
             </View>
-            {invoice.gstEnabled && invoice.gstType === 'CGST_SGST' ? (
+
+            {/* GST breakdown — only when tax was applied */}
+            {hasGst && taxAmount > 0 && invoice.gstType === 'CGST_SGST' ? (
               <>
                 <View style={s.totalsLine}>
-                  <Text style={s.totalsLabel}>CGST ({(invoice.gstPercentage ?? 0) / 2}%)</Text>
-                  <Text style={s.totalsValue}>{formatPdfMoney(0)}</Text>
+                  <Text style={s.totalsLabel}>CGST ({taxPct / 2}%)</Text>
+                  <Text style={s.totalsValue}>{formatPdfMoney(taxAmount / 2)}</Text>
                 </View>
                 <View style={s.totalsLine}>
-                  <Text style={s.totalsLabel}>SGST ({(invoice.gstPercentage ?? 0) / 2}%)</Text>
-                  <Text style={s.totalsValue}>{formatPdfMoney(0)}</Text>
+                  <Text style={s.totalsLabel}>SGST ({taxPct / 2}%)</Text>
+                  <Text style={s.totalsValue}>{formatPdfMoney(taxAmount / 2)}</Text>
                 </View>
               </>
-            ) : null}
-            {invoice.gstEnabled && invoice.gstType === 'IGST' ? (
+            ) : hasGst && taxAmount > 0 ? (
               <View style={s.totalsLine}>
-                <Text style={s.totalsLabel}>IGST ({invoice.gstPercentage ?? 0}%)</Text>
-                <Text style={s.totalsValue}>{formatPdfMoney(0)}</Text>
+                <Text style={s.totalsLabel}>IGST ({taxPct}%)</Text>
+                <Text style={s.totalsValue}>{formatPdfMoney(taxAmount)}</Text>
               </View>
             ) : null}
           </View>

@@ -134,7 +134,11 @@ export interface Invoice {
   issueDate: string
   dueDate: string
   status: InvoiceStatus
-  totalAmount: number
+  // ── GST fields — null for invoices created before GST was added ──
+  subtotal:      number | null   // sum of item totals before tax
+  taxPercentage: number | null   // e.g. 18 for 18% GST; null = no GST
+  taxAmount:     number | null   // computed by backend; null = no GST
+  totalAmount:   number          // subtotal + taxAmount (authoritative grand total)
   notes?: string | null
   pdfPath?: string | null
   revenueId?: string | null
@@ -150,8 +154,6 @@ export interface Invoice {
     paymentMethod?: PaymentMethod | null
   } | null
   items: InvoiceItem[]
-  // Phase 1 GST UI fields — frontend only, never persisted
-  gstEnabled?:    boolean
-  gstPercentage?: number
-  gstType?:       'CGST_SGST' | 'IGST'
+  // gstType is UI-only — not persisted. Derived from clientGSTIN presence or user selection.
+  gstType?: 'CGST_SGST' | 'IGST'
 }

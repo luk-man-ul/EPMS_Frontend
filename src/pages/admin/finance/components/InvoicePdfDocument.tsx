@@ -245,6 +245,12 @@ const InvoicePdfDocument = ({ invoice }: Props) => {
   const statusColor = STATUS_COLORS[invoice.status] ?? '#888888'
   const isOverdue   = invoice.status === 'OVERDUE'
 
+  // ── All monetary values from backend-persisted fields — no recalculation ──
+  const subtotal  = invoice.subtotal   ?? invoice.totalAmount
+  const taxPct    = invoice.taxPercentage ?? 0
+  const taxAmount = invoice.taxAmount  ?? 0
+  const hasGst    = taxPct > 0 && taxAmount > 0
+
   return (
     <Document
       title={invoice.invoiceNo}
@@ -342,8 +348,25 @@ const InvoicePdfDocument = ({ invoice }: Props) => {
           <View style={s.totalsBox}>
             <View style={s.totalsLine}>
               <Text style={s.totalsLabel}>Subtotal</Text>
-              <Text style={s.totalsValue}>{formatCurrencyPdf(invoice.totalAmount)}</Text>
+              <Text style={s.totalsValue}>{formatCurrencyPdf(subtotal)}</Text>
             </View>
+            {hasGst && invoice.gstType === 'CGST_SGST' ? (
+              <>
+                <View style={s.totalsLine}>
+                  <Text style={s.totalsLabel}>CGST ({taxPct / 2}%)</Text>
+                  <Text style={s.totalsValue}>{formatCurrencyPdf(taxAmount / 2)}</Text>
+                </View>
+                <View style={s.totalsLine}>
+                  <Text style={s.totalsLabel}>SGST ({taxPct / 2}%)</Text>
+                  <Text style={s.totalsValue}>{formatCurrencyPdf(taxAmount / 2)}</Text>
+                </View>
+              </>
+            ) : hasGst ? (
+              <View style={s.totalsLine}>
+                <Text style={s.totalsLabel}>IGST ({taxPct}%)</Text>
+                <Text style={s.totalsValue}>{formatCurrencyPdf(taxAmount)}</Text>
+              </View>
+            ) : null}
             <View style={s.totalsDivider} />
             <View style={s.totalsLine}>
               <Text style={s.grandLabel}>Total</Text>

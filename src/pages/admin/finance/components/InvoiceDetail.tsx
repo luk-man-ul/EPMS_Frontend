@@ -265,19 +265,57 @@ const InvoiceDetail = ({ invoice, onEdit, onBack, onPdfStored }: Props) => {
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#1a1a1a', marginBottom: '10px' }}>
             Line Items
           </div>
-          <InvoiceItemTable readonly={true} items={invoice.items} invoiceTotalAmount={invoice.totalAmount} />
+          <InvoiceItemTable readonly={true} items={invoice.items} invoiceSubtotal={invoice.subtotal ?? invoice.totalAmount} />
         </div>
 
         {/* Totals summary */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
           <div style={{
             background: '#f8fafc', borderRadius: '10px',
-            border: '1px solid #e5e5e5', padding: '16px 24px', minWidth: '240px',
+            border: '1px solid #e5e5e5', padding: '16px 24px', minWidth: '260px',
           }}>
+            {/* Subtotal row — use stored subtotal if available, else totalAmount */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               <span style={{ fontSize: '13px', color: '#666' }}>Subtotal</span>
-              <span style={{ fontSize: '13px', fontWeight: 500 }}>{formatCurrency(invoice.totalAmount)}</span>
+              <span style={{ fontSize: '13px', fontWeight: 500 }}>
+                {formatCurrency(invoice.subtotal ?? invoice.totalAmount)}
+              </span>
             </div>
+
+            {/* GST rows — only shown when taxPercentage is stored */}
+            {invoice.taxPercentage != null && invoice.taxPercentage > 0 && invoice.taxAmount != null && (
+              invoice.gstType === 'CGST_SGST' ? (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '12px', color: '#888' }}>
+                      CGST ({invoice.taxPercentage / 2}%)
+                    </span>
+                    <span style={{ fontSize: '12px', color: '#888' }}>
+                      {formatCurrency(invoice.taxAmount / 2)}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '12px', color: '#888' }}>
+                      SGST ({invoice.taxPercentage / 2}%)
+                    </span>
+                    <span style={{ fontSize: '12px', color: '#888' }}>
+                      {formatCurrency(invoice.taxAmount / 2)}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '12px', color: '#888' }}>
+                    GST ({invoice.taxPercentage}%)
+                  </span>
+                  <span style={{ fontSize: '12px', color: '#888' }}>
+                    {formatCurrency(invoice.taxAmount)}
+                  </span>
+                </div>
+              )
+            )}
+
+            {/* Grand total */}
             <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: '8px', display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '14px', fontWeight: 600 }}>Total</span>
               <span style={{ fontSize: '16px', fontWeight: 700, color: '#1a1a1a' }}>

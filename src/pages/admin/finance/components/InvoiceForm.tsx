@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { createInvoice, updateInvoice, getRevenues } from '../finance.api'
 import type { Invoice, InvoiceStatus } from '../types/finance.types'
 import type { Revenue } from '../types/finance.types'
 import { getProjectOptions } from '../lookup.api'
 import type { ProjectOption } from '../lookup.api'
 import { useToast } from '../../../../context/ToastContext'
+import { formatCurrency } from '../finance.utils'
 import InvoiceItemTable from './InvoiceItemTable'
 import type { ItemRow } from './InvoiceItemTable'
 
@@ -84,12 +85,28 @@ const InvoiceForm = (props: Props) => {
       : [{ ...EMPTY_ITEM }],
   )
 
-  const [gstEnabled,    setGstEnabled]    = useState(false)
-  const [gstPercentage, setGstPercentage] = useState<number | ''>('')
-  const [gstType,       setGstType]       = useState<'CGST_SGST' | 'IGST' | ''>('')
+  const [gstEnabled,    setGstEnabled]    = useState(
+    isEdit ? (existing!.taxPercentage != null && existing!.taxPercentage > 0) : false,
+  )
+  const [gstPercentage, setGstPercentage] = useState<number | ''>(
+    isEdit && existing!.taxPercentage != null ? existing!.taxPercentage : '',
+  )
+  const [gstType,       setGstType]       = useState<'CGST_SGST' | 'IGST' | ''>(
+    isEdit ? (existing!.gstType ?? '') : '',
+  )
 
   const [formError,  setFormError]  = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  // ── Derived totals preview (useMemo — no state, no re-render loops) ─────────
+  // These are display-only. The backend is the authoritative source of truth.
+  const previewSubtotal = useMemo(
+    () => items.reduce((sum, r) => sum + (parseFloat(r.quantity) || 0) * (parseFloat(r.unitPrice) || 0), 0),
+    [items],
+  )
+  const previewTaxPct   = gstEnabled && gstPercentage !== '' ? Number(gstPercentage) : 0
+  const previewTaxAmt   = previewSubtotal * previewTaxPct / 100
+  const previewTotal    = previewSubtotal + previewTaxAmt
 
   // ── Fetch dropdowns ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -157,6 +174,7 @@ const InvoiceForm = (props: Props) => {
           dueDate,
           status,
           notes:         notes.trim()         || undefined,
+          taxPercentage: gstEnabled && gstPercentage !== '' ? Number(gstPercentage) : 0,
           items:         itemPayload,
         })
         showToast('success', 'Invoice updated')
@@ -170,6 +188,7 @@ const InvoiceForm = (props: Props) => {
           dueDate,
           notes:         notes.trim()         || undefined,
           revenueId:     revenueId            || undefined,
+          taxPercentage: gstEnabled && gstPercentage !== '' ? Number(gstPercentage) : undefined,
           items:         itemPayload,
         })
         showToast('success', `Invoice ${result.invoiceNo} created`)
@@ -368,6 +387,55 @@ const InvoiceForm = (props: Props) => {
             Line Items *
           </div>
           <InvoiceItemTable readonly={false} items={items} onChange={setItems} />
+
+          {/* ── GST totals preview ── */}
+          <div style={{
+            display: 'flex', justifyContent: 'flex-end', marginTop: '12px',
+          }}>
+            <div style={{
+              background: '#f8fafc', borderRadius: '10px',
+              border: '1px solid #e5e5e5', padding: '14px 20px', minWidth: '240px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '13px', color: '#666' }}>Subtotal</span>
+                <span style={{ fontSize: '13px', fontWeight: 500 }}>{formatCurrency(previewSubtotal)}</span>
+              </div>
+
+              {gstEnabled && previewTaxPct > 0 && (
+                <>
+                  {gstType === 'CGST_SGST' ? (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '12px', color: '#888' }}>CGST ({previewTaxPct / 2}%)</span>
+                        <span style={{ fontSize: '12px', color: '#888' }}>{formatCurrency(previewTaxAmt / 2)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '12px', color: '#888' }}>SGST ({previewTaxPct / 2}%)</span>
+                        <span style={{ fontSize: '12px', color: '#888' }}>{formatCurrency(previewTaxAmt / 2)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '12px', color: '#888' }}>
+                        {gstType === 'IGST' ? `IGST (${previewTaxPct}%)` : `GST (${previewTaxPct}%)`}
+                      </span>
+                      <span style={{ fontSize: '12px', color: '#888' }}>{formatCurrency(previewTaxAmt)}</span>
+                    </div>
+                  )}
+                </>
+              )}
+
+              <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: '8px', marginTop: '6px', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '14px', fontWeight: 600 }}>Grand Total</span>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: '#1a1a1a' }}>
+                  {formatCurrency(previewTotal)}
+                </span>
+              </div>
+              <div style={{ marginTop: '4px', fontSize: '11px', color: '#aaa', textAlign: 'right' }}>
+                preview — backend recomputes on save
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Actions */}
