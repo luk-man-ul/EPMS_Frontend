@@ -1,12 +1,10 @@
 import { useState } from 'react'
-import { pdf } from '@react-pdf/renderer'
 import type { Invoice } from '../types/finance.types'
 import { formatCurrency, formatDate } from '../finance.utils'
 import { storeInvoicePdf } from '../finance.api'
 import { useToast } from '../../../../context/ToastContext'
 import InvoiceStatusBadge from './InvoiceStatusBadge'
 import InvoiceItemTable from './InvoiceItemTable'
-import BrandedInvoicePdfDocument from './BrandedInvoicePdfDocument'
 
 interface Props {
   invoice: Invoice
@@ -32,10 +30,14 @@ const value: React.CSSProperties = {
 
 // ── PDF helpers ───────────────────────────────────────────────────────────────
 
-/** Generate a PDF Blob from the invoice data using @react-pdf/renderer */
+/**
+ * Generate a PDF Blob on demand.
+ * Dynamically imports @react-pdf/renderer + BrandedInvoicePdfDocument so they
+ * are excluded from the initial bundle and only loaded when this function runs.
+ */
 async function generatePdfBlob(invoice: Invoice): Promise<Blob> {
-  const doc = <BrandedInvoicePdfDocument invoice={invoice} />
-  return pdf(doc).toBlob()
+  const { generateInvoicePdfBlob } = await import('./invoicePdfGenerator')
+  return generateInvoicePdfBlob(invoice)
 }
 
 /** Trigger a browser download of a Blob */

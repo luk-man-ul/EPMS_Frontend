@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ToastProvider } from './context/ToastContext'
 import { useAuth } from './context/AuthContext'
 import { FullScreenLoader } from './components/shared/FullScreenLoader'
+import { PwaUpdatePrompt } from './components/shared/PwaUpdatePrompt'
 
 import AdminRoutes from './routes/AdminRoutes'
 import AppWorkspaceRoutes from './routes/AppWorkspaceRoutes'
@@ -41,6 +42,10 @@ const App = () => {
 
         </Routes>
       </BrowserRouter>
+
+      {/* PWA update notification — shown when a new SW is waiting to activate.
+          User manually triggers the update; no auto-reload. */}
+      <PwaUpdatePrompt />
     </ToastProvider>
   )
 }
