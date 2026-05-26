@@ -40,8 +40,8 @@ const AdminHeader = ({ onMenuClick }: AdminHeaderProps) => {
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const handleLogout = () => {
-    authLogout()
+  const handleLogout = async () => {
+    await authLogout()
     navigate('/auth/login')
   }
 
@@ -73,8 +73,6 @@ const AdminHeader = ({ onMenuClick }: AdminHeaderProps) => {
         api.get('/tickets'),
         api.get('/users'),
       ])
-
-      const combined: SearchResult[] = []
 
       // Projects
       if (projectsRes.status === 'fulfilled') {

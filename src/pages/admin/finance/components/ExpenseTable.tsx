@@ -62,6 +62,10 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
   )
   const isSalary = selectedCategory?.name?.toLowerCase() === 'salary'
 
+  // ── Filter state ────────────────────────────────────────
+  const [filterCategory, setFilterCategory] = useState('')
+  const [filterSearch,   setFilterSearch]   = useState('')
+
   // ── Fetch expenses ──────────────────────────────────────
   const fetchExpenses = () => {
     setLoading(true)
@@ -129,6 +133,19 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
     setFormError(null)
     onFormClose?.()
   }
+
+  // ── Filtered expenses ───────────────────────────────────
+  const filteredExpenses = expenses.filter((e) => {
+    const matchCategory = !filterCategory || e.category?.id === filterCategory
+    const search = filterSearch.toLowerCase()
+    const matchSearch = !search ||
+      e.category?.name?.toLowerCase().includes(search) ||
+      e.description?.toLowerCase().includes(search) ||
+      e.employee?.firstName?.toLowerCase().includes(search) ||
+      e.employee?.lastName?.toLowerCase().includes(search) ||
+      e.project?.name?.toLowerCase().includes(search)
+    return matchCategory && matchSearch
+  })
 
   return (
     <div>
@@ -390,13 +407,46 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
         </div>
       )}
 
+      {/* ── Filters ── */}
+      {!showForm && (
+        <div style={{ display: 'flex', gap: '10px', padding: '16px 20px', borderBottom: '1px solid #e5e5e5', alignItems: 'center', flexWrap: 'wrap' }}>
+          <select
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', fontSize: '13px', background: '#fff', outline: 'none', cursor: 'pointer' }}
+          >
+            <option value="">All Categories</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            placeholder="Search by category, employee or project..."
+            value={filterSearch}
+            onChange={(e) => setFilterSearch(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', fontSize: '13px', outline: 'none', width: '280px' }}
+          />
+          {(filterCategory || filterSearch) && (
+            <button
+              onClick={() => { setFilterCategory(''); setFilterSearch('') }}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#666' }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
+
       {/* ── Expense Table ── */}
       {loading ? (
         <div style={{ padding: '32px 20px', textAlign: 'center', color: '#999', fontSize: '14px' }}>Loading...</div>
       ) : error ? (
         <div style={{ padding: '32px 20px', textAlign: 'center', color: '#dc2626', fontSize: '14px' }}>{error}</div>
-      ) : expenses.length === 0 ? (
-        <div style={{ padding: '32px 20px', textAlign: 'center', color: '#999', fontSize: '14px' }}>No expense records found.</div>
+      ) : filteredExpenses.length === 0 ? (
+        <div style={{ padding: '32px 20px', textAlign: 'center', color: '#999', fontSize: '14px' }}>
+          {expenses.length === 0 ? 'No expense records found.' : 'No records match your filters.'}
+        </div>
       ) : (
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
@@ -412,7 +462,7 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
             </tr>
           </thead>
           <tbody>
-            {expenses.map((expense) => (
+            {filteredExpenses.map((expense) => (
               <ExpenseRow key={expense.id} expense={expense} />
             ))}
           </tbody>

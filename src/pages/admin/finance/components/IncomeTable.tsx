@@ -49,6 +49,10 @@ const IncomeTable = ({ showForm = false, onFormClose }: Props) => {
   const [formError, setFormError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
+  // ── Filter state ────────────────────────────────────────
+  const [filterProject, setFilterProject] = useState('')
+  const [filterSearch,  setFilterSearch]  = useState('')
+
   // ── Fetch revenues ──────────────────────────────────────
   const fetchRevenues = () => {
     setLoading(true)
@@ -104,6 +108,16 @@ const IncomeTable = ({ showForm = false, onFormClose }: Props) => {
     setFormError(null)
     onFormClose?.()
   }
+
+  // ── Filtered revenues ───────────────────────────────────
+  const filteredRevenues = revenues.filter((r) => {
+    const matchProject = !filterProject || r.project?.id === filterProject
+    const search = filterSearch.toLowerCase()
+    const matchSearch = !search ||
+      r.project?.name?.toLowerCase().includes(search) ||
+      r.description?.toLowerCase().includes(search)
+    return matchProject && matchSearch
+  })
 
   return (
     <div>
@@ -265,13 +279,46 @@ const IncomeTable = ({ showForm = false, onFormClose }: Props) => {
         </div>
       )}
 
+      {/* ── Filters ── */}
+      {!showForm && (
+        <div style={{ display: 'flex', gap: '10px', padding: '16px 20px', borderBottom: '1px solid #e5e5e5', alignItems: 'center', flexWrap: 'wrap' }}>
+          <select
+            value={filterProject}
+            onChange={(e) => setFilterProject(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', fontSize: '13px', background: '#fff', outline: 'none', cursor: 'pointer' }}
+          >
+            <option value="">All Projects</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            placeholder="Search by project or description..."
+            value={filterSearch}
+            onChange={(e) => setFilterSearch(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', fontSize: '13px', outline: 'none', width: '260px' }}
+          />
+          {(filterProject || filterSearch) && (
+            <button
+              onClick={() => { setFilterProject(''); setFilterSearch('') }}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#666' }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
+
       {/* ── Revenue Table ── */}
       {loading ? (
         <div style={{ padding: '32px 20px', textAlign: 'center', color: '#999', fontSize: '14px' }}>Loading...</div>
       ) : error ? (
         <div style={{ padding: '32px 20px', textAlign: 'center', color: '#dc2626', fontSize: '14px' }}>{error}</div>
-      ) : revenues.length === 0 ? (
-        <div style={{ padding: '32px 20px', textAlign: 'center', color: '#999', fontSize: '14px' }}>No revenue records found.</div>
+      ) : filteredRevenues.length === 0 ? (
+        <div style={{ padding: '32px 20px', textAlign: 'center', color: '#999', fontSize: '14px' }}>
+          {revenues.length === 0 ? 'No revenue records found.' : 'No records match your filters.'}
+        </div>
       ) : (
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
@@ -287,7 +334,7 @@ const IncomeTable = ({ showForm = false, onFormClose }: Props) => {
             </tr>
           </thead>
           <tbody>
-            {revenues.map((revenue) => (
+            {filteredRevenues.map((revenue) => (
               <IncomeRow key={revenue.id} revenue={revenue} />
             ))}
           </tbody>

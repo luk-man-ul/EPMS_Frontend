@@ -185,149 +185,35 @@ const FinancePage = () => {
       )}
 
       {activeView === 'income' && (
-        <>
-          <div style={{ 
-            display: 'flex', 
-            gap: '12px', 
-            marginBottom: '20px',
-            alignItems: 'center'
-          }}>
-            <select
-              style={{
-                padding: '10px 16px',
-                borderRadius: '8px',
-                border: '1px solid #e5e5e5',
-                background: '#fff',
-                fontSize: '14px',
-                color: '#1a1a1a',
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              <option>All Status</option>
-              <option>Paid</option>
-              <option>Pending</option>
-              <option>Overdue</option>
-            </select>
-            <select
-              style={{
-                padding: '10px 16px',
-                borderRadius: '8px',
-                border: '1px solid #e5e5e5',
-                background: '#fff',
-                fontSize: '14px',
-                color: '#1a1a1a',
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              <option>All Clients</option>
-              <option>Acme Corporation</option>
-              <option>TechStart Inc</option>
-              <option>Global Solutions</option>
-            </select>
-            <input
-              type="text"
-              placeholder="Search invoices..."
-              style={{
-                padding: '10px 16px',
-                borderRadius: '8px',
-                border: '1px solid #e5e5e5',
-                fontSize: '14px',
-                outline: 'none',
-                width: '240px'
-              }}
-            />
-          </div>
-          <div
-            style={{
-              backgroundColor: '#fff',
-              borderRadius: '12px',
-              border: '1px solid #e5e5e5',
-              overflow: 'hidden',
-            }}
-          >
-            <IncomeTable
-                showForm={showRevenueForm}
-                onFormClose={() => setShowRevenueForm(false)}
-              />
-          </div>
-        </>
+        <div
+          style={{
+            backgroundColor: '#fff',
+            borderRadius: '12px',
+            border: '1px solid #e5e5e5',
+            overflow: 'hidden',
+          }}
+        >
+          <IncomeTable
+            showForm={showRevenueForm}
+            onFormClose={() => setShowRevenueForm(false)}
+          />
+        </div>
       )}
 
       {activeView === 'expenses' && (
-        <>
-          <div style={{ 
-            display: 'flex', 
-            gap: '12px', 
-            marginBottom: '20px',
-            alignItems: 'center'
-          }}>
-            <select
-              style={{
-                padding: '10px 16px',
-                borderRadius: '8px',
-                border: '1px solid #e5e5e5',
-                background: '#fff',
-                fontSize: '14px',
-                color: '#1a1a1a',
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              <option>All Status</option>
-              <option>Pending</option>
-              <option>Approved</option>
-              <option>Rejected</option>
-            </select>
-            <select
-              style={{
-                padding: '10px 16px',
-                borderRadius: '8px',
-                border: '1px solid #e5e5e5',
-                background: '#fff',
-                fontSize: '14px',
-                color: '#1a1a1a',
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              <option>All Categories</option>
-              <option>Infrastructure</option>
-              <option>Software Licenses</option>
-              <option>Marketing</option>
-              <option>Office Supplies</option>
-              <option>Training</option>
-              <option>Travel</option>
-              <option>Equipment</option>
-            </select>
-            <input
-              type="text"
-              placeholder="Search expenses..."
-              style={{
-                padding: '10px 16px',
-                borderRadius: '8px',
-                border: '1px solid #e5e5e5',
-                fontSize: '14px',
-                outline: 'none',
-                width: '240px'
-              }}
-            />
-          </div>
-          <div
-            style={{
-              backgroundColor: '#fff',
-              borderRadius: '12px',
-              border: '1px solid #e5e5e5',
-              overflow: 'hidden',
-            }}
-          >
-            <ExpenseTable
-                showForm={showExpenseForm}
-                onFormClose={() => setShowExpenseForm(false)}
-              />
-          </div>
-        </>
+        <div
+          style={{
+            backgroundColor: '#fff',
+            borderRadius: '12px',
+            border: '1px solid #e5e5e5',
+            overflow: 'hidden',
+          }}
+        >
+          <ExpenseTable
+            showForm={showExpenseForm}
+            onFormClose={() => setShowExpenseForm(false)}
+          />
+        </div>
       )}
     </div>
   )
