@@ -64,7 +64,6 @@ export default defineConfig({
         globPatterns: [
           '**/*.{js,css,html}',
           'icon-*.png',
-          'logo.png',
           'apple-touch-icon.png',
         ],
 
