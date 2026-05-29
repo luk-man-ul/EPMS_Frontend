@@ -20,6 +20,13 @@ const EmployeeDetail = () => {
   const [employee, setEmployee] = useState<Employee | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     if (id) fetchEmployee(id)
@@ -65,8 +72,10 @@ const EmployeeDetail = () => {
   const fullName = `${employee.firstName} ${employee.lastName}`
   const initials = `${employee.firstName?.[0] ?? ''}${employee.lastName?.[0] ?? ''}`.toUpperCase()
 
+  const cardPadding = isMobile ? '16px' : '20px 24px'
+
   return (
-    <div style={styles.page}>
+    <div style={{ ...styles.page, padding: isMobile ? '16px' : '0', gap: isMobile ? 16 : 20 }}>
       {/* Back button */}
       <button style={styles.backBtn} onClick={() => navigate('/admin/employees')}>
         <ArrowLeft size={16} /> Back to Employees
@@ -75,15 +84,24 @@ const EmployeeDetail = () => {
       {/* Hero card */}
       <div style={styles.heroCard}>
         <div style={styles.heroGradient} />
-        <div style={styles.heroContent}>
-          <div style={styles.avatar}>
+        <div style={{
+          ...styles.heroContent,
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'center' : 'flex-start',
+          textAlign: isMobile ? 'center' : 'left',
+          padding: isMobile ? '0 16px 20px 16px' : '0 28px 24px 28px',
+        }}>
+          <div style={{
+            ...styles.avatar,
+            marginTop: isMobile ? -36 : -40,
+            marginBottom: isMobile ? 12 : 0,
+          }}>
             {employee.profilePhoto ? (
               <img
                 src={employee.profilePhoto}
                 alt={fullName}
                 style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                 onError={(e) => {
-                  // If image fails to load, hide it and show initials
                   e.currentTarget.style.display = 'none'
                   e.currentTarget.parentElement!.textContent = initials
                 }}
@@ -92,21 +110,23 @@ const EmployeeDetail = () => {
               initials
             )}
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <h1 style={styles.heroName}>{fullName}</h1>
-              <StatusBadge status={employee.status} />
-            </div>
-            {employee.designation && (
-              <p style={styles.heroDesignation}>{employee.designation}</p>
-            )}
-            <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-              <RoleBadge role={primaryRole} />
-              {employee.department && (
-                <span style={styles.deptChip}>
-                  <Building2 size={12} /> {employee.department}
-                </span>
+          <div style={{ flex: 1, width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMobile ? 'center' : 'flex-start', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
+                <h1 style={{ ...styles.heroName, marginTop: isMobile ? 4 : 12 }}>{fullName}</h1>
+                <StatusBadge status={employee.status} />
+              </div>
+              {employee.designation && (
+                <p style={styles.heroDesignation}>{employee.designation}</p>
               )}
+              <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
+                <RoleBadge role={primaryRole} />
+                {employee.department && (
+                  <span style={styles.deptChip}>
+                    <Building2 size={12} /> {employee.department}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -115,7 +135,7 @@ const EmployeeDetail = () => {
       {/* Two-column grid */}
       <div style={styles.grid}>
         {/* Contact Information */}
-        <InfoCard title="Contact Information" icon={<User size={16} />}>
+        <InfoCard title="Contact Information" icon={<User size={16} />} padding={cardPadding}>
           <InfoRow icon={<Mail size={14} />} label="Email" value={employee.email} />
           <InfoRow icon={<Phone size={14} />} label="Phone" value={employee.phone || '—'} />
           <InfoRow icon={<Building2 size={14} />} label="Department" value={employee.department || '—'} />
@@ -123,7 +143,7 @@ const EmployeeDetail = () => {
         </InfoCard>
 
         {/* Employment Information */}
-        <InfoCard title="Employment Information" icon={<Briefcase size={16} />}>
+        <InfoCard title="Employment Information" icon={<Briefcase size={16} />} padding={cardPadding}>
           <InfoRow
             icon={<Calendar size={14} />}
             label="Joined Date"
@@ -176,7 +196,7 @@ const EmployeeDetail = () => {
       </div>
 
       {/* Roles */}
-      <SectionCard title="Assigned Roles" icon={<ShieldCheck size={16} />}>
+      <SectionCard title="Assigned Roles" icon={<ShieldCheck size={16} />} padding={cardPadding}>
         {employee.roles && employee.roles.length > 0 ? (
           <div style={styles.chipRow}>
             {employee.roles.map((r, i) => (
@@ -189,7 +209,7 @@ const EmployeeDetail = () => {
       </SectionCard>
 
       {/* Skills */}
-      <SectionCard title="Skills" icon={<Briefcase size={16} />}>
+      <SectionCard title="Skills" icon={<Briefcase size={16} />} padding={cardPadding}>
         {employee.skills && employee.skills.length > 0 ? (
           <div style={styles.chipRow}>
             {employee.skills.map((s) => (
@@ -237,8 +257,8 @@ const RoleBadge = ({ role, large }: { role: string; large?: boolean }) => {
   )
 }
 
-const InfoCard = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
-  <div style={styles.card}>
+const InfoCard = ({ title, icon, padding, children }: { title: string; icon: React.ReactNode; padding: string; children: React.ReactNode }) => (
+  <div style={{ ...styles.card, padding }}>
     <div style={styles.cardHeader}>
       <span style={styles.cardIcon}>{icon}</span>
       <h3 style={styles.cardTitle}>{title}</h3>
@@ -247,8 +267,8 @@ const InfoCard = ({ title, icon, children }: { title: string; icon: React.ReactN
   </div>
 )
 
-const SectionCard = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
-  <div style={{ ...styles.card, marginTop: 0 }}>
+const SectionCard = ({ title, icon, padding, children }: { title: string; icon: React.ReactNode; padding: string; children: React.ReactNode }) => (
+  <div style={{ ...styles.card, padding, marginTop: 0 }}>
     <div style={styles.cardHeader}>
       <span style={styles.cardIcon}>{icon}</span>
       <h3 style={styles.cardTitle}>{title}</h3>

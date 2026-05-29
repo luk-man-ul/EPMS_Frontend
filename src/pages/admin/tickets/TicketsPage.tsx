@@ -17,6 +17,7 @@ import api from '../../../utils/api'
 
 const TicketsPage = () => {
   const { user } = useAuth()
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   
   interface TicketFiltersState {
   status?: string
@@ -36,6 +37,12 @@ const TicketsPage = () => {
 
   const [projects, setProjects] = useState<ProjectOption[]>([])
   const [employees, setEmployees] = useState<EmployeeOption[]>([])
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   ////////////////////////////////////////////////////////////
   // LOAD DROPDOWN DATA
@@ -157,8 +164,10 @@ const TicketsPage = () => {
       <div
         style={{
           display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '16px' : '0px',
           justifyContent: 'space-between',
-          alignItems: 'center',
+          alignItems: isMobile ? 'stretch' : 'center',
           marginBottom: '24px',
         }}
       >
@@ -184,7 +193,7 @@ const TicketsPage = () => {
           <button
             onClick={() => setShowModal(true)}
             style={{
-              padding: '10px 18px',
+              padding: '12px 18px',
               borderRadius: '10px',
               border: 'none',
               backgroundColor: '#1a1a1a',
@@ -192,6 +201,7 @@ const TicketsPage = () => {
               fontWeight: 500,
               cursor: 'pointer',
               fontSize: '14px',
+              textAlign: 'center',
             }}
           >
             + Create Ticket
@@ -210,9 +220,9 @@ const TicketsPage = () => {
       {/* Table */}
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: isMobile ? 'transparent' : '#fff',
           borderRadius: '12px',
-          border: '1px solid #e5e5e5',
+          border: isMobile ? 'none' : '1px solid #e5e5e5',
           overflow: 'visible',
         }}
       >

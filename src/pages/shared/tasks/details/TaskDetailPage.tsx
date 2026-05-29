@@ -35,6 +35,7 @@ const TaskDetailPage = () => {
   const [accessDenied, setAccessDenied] = useState(false)
   const [toastShown, setToastShown] = useState(false)
   const [updatingStatus, setUpdatingStatus] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
 
   const fromProject = location.state?.fromProject
 
@@ -60,6 +61,12 @@ const TaskDetailPage = () => {
     setComments(commentsRes.data)
     showToast('success', 'Comment posted')
   }
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     if (taskId && !accessDenied) fetchTask()
@@ -120,19 +127,22 @@ const TaskDetailPage = () => {
   const creatorName = task.creator ? `${task.creator.firstName} ${task.creator.lastName}` : '—'
   const avatarInitials = (name: string) => name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
 
+  const sectionPadding = isMobile ? '20px 16px' : '24px 28px'
+  const rightSectionPadding = isMobile ? '20px 16px' : '20px 22px'
+
   return (
     <div style={{ width: '100%' }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
 
       {/* TOP BAR */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <button onClick={handleBack} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid #e5e5e5', borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 500, color: '#444', cursor: 'pointer' }}>
           ← Back
         </button>
       </div>
 
       {/* HERO CARD */}
-      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '28px 32px', marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: isMobile ? '20px 16px' : '28px 32px', marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ flex: 1 }}>
             {/* Breadcrumb */}
@@ -140,7 +150,7 @@ const TaskDetailPage = () => {
               <span>📁</span><span>{task.project?.name}</span><span>›</span><span>Tasks</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: 26, fontWeight: 700, color: '#0f0f0f', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
+              <h1 style={{ fontSize: isMobile ? 22 : 26, fontWeight: 700, color: '#0f0f0f', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
                 {task.title}
               </h1>
               <TaskTypeBadge type={task.type} status={task.status} />
@@ -178,13 +188,13 @@ const TaskDetailPage = () => {
       </div>
 
       {/* MAIN GRID */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 340px', gap: 20 }}>
 
         {/* LEFT */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
           {/* Description */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '24px 28px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: sectionPadding, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>Description</div>
             <p style={{ fontSize: 15, color: '#333', lineHeight: 1.75, margin: 0, whiteSpace: 'pre-wrap' }}>
               {task.description || <span style={{ color: '#bbb', fontStyle: 'italic' }}>No description provided.</span>}
@@ -192,7 +202,7 @@ const TaskDetailPage = () => {
           </div>
 
           {/* Status History */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '24px 28px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: sectionPadding, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>Activity</div>
             {!task.statusHistory?.length ? (
               <p style={{ color: '#bbb', fontSize: 14, margin: 0 }}>No activity yet.</p>
@@ -237,7 +247,7 @@ const TaskDetailPage = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
           {/* Status Control */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '20px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: rightSectionPadding, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Status</div>
             <select
               value={task.status}
@@ -252,14 +262,14 @@ const TaskDetailPage = () => {
           </div>
 
           {/* People */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '20px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: rightSectionPadding, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>People</div>
             <PersonRow label="Assignee" name={assigneeName} gradient="linear-gradient(135deg, #667eea, #764ba2)" photo={task.assignee?.profilePhoto} />
             <PersonRow label="Created By" name={creatorName} gradient="linear-gradient(135deg, #f093fb, #f5576c)" photo={task.creator?.profilePhoto} />
           </div>
 
           {/* Dates */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: '20px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e5e5', padding: rightSectionPadding, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>Dates</div>
             <MetaRow icon="📅" label="Due Date" value={task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'} />
             <MetaRow icon="✅" label="Completed" value={task.completedAt ? new Date(task.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'} />

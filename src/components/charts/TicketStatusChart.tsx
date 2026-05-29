@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Card } from '../ui';
 
@@ -21,6 +22,14 @@ const COLORS = {
 };
 
 export function TicketStatusChart({ data, loading }: TicketStatusChartProps) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const chartData = [
     { name: 'Open', value: data.open, color: COLORS.open },
     { name: 'In Progress', value: data.inProgress, color: COLORS.inProgress },
@@ -68,9 +77,9 @@ export function TicketStatusChart({ data, loading }: TicketStatusChartProps) {
               data={chartData}
               cx="50%"
               cy="50%"
-              labelLine={false}
-              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-              outerRadius={80}
+              labelLine={!isMobile}
+              label={({ name, percent }) => isMobile ? `${(percent * 100).toFixed(0)}%` : `${name}: ${(percent * 100).toFixed(0)}%`}
+              outerRadius={isMobile ? 55 : 80}
               fill="#8884d8"
               dataKey="value"
             >
@@ -79,7 +88,7 @@ export function TicketStatusChart({ data, loading }: TicketStatusChartProps) {
               ))}
             </Pie>
             <Tooltip />
-            <Legend />
+            <Legend wrapperStyle={isMobile ? { fontSize: '11px' } : undefined} />
           </PieChart>
         </ResponsiveContainer>
       </div>

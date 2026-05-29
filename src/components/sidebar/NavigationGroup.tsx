@@ -10,6 +10,7 @@ interface NavigationGroupProps {
   isExpanded?: boolean;
   onToggle?: () => void;
   sidebarExpanded?: boolean;
+  isMobile?: boolean;
 }
 
 export function NavigationGroup({ 
@@ -18,7 +19,8 @@ export function NavigationGroup({
   activePath, 
   onNavigate,
   onClose,
-  sidebarExpanded = false
+  sidebarExpanded = false,
+  isMobile = false
 }: NavigationGroupProps) {
 
   // Filter items based on user role
@@ -36,7 +38,7 @@ export function NavigationGroup({
       {/* Section Title or Divider — same vertical space in both states */}
       {sidebarExpanded ? (
         <div style={{
-          paddingLeft: '63px',
+          paddingLeft: isMobile ? '24px' : '63px',
           paddingTop: '2px',
           paddingBottom: '6px',
           fontSize: '10px',
@@ -75,6 +77,7 @@ export function NavigationGroup({
             onNavigate={onNavigate}
             onClose={onClose}
             sidebarExpanded={sidebarExpanded}
+            isMobile={isMobile}
           />
         ))}
       </div>

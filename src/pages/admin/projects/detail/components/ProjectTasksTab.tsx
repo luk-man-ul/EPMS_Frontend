@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CreateTaskModal from '../../../tasks/components/CreateTaskModal'
 
@@ -25,6 +25,13 @@ const ProjectTasksTab = ({ project, onTaskCreated }: Props) => {
   const navigate = useNavigate()
   const tasks = project.tasks || []
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const handleTaskCreated = () => {
     setIsModalOpen(false)
@@ -41,8 +48,10 @@ const ProjectTasksTab = ({ project, onTaskCreated }: Props) => {
       {/* Header with Create Button */}
       <div style={{
         display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: isMobile ? 'stretch' : 'center',
+        gap: isMobile ? '12px' : '24px',
         marginBottom: '24px'
       }}>
         <div>
@@ -62,21 +71,22 @@ const ProjectTasksTab = ({ project, onTaskCreated }: Props) => {
         <button
           onClick={() => setIsModalOpen(true)}
           style={{
-            padding: '10px 18px',
+            padding: isMobile ? '8px 16px' : '10px 18px',
             borderRadius: '10px',
             border: 'none',
             backgroundColor: '#1a1a1a',
             color: '#fff',
             fontWeight: 500,
             cursor: 'pointer',
-            fontSize: '14px',
-            transition: 'all 0.2s ease'
+            fontSize: '13px',
+            transition: 'all 0.2s ease',
+            textAlign: 'center'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#333333'
+            if (!isMobile) e.currentTarget.style.backgroundColor = '#333333'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#1a1a1a'
+            if (!isMobile) e.currentTarget.style.backgroundColor = '#1a1a1a'
           }}
         >
           + Create Task
@@ -84,8 +94,27 @@ const ProjectTasksTab = ({ project, onTaskCreated }: Props) => {
       </div>
 
       {/* Kanban Board */}
+      {isMobile && (
+        <style>{`
+          .kanban-scroll-container::-webkit-scrollbar {
+            display: none;
+          }
+          .kanban-scroll-container {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+          }
+        `}</style>
+      )}
       <div
-        style={{
+        className={isMobile ? "kanban-scroll-container" : undefined}
+        style={isMobile ? {
+          display: 'flex',
+          overflowX: 'auto',
+          gap: 16,
+          paddingBottom: 12,
+          width: '100%',
+          WebkitOverflowScrolling: 'touch',
+        } : {
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
           gap: 24,
@@ -100,11 +129,12 @@ const ProjectTasksTab = ({ project, onTaskCreated }: Props) => {
               style={{
                 background: '#f9fafb',
                 borderRadius: 14,
-                padding: 18,
-                minHeight: 400,
+                padding: isMobile ? 14 : 18,
+                minHeight: isMobile ? 350 : 400,
                 border: '1px solid #e5e7eb',
                 display: 'flex',
                 flexDirection: 'column',
+                flex: isMobile ? '0 0 280px' : undefined,
               }}
             >
               {/* COLUMN HEADER */}

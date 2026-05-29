@@ -11,7 +11,7 @@ import type {
   ProjectProfitSummary,
 } from '../finance.api'
 import type { Revenue, ExpenseRecord } from '../types/finance.types'
-import { formatCurrency } from '../finance.utils'
+import { formatCurrency, formatDate } from '../finance.utils'
 import FinanceStatCard from './FinanceStatCard'
 import IncomeRow from './IncomeRow'
 import ExpenseRow from './ExpenseRow'
@@ -76,6 +76,13 @@ const ProjectProfit = () => {
   const [expenses, setExpenses] = useState<ExpenseRecord[]>([])
   const [txLoading, setTxLoading] = useState(false)
   const [txError, setTxError] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // ── Load aggregate once on mount ──────────────────────────────────────────
   useEffect(() => {
@@ -148,7 +155,7 @@ const ProjectProfit = () => {
         : null
 
     return (
-      <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '24px' }}>
+      <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: isMobile ? '16px' : '24px' }}>
         {/* Header */}
         <div style={{ marginBottom: '24px' }}>
           <button
@@ -171,7 +178,7 @@ const ProjectProfit = () => {
           <div style={{ padding: '24px 0', textAlign: 'center', color: '#dc2626', fontSize: '14px' }}>{drillError}</div>
         )}
         {!drillLoading && !drillError && drillData && (
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${profitMargin !== null ? 4 : 3}, 1fr)`, gap: '16px' }}>
+          <div style={isMobile ? { display: 'flex', flexDirection: 'column', gap: '16px' } : { display: 'grid', gridTemplateColumns: `repeat(${profitMargin !== null ? 4 : 3}, 1fr)`, gap: '16px' }}>
             <FinanceStatCard label="Revenue" value={formatCurrency(drillData.revenue)} subtext="Total received" />
             <FinanceStatCard label="Expense" value={formatCurrency(drillData.expense)} subtext="Total spent" valueColor="#666" />
             <FinanceStatCard
@@ -199,19 +206,61 @@ const ProjectProfit = () => {
           <TableLoading />
         ) : revenues.length === 0 ? (
           <TableEmpty message="No revenue records for this project yet." />
+        ) : isMobile ? (
+          <div style={{ display: 'flex', flexDirection: 'column', border: '1px solid #e5e5e5', borderRadius: '12px', overflow: 'hidden' }}>
+            {revenues.map((rev, idx) => (
+              <div
+                key={rev.id}
+                style={{
+                  padding: '16px',
+                  borderBottom: idx < revenues.length - 1 ? '1px solid #e5e5e5' : 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: '#1a1a1a' }}>
+                    {formatCurrency(rev.amount)}
+                  </span>
+                  <span style={{ fontSize: '12px', color: '#666' }}>
+                    📅 {formatDate(rev.receivedDate)}
+                  </span>
+                </div>
+                {rev.description && (
+                  <div style={{ fontSize: '13px', color: '#555', lineHeight: 1.4 }}>
+                    {rev.description}
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                  {rev.paymentMethod && (
+                    <span style={{ fontSize: '11px', fontWeight: 500, color: '#555', background: '#f5f5f5', padding: '2px 6px', borderRadius: '4px' }}>
+                      💳 {rev.paymentMethod} {rev.bankAccount ? `(${rev.bankAccount.name})` : ''}
+                    </span>
+                  )}
+                  {rev.invoice && (
+                    <span style={{ fontSize: '11px', fontWeight: 500, color: '#2563eb', background: '#eff6ff', padding: '2px 6px', borderRadius: '4px' }}>
+                      🧾 {rev.invoice.invoiceNo}
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>
+                  Recorded by {rev.createdBy.firstName} {rev.createdBy.lastName}
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div style={{ border: '1px solid #e5e5e5', borderRadius: '10px', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ textAlign: 'left', fontSize: '12px', color: '#666', fontWeight: 500 }}>
-                  {/* Project column hidden — we're already in project context */}
                   <th style={th}>Amount</th>
                   <th style={th}>Received Date</th>
                   <th style={th}>Payment</th>
                   <th style={th}>Description</th>
                   <th style={th}>Created By</th>
                   <th style={th}>Invoice</th>
-                  {/* Actions column hidden — read-only */}
                 </tr>
               </thead>
               <tbody>
@@ -234,6 +283,62 @@ const ProjectProfit = () => {
           <TableLoading />
         ) : expenses.length === 0 ? (
           <TableEmpty message="No expense records for this project yet." />
+        ) : isMobile ? (
+          <div style={{ display: 'flex', flexDirection: 'column', border: '1px solid #e5e5e5', borderRadius: '12px', overflow: 'hidden' }}>
+            {expenses.map((exp, idx) => (
+              <div
+                key={exp.id}
+                style={{
+                  padding: '16px',
+                  borderBottom: idx < expenses.length - 1 ? '1px solid #e5e5e5' : 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    background: exp.category.name.toLowerCase() === 'salary' ? '#eff6ff' : '#f0fdf4',
+                    color: exp.category.name.toLowerCase() === 'salary' ? '#2563eb' : '#16a34a',
+                  }}>
+                    {exp.category.name}
+                  </span>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#1a1a1a' }}>
+                    {formatCurrency(exp.amount)}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                  {exp.employee && (
+                    <span style={{ fontSize: '13px', color: '#1a1a1a', fontWeight: 500 }}>
+                      👤 {exp.employee.firstName} {exp.employee.lastName}
+                    </span>
+                  )}
+                  <span style={{ fontSize: '12px', color: '#666' }}>
+                    📅 {formatDate(exp.expenseDate)}
+                  </span>
+                </div>
+                {exp.description && (
+                  <div style={{ fontSize: '13px', color: '#555', lineHeight: 1.4, marginTop: '2px' }}>
+                    {exp.description}
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                  {exp.paymentMethod && (
+                    <span style={{ fontSize: '11px', fontWeight: 500, color: '#555', background: '#f5f5f5', padding: '2px 6px', borderRadius: '4px' }}>
+                      💳 {exp.paymentMethod} {exp.bankAccount ? `(${exp.bankAccount.name})` : ''}
+                    </span>
+                  )}
+                  <span style={{ fontSize: '11px', color: '#999' }}>
+                    Recorded by {exp.createdBy.firstName} {exp.createdBy.lastName}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div style={{ border: '1px solid #e5e5e5', borderRadius: '10px', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -243,11 +348,9 @@ const ProjectProfit = () => {
                   <th style={th}>Amount</th>
                   <th style={th}>Expense Date</th>
                   <th style={th}>Employee</th>
-                  {/* Project column hidden — we're already in project context */}
                   <th style={th}>Payment</th>
                   <th style={th}>Description</th>
                   <th style={th}>Created By</th>
-                  {/* Actions column hidden — read-only */}
                 </tr>
               </thead>
               <tbody>
@@ -269,7 +372,7 @@ const ProjectProfit = () => {
 
   // ── Aggregate dashboard view ──────────────────────────────────────────────
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '24px' }}>
+    <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: isMobile ? '16px' : '24px' }}>
       <div style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a', marginBottom: '4px' }}>Project Profit</div>
       <div style={{ fontSize: '13px', color: '#999', marginBottom: '24px' }}>All projects ranked by profitability</div>
 
@@ -281,7 +384,7 @@ const ProjectProfit = () => {
       )}
       {!aggLoading && !aggError && aggregate && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '28px' }}>
+          <div style={isMobile ? { display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '28px' } : { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '28px' }}>
             <FinanceStatCard label="Total Revenue" value={formatCurrency(aggregate.totalRevenue)} subtext="Across all projects" />
             <FinanceStatCard label="Total Expense" value={formatCurrency(aggregate.totalExpense)} subtext="Across all projects" valueColor="#666" />
             <FinanceStatCard
@@ -303,6 +406,46 @@ const ProjectProfit = () => {
           {aggregate.projects.length === 0 ? (
             <div style={{ padding: '32px 0', textAlign: 'center', color: '#bbb', fontSize: '14px' }}>
               No project financial data yet.
+            </div>
+          ) : isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', border: '1px solid #e5e5e5', borderRadius: '12px', overflow: 'hidden' }}>
+              {aggregate.projects.map((p, idx) => (
+                <div
+                  key={p.projectId}
+                  onClick={() => handleSelectProject(p)}
+                  style={{
+                    padding: '16px',
+                    borderBottom: idx < aggregate.projects.length - 1 ? '1px solid #e5e5e5' : 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#1a1a1a' }}>
+                      #{idx + 1} {p.projectName}
+                    </span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: p.profitMargin >= 20 ? '#16a34a' : p.profitMargin > 0 ? '#d97706' : '#dc2626' }}>
+                      {p.revenue > 0 ? `Margin: ${p.profitMargin}%` : '—'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginTop: '4px' }}>
+                    <div>
+                      <div style={{ fontSize: '11px', color: '#999', marginBottom: '2px' }}>Revenue</div>
+                      <div style={{ fontSize: '13px', fontWeight: 500 }}>{formatCurrency(p.revenue)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: '#999', marginBottom: '2px' }}>Expense</div>
+                      <div style={{ fontSize: '13px', fontWeight: 500, color: '#666' }}>{formatCurrency(p.expense)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: '#999', marginBottom: '2px' }}>Profit</div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: p.profit >= 0 ? '#1a1a1a' : '#dc2626' }}>{formatCurrency(p.profit)}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <div style={{ border: '1px solid #e5e5e5', borderRadius: '10px', overflow: 'hidden' }}>

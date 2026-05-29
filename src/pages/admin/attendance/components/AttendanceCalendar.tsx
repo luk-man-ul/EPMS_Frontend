@@ -106,10 +106,27 @@ function displayKey(day: CalendarDay): string {
     return (day.status && WORK_STATUSES.has(day.status)) ? 'WORKED_HOLIDAY' : 'HOLIDAY'
   }
   if (day.dayType === 'WEEKEND') {
-    // Only show WORKED_WEEKEND when the employee actually performed work
+// Only show WORKED_WEEKEND when the employee actually performed work
     return (day.status && WORK_STATUSES.has(day.status)) ? 'WORKED_WEEKEND' : 'WEEKEND'
   }
   return day.status ?? ''
+}
+
+// ── Short labels for mobile view ──
+function getShortLabel(key: string): string {
+  const shortLabels: Record<string, string> = {
+    PRESENT:  'Pres',
+    LATE:     'Late',
+    HALF_DAY: 'Half',
+    ABSENT:   'Abs',
+    LEAVE:    'Leave',
+    WFH:      'WFH',
+    WEEKEND:  'Wknd',
+    HOLIDAY:  'Hol',
+    WORKED_WEEKEND: 'Wrkd WE',
+    WORKED_HOLIDAY: 'Wrkd Hol',
+  }
+  return shortLabels[key] ?? ''
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -127,6 +144,16 @@ interface AttendanceCalendarProps {
 
 const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false, hideAddHoliday = false }: AttendanceCalendarProps = {}) => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth())
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   const [selectedUserId, setSelectedUserId] = useState(fixedUserId ?? '')
   const [employees, setEmployees] = useState<Employee[]>([])
   const [calendarData, setCalendarData] = useState<CalendarDay[]>([])
@@ -204,17 +231,52 @@ const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false, hideAdd
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '24px' }}>
+    <div style={{
+      background: '#fff',
+      border: '1px solid #e5e5e5',
+      borderRadius: '12px',
+      padding: isMobile ? '14px' : '24px'
+    }}>
 
       {/* ── Controls ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        justifyContent: 'space-between',
+        alignItems: isMobile ? 'stretch' : 'center',
+        marginBottom: '20px',
+        gap: isMobile ? '16px' : '12px',
+        width: '100%',
+        flexWrap: isMobile ? 'nowrap' : 'wrap'
+      }}>
 
         {/* Employee selector */}
         {!hideEmployeeSelector && (
           <select
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
-            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', fontSize: '14px', minWidth: '200px', cursor: 'pointer', outline: 'none' }}
+            style={isMobile ? {
+              padding: '10px 14px',
+              borderRadius: '10px',
+              border: '1px solid #e2e8f0',
+              fontSize: '14px',
+              width: '100%',
+              minWidth: '100%',
+              cursor: 'pointer',
+              outline: 'none',
+              background: '#fff',
+              fontWeight: 500,
+              color: '#334155',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+            } : {
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: '1px solid #e5e5e5',
+              fontSize: '14px',
+              minWidth: '200px',
+              cursor: 'pointer',
+              outline: 'none'
+            }}
           >
             {employees.map((emp) => (
               <option key={emp.id} value={emp.id}>
@@ -225,31 +287,123 @@ const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false, hideAdd
         )}
 
         {/* Month navigation + Add Holiday button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto' }}>
-          <button
-            onClick={() => setSelectedMonth((m) => shiftMonth(m, -1))}
-            style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', background: '#fff', fontSize: '18px', cursor: 'pointer' }}
-          >←</button>
-          <span style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a', minWidth: '140px', textAlign: 'center' }}>
-            {formatMonthLabel(selectedMonth)}
-          </span>
-          <button
-            onClick={() => setSelectedMonth((m) => shiftMonth(m, 1))}
-            style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', background: '#fff', fontSize: '18px', cursor: 'pointer' }}
-          >→</button>
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: 'stretch',
+          gap: '12px',
+          marginLeft: isMobile ? '0' : 'auto',
+          width: isMobile ? '100%' : 'auto'
+        }}>
+          {/* Month navigation control */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px',
+            width: isMobile ? '100%' : 'auto'
+          }}>
+            <button
+              onClick={() => setSelectedMonth((m) => shiftMonth(m, -1))}
+              style={isMobile ? {
+                padding: '8px 16px',
+                borderRadius: '10px',
+                border: '1px solid #e2e8f0',
+                background: '#fff',
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                color: '#475569',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              } : {
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: '1px solid #e5e5e5',
+                background: '#fff',
+                fontSize: '18px',
+                cursor: 'pointer'
+              }}
+            >←</button>
+            <span style={isMobile ? {
+              fontSize: '15px',
+              fontWeight: 600,
+              color: '#1e293b',
+              minWidth: '120px',
+              textAlign: 'center',
+              userSelect: 'none'
+            } : {
+              fontSize: '16px',
+              fontWeight: 600,
+              color: '#1a1a1a',
+              minWidth: '140px',
+              textAlign: 'center'
+            }}>
+              {formatMonthLabel(selectedMonth)}
+            </span>
+            <button
+              onClick={() => setSelectedMonth((m) => shiftMonth(m, 1))}
+              style={isMobile ? {
+                padding: '8px 16px',
+                borderRadius: '10px',
+                border: '1px solid #e2e8f0',
+                background: '#fff',
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                color: '#475569',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              } : {
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: '1px solid #e5e5e5',
+                background: '#fff',
+                fontSize: '18px',
+                cursor: 'pointer'
+              }}
+            >→</button>
+          </div>
 
-          <button
-            onClick={() => { setShowAddHoliday(true); setFormError('') }}
-            style={{
-              padding: '8px 16px', borderRadius: '8px', border: 'none',
-              background: '#6366f1', color: '#fff',
-              fontWeight: 600, fontSize: '13px', cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              display: hideAddHoliday ? 'none' : undefined,
-            }}
-          >
-            + Add Holiday
-          </button>
+          {/* Add Holiday Button */}
+          {!hideAddHoliday && (
+            <button
+              onClick={() => { setShowAddHoliday(true); setFormError('') }}
+              style={isMobile ? {
+                padding: '10px 20px',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                color: '#fff',
+                fontWeight: 600,
+                fontSize: '14px',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.15)',
+                width: '100%',
+                transition: 'all 0.2s ease',
+              } : {
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: 'none',
+                background: '#6366f1',
+                color: '#fff',
+                fontWeight: 600,
+                fontSize: '13px',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              + Add Holiday
+            </button>
+          )}
         </div>
       </div>
 
@@ -320,18 +474,18 @@ const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false, hideAdd
       {loading && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
           {Array.from({ length: 35 }).map((_, i) => (
-            <div key={i} style={{ height: '64px', borderRadius: '8px', background: '#f3f4f6' }} />
+            <div key={i} style={{ height: isMobile ? '48px' : '64px', borderRadius: '8px', background: '#f3f4f6' }} />
           ))}
         </div>
       )}
 
       {/* ── Calendar grid ── */}
       {!loading && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: isMobile ? '4px' : '6px' }}>
 
           {/* Week day headers */}
           {WEEK_DAYS.map((wd) => (
-            <div key={wd} style={{ padding: '8px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>
+            <div key={wd} style={{ padding: '8px 2px', textAlign: 'center', fontSize: isMobile ? '11px' : '12px', fontWeight: 600, color: '#6b7280' }}>
               {wd}
             </div>
           ))}
@@ -353,19 +507,33 @@ const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false, hideAdd
               <div
                 key={day.date}
                 onMouseEnter={(e) => {
+                  if (isMobile) return
                   const rect = e.currentTarget.getBoundingClientRect()
                   setTooltip({ day, x: rect.left, y: rect.bottom + 6 })
                 }}
-                onMouseLeave={() => setTooltip(null)}
+                onMouseLeave={() => {
+                  if (isMobile) return
+                  setTooltip(null)
+                }}
+                onClick={(e) => {
+                  if (isMobile) {
+                    if (tooltip && tooltip.day.date === day.date) {
+                      setTooltip(null)
+                    } else {
+                      const rect = e.currentTarget.getBoundingClientRect()
+                      setTooltip({ day, x: rect.left, y: rect.bottom + 6 })
+                    }
+                  }
+                }}
                 style={{
                   borderRadius: '8px',
-                  padding: '8px 6px',
-                  minHeight: '64px',
+                  padding: isMobile ? '4px 2px' : '8px 6px',
+                  minHeight: isMobile ? '48px' : '64px',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '4px',
+                  gap: isMobile ? '2px' : '4px',
                   background: bg,
                   border: isToday ? '2px solid #1a1a1a' : '1px solid transparent',
                   cursor: 'default',
@@ -375,12 +543,12 @@ const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false, hideAdd
                 onMouseOver={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '0.85' }}
                 onMouseOut={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '1' }}
               >
-                <span style={{ fontSize: '13px', fontWeight: 600, color: key ? '#fff' : '#374151' }}>
+                <span style={{ fontSize: isMobile ? '12px' : '13px', fontWeight: 600, color: key ? '#fff' : '#374151' }}>
                   {dayNum}
                 </span>
                 {label && (
-                  <span style={{ fontSize: '9px', fontWeight: 500, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>
-                    {label}
+                  <span style={{ fontSize: isMobile ? '8px' : '9px', fontWeight: 500, color: '#fff', textAlign: 'center', lineHeight: 1.1 }}>
+                    {isMobile ? getShortLabel(key) : label}
                   </span>
                 )}
               </div>
@@ -392,6 +560,9 @@ const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false, hideAdd
       {/* ── Tooltip ── */}
       {tooltip && (
         <div
+          onClick={() => {
+            if (isMobile) setTooltip(null)
+          }}
           style={{
             position: 'fixed',
             top: tooltip.y,
@@ -403,7 +574,7 @@ const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false, hideAdd
             padding: '10px 14px',
             fontSize: '12px',
             lineHeight: 1.6,
-            pointerEvents: 'none',
+            pointerEvents: isMobile ? 'auto' : 'none',
             minWidth: '180px',
             boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
           }}
@@ -425,11 +596,21 @@ const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false, hideAdd
           {!tooltip.day.status && tooltip.day.dayType === 'WORKING' && (
             <div style={{ color: '#9ca3af' }}>No record</div>
           )}
+          {isMobile && (
+            <div style={{ fontSize: '9px', color: '#9ca3af', marginTop: '6px', textAlign: 'right', borderTop: '1px solid #333', paddingTop: '4px' }}>Tap to close</div>
+          )}
         </div>
       )}
 
       {/* ── Legend ── */}
-      <div style={{ display: 'flex', gap: '12px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #f5f5f5', flexWrap: 'wrap' }}>
+      <div style={{
+        display: 'flex',
+        gap: isMobile ? '8px 12px' : '12px',
+        marginTop: '20px',
+        paddingTop: '16px',
+        borderTop: '1px solid #f5f5f5',
+        flexWrap: 'wrap'
+      }}>
         {[
           { key: 'PRESENT',        label: 'Present' },
           { key: 'LATE',           label: 'Late' },
@@ -444,7 +625,7 @@ const AttendanceCalendar = ({ fixedUserId, hideEmployeeSelector = false, hideAdd
         ].map(({ key, label }) => (
           <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: STATUS_BG[key] }} />
-            <span style={{ fontSize: '12px', color: '#6b7280' }}>{label}</span>
+            <span style={{ fontSize: isMobile ? '11px' : '12px', color: '#6b7280' }}>{label}</span>
           </div>
         ))}
       </div>

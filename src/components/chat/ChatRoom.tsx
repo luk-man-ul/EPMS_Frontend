@@ -13,18 +13,26 @@ import './ChatRoom.css';
 interface ChatRoomProps {
   roomId: string;
   roomName: string;
+  onBack?: () => void;
 }
 
-export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
+export function ChatRoom({ roomId, roomName, onBack }: ChatRoomProps) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   // ── Edit state (lifted here so MessageInput can own the edit flow) ──────────
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingMessageText, setEditingMessageText] = useState('');
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (!user || !roomId) return;
@@ -228,7 +236,26 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
 
   return (
     <div className="chat-room-container">
-      <div className="chat-room-header">
+      <div className="chat-room-header" style={{ display: 'flex', alignItems: 'center' }}>
+        {isMobile && onBack && (
+          <button
+            onClick={onBack}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '24px',
+              cursor: 'pointer',
+              color: '#3b82f6',
+              marginRight: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '0 4px 0 0',
+              outline: 'none',
+            }}
+          >
+            ←
+          </button>
+        )}
         <h3>{roomName}</h3>
       </div>
 

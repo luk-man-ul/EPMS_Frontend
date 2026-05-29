@@ -29,9 +29,10 @@ interface NavigationItemProps {
   onNavigate?: (path: string) => void;
   onClose?: () => void;
   sidebarExpanded?: boolean;
+  isMobile?: boolean;
 }
 
-export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarExpanded = false }: NavigationItemProps) {
+export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarExpanded = false, isMobile = false }: NavigationItemProps) {
   const isActive = activePath === item.path;
 
   const handleClick = () => {
@@ -45,32 +46,35 @@ export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarE
         display: 'flex',
         alignItems: 'center',
         gap: '0',
-        padding: '10px 15px',
-        margin: '0 8px',
-        borderRadius: '12px',
-        fontSize: '14px',
+        padding: isMobile ? '12px 24px' : '10px 15px',
+        margin: isMobile ? '0' : '0 8px',
+        borderRadius: isMobile ? '0' : '12px',
+        fontSize: isMobile ? '15px' : '14px',
         fontWeight: 500,
+        textTransform: isMobile ? 'uppercase' : 'none',
         color: '#999',
         opacity: 0.5,
         cursor: 'not-allowed',
-        justifyContent: sidebarExpanded ? 'flex-start' : 'center',
+        justifyContent: (isMobile || sidebarExpanded) ? 'flex-start' : 'center',
         transition: 'all 0.3s ease'
       }}>
-        <span style={{ 
-          width: '40px',
-          minWidth: '40px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: sidebarExpanded ? 'flex-start' : 'center',
-          flexShrink: 0
-        }}>
-          {getIcon(item.icon)}
-        </span>
+        {!isMobile && (
+          <span style={{ 
+            width: '40px',
+            minWidth: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: sidebarExpanded ? 'flex-start' : 'center',
+            flexShrink: 0
+          }}>
+            {getIcon(item.icon)}
+          </span>
+        )}
         <span style={{ 
           flex: 1,
           minWidth: 0,
-          opacity: sidebarExpanded ? 1 : 0,
-          transform: sidebarExpanded ? 'translateX(0)' : 'translateX(-6px)',
+          opacity: (isMobile || sidebarExpanded) ? 1 : 0,
+          transform: (isMobile || sidebarExpanded) ? 'translateX(0)' : 'translateX(-6px)',
           transition: 'opacity 0.25s ease, transform 0.25s ease',
           whiteSpace: 'nowrap',
           overflow: 'hidden',
@@ -87,7 +91,7 @@ export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarE
             background: '#f3f4f6',
             color: '#666',
             borderRadius: '12px',
-            opacity: sidebarExpanded ? 1 : 0,
+            opacity: (isMobile || sidebarExpanded) ? 1 : 0,
             transition: 'opacity 0.25s ease',
             flexShrink: 0,
           }}>
@@ -103,27 +107,40 @@ export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarE
       to={item.path}
       end
       onClick={handleClick}
-      style={({ isActive: linkActive }) => ({
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0',
-        padding: '10px 15px',
-        margin: '0 8px',
-        borderRadius: '12px',
-        textDecoration: 'none',
-        fontSize: '14px',
-        fontWeight: 500,
-        color: (isActive || linkActive) ? '#ffffff' : '#666',
-        background: (isActive || linkActive)
-          ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
-          : 'transparent',
-        boxShadow: (isActive || linkActive) ? '0 4px 12px rgba(102, 126, 234, 0.3)' : 'none',
-        transition: 'all 0.3s ease',
-        position: 'relative',
-        overflow: 'hidden',
-        justifyContent: sidebarExpanded ? 'flex-start' : 'center',
-      })}
+      style={({ isActive: linkActive }) => {
+        const isCurrentlyActive = isActive || linkActive;
+        return {
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0',
+          padding: isMobile 
+            ? '12px 24px' 
+            : '10px 15px',
+          margin: isMobile ? '0' : '0 8px',
+          borderRadius: isMobile ? '0' : '12px',
+          textDecoration: 'none',
+          fontSize: isMobile ? '15px' : '14px',
+          fontWeight: isCurrentlyActive ? 600 : 500,
+          textTransform: isMobile ? 'uppercase' : 'none',
+          letterSpacing: isMobile ? '0.03em' : 'normal',
+          color: isMobile
+            ? (isCurrentlyActive ? '#667eea' : '#334155')
+            : (isCurrentlyActive ? '#ffffff' : '#666'),
+          background: isMobile
+            ? (isCurrentlyActive ? '#f8fafc' : 'transparent')
+            : (isCurrentlyActive ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent'),
+          borderLeft: isMobile
+            ? (isCurrentlyActive ? '4px solid #667eea' : '4px solid transparent')
+            : 'none',
+          boxShadow: (!isMobile && isCurrentlyActive) ? '0 4px 12px rgba(102, 126, 234, 0.3)' : 'none',
+          transition: 'all 0.3s ease',
+          position: 'relative',
+          overflow: 'hidden',
+          justifyContent: (isMobile || sidebarExpanded) ? 'flex-start' : 'center',
+        };
+      }}
       onMouseEnter={(e) => {
+        if (isMobile) return;
         if (!isActive) {
           e.currentTarget.style.background = '#f8f9fa';
           e.currentTarget.style.color = '#1a1a1a';
@@ -131,6 +148,7 @@ export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarE
         }
       }}
       onMouseLeave={(e) => {
+        if (isMobile) return;
         if (!isActive) {
           e.currentTarget.style.background = 'transparent';
           e.currentTarget.style.color = '#666';
@@ -138,21 +156,23 @@ export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarE
         }
       }}
     >
-      <span style={{ 
-        width: '40px',
-        minWidth: '40px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: sidebarExpanded ? 'flex-start' : 'center',
-        flexShrink: 0
-      }}>
-        {getIcon(item.icon)}
-      </span>
+      {!isMobile && (
+        <span style={{ 
+          width: '40px',
+          minWidth: '40px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: sidebarExpanded ? 'flex-start' : 'center',
+          flexShrink: 0
+        }}>
+          {getIcon(item.icon)}
+        </span>
+      )}
       <span style={{ 
         flex: 1,
         minWidth: 0,
-        opacity: sidebarExpanded ? 1 : 0,
-        transform: sidebarExpanded ? 'translateX(0)' : 'translateX(-6px)',
+        opacity: (isMobile || sidebarExpanded) ? 1 : 0,
+        transform: (isMobile || sidebarExpanded) ? 'translateX(0)' : 'translateX(-6px)',
         transition: 'opacity 0.25s ease, transform 0.25s ease',
         whiteSpace: 'nowrap',
         overflow: 'hidden',
@@ -166,10 +186,14 @@ export function NavigationItem({ item, activePath, onNavigate, onClose, sidebarE
           padding: '2px 8px',
           fontSize: '11px',
           fontWeight: 600,
-          background: isActive ? 'rgba(255, 255, 255, 0.2)' : '#e0f2fe',
-          color: isActive ? '#ffffff' : '#0369a1',
+          background: isActive 
+            ? (isMobile ? '#e0e7ff' : 'rgba(255, 255, 255, 0.2)') 
+            : '#e0f2fe',
+          color: isActive 
+            ? (isMobile ? '#4f46e5' : '#ffffff') 
+            : '#0369a1',
           borderRadius: '12px',
-          opacity: sidebarExpanded ? 1 : 0,
+          opacity: (isMobile || sidebarExpanded) ? 1 : 0,
           transition: 'opacity 0.25s ease',
           flexShrink: 0,
         }}>

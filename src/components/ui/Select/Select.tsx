@@ -67,7 +67,9 @@ export function Select({
         multiple={multiple}
         required={required}
       >
-        {!multiple && <option value="">{placeholder}</option>}
+        {!multiple && !options.some(opt => opt.value === '') && (
+          <option value="">{placeholder}</option>
+        )}
         {options.map((option) => (
           <option 
             key={option.value} 

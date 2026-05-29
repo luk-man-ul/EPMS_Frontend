@@ -8,6 +8,13 @@ const FinanceDashboard = () => {
   const [summary, setSummary] = useState<FinanceSummaryData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     getFinanceSummary()
@@ -94,7 +101,7 @@ const FinanceDashboard = () => {
       </div>
 
       {/* Detailed Breakdown */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+      <div style={isMobile ? { display: 'flex', flexDirection: 'column', gap: '20px' } : { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
         {/* Revenue Breakdown */}
         <div style={{
           background: '#fff',

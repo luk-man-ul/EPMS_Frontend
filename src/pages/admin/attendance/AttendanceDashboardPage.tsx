@@ -120,6 +120,15 @@ const AttendanceDashboardPage = () => {
   const [stats, setStats] = useState<AttendanceStatsResponse | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [employees, setEmployees] = useState<Array<{ id: string; firstName: string; lastName: string }>>([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   // Initialize with today's date so stats/table always have a defined range on first load.
   // resolveEffectiveDates() also guards against empty dates, but explicit init avoids
   // a flash of "no date" in the context label and filter inputs.
@@ -302,39 +311,92 @@ const AttendanceDashboardPage = () => {
           📍 {contextLabel}
         </div>
 
+        {/* Style tag to hide scrollbars on Webkit browsers for stats slider */}
+        {isMobile && (
+          <style>{`
+            .attendance-stats-container::-webkit-scrollbar {
+              display: none;
+            }
+            .attendance-stats-container {
+              scrollbar-width: none;
+              -ms-overflow-style: none;
+            }
+          `}</style>
+        )}
+
         {/* Stat Cards — sourced from /attendance/stats (full dataset) */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(148px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+        <div 
+          className="attendance-stats-container"
+          style={isMobile ? {
+            display: 'flex',
+            overflowX: 'auto',
+            gap: '12px',
+            marginBottom: '20px',
+            paddingBottom: '10px',
+            width: '100%',
+            WebkitOverflowScrolling: 'touch',
+          } : {
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(148px, 1fr))',
+            gap: '12px',
+            marginBottom: '24px'
+          }}
+        >
           {statsLoading
             ? Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} style={{ background: '#f3f4f6', borderRadius: '16px', height: '88px' }} />
+                <div 
+                  key={i} 
+                  style={isMobile ? { 
+                    flex: '0 0 130px', 
+                    background: '#f3f4f6', 
+                    borderRadius: '12px', 
+                    height: '76px' 
+                  } : { 
+                    background: '#f3f4f6', 
+                    borderRadius: '16px', 
+                    height: '88px' 
+                  }} 
+                />
               ))
             : statCards.map((card) => (
             <div
               key={card.label}
               title={card.tooltip}
-              style={{
-                background: card.bg, borderRadius: '16px', padding: '16px 18px',
+              style={isMobile ? {
+                background: card.bg,
+                borderRadius: '12px',
+                padding: '12px 14px',
+                border: '1px solid transparent',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                flex: '0 0 130px',
+                cursor: 'default',
+              } : {
+                background: card.bg,
+                borderRadius: '16px',
+                padding: '16px 18px',
                 border: '1px solid transparent',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                 transition: 'transform 0.15s, box-shadow 0.15s',
                 cursor: 'default',
               }}
               onMouseEnter={(e) => {
+                if (isMobile) return;
                 (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
                 (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 16px rgba(0,0,0,0.08)';
               }}
               onMouseLeave={(e) => {
+                if (isMobile) return;
                 (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
                 (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: card.accent, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1.3 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '6px' : '10px' }}>
+                <span style={{ fontSize: isMobile ? '9px' : '10px', fontWeight: 700, color: card.accent, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1.3 }}>
                   {card.label}
                 </span>
-                <span style={{ fontSize: '15px' }}>{card.icon}</span>
+                <span style={{ fontSize: isMobile ? '13px' : '15px' }}>{card.icon}</span>
               </div>
-              <div style={{ fontSize: '26px', fontWeight: 700, color: card.accent, letterSpacing: '-0.02em' }}>
+              <div style={{ fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: card.accent, letterSpacing: '-0.02em' }}>
                 {card.value}
               </div>
             </div>

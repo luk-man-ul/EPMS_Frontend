@@ -15,6 +15,13 @@ const HolidaysPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ date: '', name: '', description: '' });
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchHolidays = async () => {
     try {
@@ -81,22 +88,22 @@ const HolidaysPage = () => {
         </div>
 
         {/* Add Holiday Form */}
-        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e5e7eb', padding: '24px', marginBottom: '28px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e5e7eb', padding: isMobile ? '16px' : '24px', marginBottom: '28px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#111827', marginBottom: '16px' }}>
             Add Holiday
           </h2>
-          <form onSubmit={handleAdd} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <form onSubmit={handleAdd} style={isMobile ? { display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'stretch' } : { display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: isMobile ? '100%' : 'auto' }}>
               <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>Date *</label>
               <input
                 type="date"
                 required
                 value={form.date}
                 onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-                style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
+                style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '14px', outline: 'none', cursor: 'pointer', width: '100%', boxSizing: 'border-box' }}
               />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '180px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: isMobile ? 'none' : 1, minWidth: isMobile ? 'none' : '180px', width: isMobile ? '100%' : 'auto' }}>
               <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>Name *</label>
               <input
                 type="text"
@@ -104,17 +111,17 @@ const HolidaysPage = () => {
                 placeholder="e.g. Independence Day"
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '14px', outline: 'none', width: '100%' }}
+                style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '14px', outline: 'none', width: '100%', boxSizing: 'border-box' }}
               />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '180px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: isMobile ? 'none' : 1, minWidth: isMobile ? 'none' : '180px', width: isMobile ? '100%' : 'auto' }}>
               <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>Description</label>
               <input
                 type="text"
                 placeholder="Optional"
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '14px', outline: 'none', width: '100%' }}
+                style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '14px', outline: 'none', width: '100%', boxSizing: 'border-box' }}
               />
             </div>
             <button
@@ -125,6 +132,9 @@ const HolidaysPage = () => {
                 background: submitting ? '#a5b4fc' : '#6366f1', color: '#fff',
                 fontWeight: 600, fontSize: '14px', cursor: submitting ? 'not-allowed' : 'pointer',
                 whiteSpace: 'nowrap',
+                width: isMobile ? '100%' : 'auto',
+                boxSizing: 'border-box',
+                textAlign: 'center',
               }}
             >
               {submitting ? 'Adding…' : '+ Add Holiday'}
@@ -139,7 +149,7 @@ const HolidaysPage = () => {
 
         {/* Holiday List */}
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          <div style={{ padding: '16px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ padding: isMobile ? '16px' : '16px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#111827' }}>
               Holidays ({holidays.length})
             </h2>
@@ -152,6 +162,49 @@ const HolidaysPage = () => {
           ) : holidays.length === 0 ? (
             <div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}>
               No holidays defined yet. Add one above.
+            </div>
+          ) : isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {holidays.map((holiday, i) => (
+                <div
+                  key={holiday.id}
+                  style={{
+                    padding: '16px',
+                    borderBottom: i < holidays.length - 1 ? '1px solid #f3f4f6' : 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                      <span style={{ alignSelf: 'flex-start', fontSize: '11px', fontWeight: 600, color: '#4f46e5', background: '#e0e7ff', padding: '3px 8px', borderRadius: '6px' }}>
+                        📅 {formatDate(holiday.date)}
+                      </span>
+                      <div style={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>
+                        {holiday.name}
+                      </div>
+                      {holiday.description && (
+                        <div style={{ fontSize: '13px', color: '#4b5563', lineHeight: '1.4' }}>
+                          {holiday.description}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleDelete(holiday.id)}
+                      style={{
+                        padding: '6px 12px', borderRadius: '6px', border: '1px solid #fecaca',
+                        background: '#fff', color: '#dc2626', fontSize: '12px', fontWeight: 600,
+                        cursor: 'pointer', flexShrink: 0,
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>

@@ -30,6 +30,13 @@ const WorkApprovalPage = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [showRejectModal, setShowRejectModal] = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     fetchData()
@@ -114,8 +121,8 @@ const WorkApprovalPage = () => {
 
   return (
     <div style={{ width: '100%' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1a1a1a', marginBottom: '8px' }}>
+      <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
+        <h1 style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: 700, color: '#1a1a1a', marginBottom: '8px' }}>
           Self-Work Approval
         </h1>
         <p style={{ fontSize: '14px', color: '#666666' }}>
@@ -132,8 +139,8 @@ const WorkApprovalPage = () => {
       />
 
       {/* Filters */}
-      <Card padding="md">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+      <Card padding={isMobile ? 'sm' : 'md'} style={isMobile ? { marginBottom: '16px' } : { marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
           <Select
             label="Status"
             value={statusFilter}
@@ -149,7 +156,7 @@ const WorkApprovalPage = () => {
       </Card>
 
       {/* Table */}
-      <Card padding="none">
+      <Card padding="none" style={isMobile ? { background: 'transparent', border: 'none', boxShadow: 'none' } : undefined}>
         {loading ? (
           <div style={{ padding: '48px' }}>
             <LoadingSpinner text="Loading work approvals..." />
@@ -158,7 +165,92 @@ const WorkApprovalPage = () => {
           <div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}>
             No work submissions found
           </div>
+        ) : isMobile ? (
+          // Mobile Card List
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {tasks.map((task) => {
+              const s = statusConfig[task.status] || statusConfig.PROPOSED;
+              const isPending = task.status === 'PROPOSED';
+              return (
+                <div 
+                  key={task.id} 
+                  style={{
+                    background: '#ffffff',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    border: '1px solid #e5e5e5',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937' }}>
+                        {task.assignee?.firstName} {task.assignee?.lastName}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+                        {task.assignee?.email}
+                      </div>
+                    </div>
+                    <span style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, color: s.color, background: s.bg }}>
+                      {s.label}
+                    </span>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '10px' }}>
+                    <div style={{ display: 'flex', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '12px', color: '#6b7280', width: '80px', flexShrink: 0 }}>Project:</span>
+                      <span style={{ fontSize: '12px', color: '#374151', fontWeight: 500 }}>{task.project?.name || '—'}</span>
+                    </div>
+                    <div style={{ display: 'flex', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '12px', color: '#6b7280', width: '80px', flexShrink: 0 }}>Title:</span>
+                      <span style={{ fontSize: '12px', color: '#374151', wordBreak: 'break-word' }}>{task.title}</span>
+                    </div>
+                    <div style={{ display: 'flex' }}>
+                      <span style={{ fontSize: '12px', color: '#6b7280', width: '80px', flexShrink: 0 }}>Submitted:</span>
+                      <span style={{ fontSize: '12px', color: '#6b7280' }}>{formatDate(task.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '10px', display: 'flex', justifyContent: 'flex-end' }}>
+                    {isPending ? (
+                      <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleApprove(task.id)}
+                          loading={actionLoading === task.id}
+                          disabled={actionLoading === task.id}
+                          style={{ flex: 1 }}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleRejectClick(task.id)}
+                          disabled={actionLoading === task.id}
+                          style={{ flex: 1 }}
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: '12px', color: '#6b7280', fontStyle: 'italic' }}>
+                        {task.approvedBy
+                          ? `Approved by ${task.approvedBy.firstName} ${task.approvedBy.lastName}`
+                          : 'Processed'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
+          // Desktop Table Layout
           <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
             <thead>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Invoice } from '../types/finance.types'
 import { formatCurrency, formatDate } from '../finance.utils'
 import { storeInvoicePdf } from '../finance.api'
@@ -30,17 +30,11 @@ const value: React.CSSProperties = {
 
 // ── PDF helpers ───────────────────────────────────────────────────────────────
 
-/**
- * Generate a PDF Blob on demand.
- * Dynamically imports @react-pdf/renderer + BrandedInvoicePdfDocument so they
- * are excluded from the initial bundle and only loaded when this function runs.
- */
 async function generatePdfBlob(invoice: Invoice): Promise<Blob> {
   const { generateInvoicePdfBlob } = await import('./invoicePdfGenerator')
   return generateInvoicePdfBlob(invoice)
 }
 
-/** Trigger a browser download of a Blob */
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -50,7 +44,6 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-/** Sanitize invoiceNo to a safe filename */
 function pdfFilename(invoiceNo: string): string {
   return `${invoiceNo.replace(/[^a-zA-Z0-9-]/g, '-')}.pdf`
 }
@@ -63,6 +56,13 @@ const InvoiceDetail = ({ invoice, onEdit, onBack, onPdfStored }: Props) => {
 
   const [downloading, setDownloading] = useState(false)
   const [storing,     setStoring]     = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // ── Download PDF (client-side only, no server call) ──────────────────────
   const handleDownload = async () => {
@@ -101,19 +101,21 @@ const InvoiceDetail = ({ invoice, onEdit, onBack, onPdfStored }: Props) => {
   return (
     <div>
       {/* ── Toolbar ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '10px' }}>
+      <div style={isMobile ? { display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '12px', marginBottom: '24px' } : { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '10px' }}>
         <button
           onClick={onBack}
           style={{
             padding: '8px 16px', borderRadius: '8px', border: '1px solid #e5e5e5',
             background: '#fff', fontSize: '13px', color: '#666', cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '6px',
+            justifyContent: isMobile ? 'center' : 'flex-start',
+            width: isMobile ? '100%' : 'auto',
           }}
         >
           ← Back to Invoices
         </button>
 
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div style={isMobile ? { display: 'flex', flexDirection: 'column', gap: '8px' } : { display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {/* Download PDF — always available */}
           <button
             onClick={handleDownload}
@@ -124,6 +126,8 @@ const InvoiceDetail = ({ invoice, onEdit, onBack, onPdfStored }: Props) => {
               fontSize: '13px', color: '#1a1a1a', fontWeight: 500,
               cursor: downloading ? 'not-allowed' : 'pointer',
               opacity: downloading ? 0.6 : 1,
+              width: isMobile ? '100%' : 'auto',
+              textAlign: 'center',
             }}
           >
             {downloading ? 'Generating...' : '⬇ Download PDF'}
@@ -139,6 +143,8 @@ const InvoiceDetail = ({ invoice, onEdit, onBack, onPdfStored }: Props) => {
               fontSize: '13px', color: '#1a1a1a', fontWeight: 500,
               cursor: storing ? 'not-allowed' : 'pointer',
               opacity: storing ? 0.6 : 1,
+              width: isMobile ? '100%' : 'auto',
+              textAlign: 'center',
             }}
           >
             {storing ? 'Saving...' : '☁ Save PDF to Server'}
@@ -155,6 +161,9 @@ const InvoiceDetail = ({ invoice, onEdit, onBack, onPdfStored }: Props) => {
                 border: '1px solid #bbf7d0', background: '#f0fdf4',
                 fontSize: '13px', color: '#16a34a', fontWeight: 500,
                 textDecoration: 'none', display: 'inline-block',
+                width: isMobile ? '100%' : 'auto',
+                textAlign: 'center',
+                boxSizing: 'border-box',
               }}
             >
               👁 View Stored PDF
@@ -169,6 +178,8 @@ const InvoiceDetail = ({ invoice, onEdit, onBack, onPdfStored }: Props) => {
                 padding: '8px 16px', borderRadius: '8px', border: 'none',
                 background: '#1a1a1a', color: '#fff', fontSize: '13px',
                 fontWeight: 500, cursor: 'pointer',
+                width: isMobile ? '100%' : 'auto',
+                textAlign: 'center',
               }}
             >
               Edit Invoice
@@ -194,7 +205,7 @@ const InvoiceDetail = ({ invoice, onEdit, onBack, onPdfStored }: Props) => {
         background: '#fff',
         borderRadius: '12px',
         border: '1px solid #e5e5e5',
-        padding: '40px',
+        padding: isMobile ? '16px' : '40px',
         maxWidth: '860px',
       }}>
         {/* Header row */}
@@ -211,9 +222,9 @@ const InvoiceDetail = ({ invoice, onEdit, onBack, onPdfStored }: Props) => {
         </div>
 
         {/* Client + Dates grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', marginBottom: '32px' }}>
+        <div style={isMobile ? { display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '32px' } : { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', marginBottom: '32px' }}>
           {/* Bill To */}
-          <div style={{ marginBottom: '24px' }}>
+          <div>
             <div style={label}>Bill To</div>
             <div style={{ ...value, fontSize: '15px', fontWeight: 600 }}>{invoice.clientName}</div>
             {invoice.clientAddress && (
@@ -274,9 +285,9 @@ const InvoiceDetail = ({ invoice, onEdit, onBack, onPdfStored }: Props) => {
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
           <div style={{
             background: '#f8fafc', borderRadius: '10px',
-            border: '1px solid #e5e5e5', padding: '16px 24px', minWidth: '260px',
+            border: '1px solid #e5e5e5', padding: '16px 24px', minWidth: isMobile ? '100%' : '260px',
+            boxSizing: 'border-box',
           }}>
-            {/* Subtotal row — use stored subtotal if available, else totalAmount */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               <span style={{ fontSize: '13px', color: '#666' }}>Subtotal</span>
               <span style={{ fontSize: '13px', fontWeight: 500 }}>
@@ -284,7 +295,6 @@ const InvoiceDetail = ({ invoice, onEdit, onBack, onPdfStored }: Props) => {
               </span>
             </div>
 
-            {/* GST rows — only shown when taxPercentage is stored */}
             {invoice.taxPercentage != null && invoice.taxPercentage > 0 && invoice.taxAmount != null && (
               invoice.gstType === 'CGST_SGST' ? (
                 <>
@@ -317,7 +327,6 @@ const InvoiceDetail = ({ invoice, onEdit, onBack, onPdfStored }: Props) => {
               )
             )}
 
-            {/* Grand total */}
             <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: '8px', display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '14px', fontWeight: 600 }}>Total</span>
               <span style={{ fontSize: '16px', fontWeight: 700, color: '#1a1a1a' }}>

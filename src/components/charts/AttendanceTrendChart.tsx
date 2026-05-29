@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card } from '../ui';
 
@@ -14,6 +15,13 @@ interface AttendanceTrendChartProps {
 }
 
 export function AttendanceTrendChart({ data, loading, days = 7 }: AttendanceTrendChartProps) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   if (loading) {
     return (
       <Card padding="md">
@@ -47,18 +55,18 @@ export function AttendanceTrendChart({ data, loading, days = 7 }: AttendanceTren
       </h3>
       <div style={{ width: '100%', height: '300px' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
+          <LineChart data={data} margin={isMobile ? { top: 10, right: 5, left: -25, bottom: 5 } : undefined}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey="date" 
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: isMobile ? 10 : 12 }}
               angle={-45}
               textAnchor="end"
-              height={60}
+              height={isMobile ? 55 : 60}
             />
-            <YAxis tick={{ fontSize: 12 }} />
+            <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
             <Tooltip />
-            <Legend />
+            <Legend wrapperStyle={isMobile ? { fontSize: '11px' } : undefined} />
             <Line 
               type="monotone" 
               dataKey="present" 

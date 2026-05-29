@@ -18,6 +18,7 @@ interface EmployeeOption {
 }
 
 const TasksPage = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   const [filters, setFilters] = useState<any>({})
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(false)
@@ -28,6 +29,13 @@ const TasksPage = () => {
 
   const [projects, setProjects] = useState<ProjectOption[]>([])
   const [employees, setEmployees] = useState<EmployeeOption[]>([])
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
 
   ////////////////////////////////////////////////////////////
   // FETCH TASKS
@@ -159,8 +167,10 @@ const TasksPage = () => {
       <div
         style={{
           display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '16px' : '0px',
           justifyContent: 'space-between',
-          alignItems: 'center',
+          alignItems: isMobile ? 'stretch' : 'center',
           marginBottom: '24px',
         }}
       >
@@ -179,13 +189,14 @@ const TasksPage = () => {
             setIsModalOpen(true)
           }}
           style={{
-            padding: '10px 18px',
+            padding: '12px 18px',
             borderRadius: '10px',
             border: 'none',
             backgroundColor: '#1a1a1a',
             color: '#fff',
             fontWeight: 500,
             cursor: 'pointer',
+            textAlign: 'center',
           }}
         >
           + Create Task
@@ -201,9 +212,9 @@ const TasksPage = () => {
 
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: isMobile ? 'transparent' : '#fff',
           borderRadius: '12px',
-          border: '1px solid #e5e5e5',
+          border: isMobile ? 'none' : '1px solid #e5e5e5',
           overflow: 'visible',
         }}
       >

@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react'
 import { Priority, TicketStatus } from '../../../../types/enums'
 
 interface ProjectOption {
@@ -23,9 +24,27 @@ const TicketFilters = ({
   filters,
   onFilterChange,
 }: Props) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const mergedSelectStyle: React.CSSProperties = {
+    ...selectStyle,
+    width: isMobile ? '100%' : 'auto',
+  }
+
   return (
     <div
-      style={{
+      style={isMobile ? {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '12px',
+        marginBottom: '20px',
+      } : {
         display: 'flex',
         gap: '12px',
         flexWrap: 'wrap',
@@ -34,7 +53,7 @@ const TicketFilters = ({
     >
       {/* Project Filter */}
       <select
-        style={selectStyle}
+        style={mergedSelectStyle}
         value={filters.projectId || ''}
         onChange={(e) =>
           onFilterChange({ projectId: e.target.value })
@@ -50,7 +69,7 @@ const TicketFilters = ({
 
       {/* Priority Filter */}
       <select
-        style={selectStyle}
+        style={mergedSelectStyle}
         value={filters.priority || ''}
         onChange={(e) =>
           onFilterChange({ priority: e.target.value })
@@ -65,7 +84,7 @@ const TicketFilters = ({
 
       {/* Status Filter */}
       <select
-        style={selectStyle}
+        style={mergedSelectStyle}
         value={filters.status || ''}
         onChange={(e) =>
           onFilterChange({ status: e.target.value })
@@ -83,7 +102,7 @@ const TicketFilters = ({
 
       {/* Employee Filter */}
       <select
-        style={selectStyle}
+        style={mergedSelectStyle}
         value={filters.assignedToId || ''}
         onChange={(e) =>
           onFilterChange({ assignedToId: e.target.value })
@@ -99,7 +118,12 @@ const TicketFilters = ({
 
       {/* Clear Button */}
       <button
-        style={clearButtonStyle}
+        style={{
+          ...clearButtonStyle,
+          width: isMobile ? '100%' : 'auto',
+          gridColumn: isMobile ? 'span 2' : 'auto',
+          textAlign: 'center',
+        }}
         onClick={() => onFilterChange({ __clear: true })}
       >
         Clear Filters

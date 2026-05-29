@@ -10,7 +10,7 @@ import type {
   EmployeeCostSummary,
 } from '../finance.api'
 import type { ExpenseRecord } from '../types/finance.types'
-import { formatCurrency } from '../finance.utils'
+import { formatCurrency, formatDate } from '../finance.utils'
 import FinanceStatCard from './FinanceStatCard'
 import ExpenseRow from './ExpenseRow'
 
@@ -73,6 +73,13 @@ const EmployeeCost = () => {
   const [salaryExpenses, setSalaryExpenses] = useState<ExpenseRecord[]>([])
   const [txLoading, setTxLoading] = useState(false)
   const [txError, setTxError] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // ── Load aggregate once on mount ──────────────────────────────────────────
   useEffect(() => {
@@ -138,7 +145,7 @@ const EmployeeCost = () => {
   // ── Drill-down view ───────────────────────────────────────────────────────
   if (selectedEmployee) {
     return (
-      <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '24px' }}>
+      <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: isMobile ? '16px' : '24px' }}>
         {/* Header */}
         <div style={{ marginBottom: '24px' }}>
           <button
@@ -161,7 +168,7 @@ const EmployeeCost = () => {
           <div style={{ padding: '24px 0', textAlign: 'center', color: '#dc2626', fontSize: '14px' }}>{drillError}</div>
         )}
         {!drillLoading && !drillError && drillData && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+          <div style={isMobile ? { display: 'flex', flexDirection: 'column', gap: '16px' } : { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
             <FinanceStatCard
               label="Total Salary Cost"
               value={formatCurrency(drillData.totalSalary)}
@@ -193,6 +200,50 @@ const EmployeeCost = () => {
           <TableLoading />
         ) : salaryExpenses.length === 0 ? (
           <TableEmpty message="No salary expense records found for this employee." />
+        ) : isMobile ? (
+          <div style={{ display: 'flex', flexDirection: 'column', border: '1px solid #e5e5e5', borderRadius: '12px', overflow: 'hidden' }}>
+            {salaryExpenses.map((exp, idx) => (
+              <div
+                key={exp.id}
+                style={{
+                  padding: '16px',
+                  borderBottom: idx < salaryExpenses.length - 1 ? '1px solid #e5e5e5' : 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: '#1a1a1a' }}>
+                    {formatCurrency(exp.amount)}
+                  </span>
+                  <span style={{ fontSize: '12px', color: '#666' }}>
+                    📅 {formatDate(exp.expenseDate)}
+                  </span>
+                </div>
+                {exp.project && (
+                  <div style={{ fontSize: '13px', color: '#1a1a1a', fontWeight: 500, marginTop: '2px' }}>
+                    📁 Project: {exp.project.name}
+                  </div>
+                )}
+                {exp.description && (
+                  <div style={{ fontSize: '13px', color: '#555', lineHeight: 1.4, marginTop: '2px' }}>
+                    {exp.description}
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                  {exp.paymentMethod && (
+                    <span style={{ fontSize: '11px', fontWeight: 500, color: '#555', background: '#f5f5f5', padding: '2px 6px', borderRadius: '4px' }}>
+                      💳 {exp.paymentMethod} {exp.bankAccount ? `(${exp.bankAccount.name})` : ''}
+                    </span>
+                  )}
+                  <span style={{ fontSize: '11px', color: '#999' }}>
+                    Recorded by {exp.createdBy.firstName} {exp.createdBy.lastName}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div style={{ border: '1px solid #e5e5e5', borderRadius: '10px', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -202,11 +253,9 @@ const EmployeeCost = () => {
                   <th style={th}>Amount</th>
                   <th style={th}>Expense Date</th>
                   <th style={th}>Project</th>
-                  {/* Employee column hidden — we're already in employee context */}
                   <th style={th}>Payment</th>
                   <th style={th}>Description</th>
                   <th style={th}>Created By</th>
-                  {/* Actions column hidden — read-only */}
                 </tr>
               </thead>
               <tbody>
@@ -228,7 +277,7 @@ const EmployeeCost = () => {
 
   // ── Aggregate dashboard view ──────────────────────────────────────────────
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '24px' }}>
+    <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: isMobile ? '16px' : '24px' }}>
       <div style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a', marginBottom: '4px' }}>Employee Salary Cost</div>
       <div style={{ fontSize: '13px', color: '#999', marginBottom: '24px' }}>All employees ranked by total salary</div>
 
@@ -240,7 +289,7 @@ const EmployeeCost = () => {
       )}
       {!aggLoading && !aggError && aggregate && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '28px' }}>
+          <div style={isMobile ? { display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '28px' } : { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '28px' }}>
             <FinanceStatCard label="Total Payroll" value={formatCurrency(aggregate.totalPayroll)} subtext="All salary expenses" bgColor="#1a1a1a" />
             <FinanceStatCard label="Employees" value={String(aggregate.employeeCount)} subtext="With salary records" />
             {aggregate.topEarner && (
@@ -251,6 +300,40 @@ const EmployeeCost = () => {
           {aggregate.employees.length === 0 ? (
             <div style={{ padding: '32px 0', textAlign: 'center', color: '#bbb', fontSize: '14px' }}>
               No salary expense records yet.
+            </div>
+          ) : isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', border: '1px solid #e5e5e5', borderRadius: '12px', overflow: 'hidden' }}>
+              {aggregate.employees.map((e, idx) => (
+                <div
+                  key={e.employeeId}
+                  onClick={() => handleSelectEmployee(e)}
+                  style={{
+                    padding: '16px',
+                    borderBottom: idx < aggregate.employees.length - 1 ? '1px solid #e5e5e5' : 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#1a1a1a' }}>
+                      #{idx + 1} {e.employeeName}
+                    </span>
+                    <span style={{ fontSize: '13px', fontWeight: 600 }}>
+                      {formatCurrency(e.totalSalary)}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                    <span style={{ fontSize: '12px', color: '#666' }}>
+                      {e.salaryCount} salary record{e.salaryCount !== 1 ? 's' : ''}
+                    </span>
+                    <span style={{ fontSize: '12px', color: '#2563eb', fontWeight: 500 }}>
+                      View breakdown →
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <div style={{ border: '1px solid #e5e5e5', borderRadius: '10px', overflow: 'hidden' }}>

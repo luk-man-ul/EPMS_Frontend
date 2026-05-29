@@ -45,23 +45,45 @@ const TaskFilters = ({
   showCreateButton,
   onCreateTask,
 }: Props) => {
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768)
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   const handleChange = (key: keyof TaskFilterValues, value: string) => {
     onFilterChange({ [key]: value })
   }
 
+  const mergedSelectStyle: React.CSSProperties = {
+    ...selectStyle,
+    width: isMobile ? '100%' : 'auto',
+  }
+
   return (
     <div
-      style={{
-        display: 'flex',
-        gap: '12px',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        marginBottom: '20px',
-      }}
+      style={
+        isMobile
+          ? {
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '12px',
+              marginBottom: '20px',
+            }
+          : {
+              display: 'flex',
+              gap: '12px',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              marginBottom: '20px',
+            }
+      }
     >
       {/* Project Filter */}
       <select
-        style={selectStyle}
+        style={mergedSelectStyle}
         value={filters.projectId || ''}
         onChange={(e) =>
           handleChange('projectId', e.target.value)
@@ -77,7 +99,7 @@ const TaskFilters = ({
 
       {/* Type Filter */}
       <select
-        style={selectStyle}
+        style={mergedSelectStyle}
         value={filters.type || ''}
         onChange={(e) =>
           handleChange('type', e.target.value)
@@ -90,7 +112,7 @@ const TaskFilters = ({
 
       {/* Status Filter */}
       <select
-        style={selectStyle}
+        style={mergedSelectStyle}
         value={filters.status || ''}
         onChange={(e) =>
           handleChange('status', e.target.value)
@@ -106,7 +128,7 @@ const TaskFilters = ({
 
       {/* Priority Filter */}
       <select
-        style={selectStyle}
+        style={mergedSelectStyle}
         value={filters.priority || ''}
         onChange={(e) =>
           handleChange('priority', e.target.value)
@@ -122,7 +144,7 @@ const TaskFilters = ({
       {/* Employee Filter (only if provided) */}
       {employees && employees.length > 0 && (
         <select
-          style={selectStyle}
+          style={mergedSelectStyle}
           value={filters.assignedToId || ''}
           onChange={(e) =>
             handleChange('assignedToId', e.target.value)
@@ -140,7 +162,7 @@ const TaskFilters = ({
       {/* Due Date */}
       <input
         type="date"
-        style={selectStyle}
+        style={mergedSelectStyle}
         value={filters.dueDate || ''}
         onChange={(e) =>
           handleChange('dueDate', e.target.value)
@@ -149,7 +171,12 @@ const TaskFilters = ({
 
       {/* Clear Button */}
       <button
-        style={clearButtonStyle}
+        style={{
+          ...clearButtonStyle,
+          width: isMobile ? '100%' : 'auto',
+          gridColumn: isMobile ? 'span 2' : 'auto',
+          textAlign: 'center',
+        }}
         onClick={() => onFilterChange({ __clear: true })}
       >
         Clear
@@ -158,7 +185,12 @@ const TaskFilters = ({
       {/* Create Task Button (only for TeamLead) */}
       {showCreateButton && onCreateTask && (
         <button
-          style={createButtonStyle}
+          style={{
+            ...createButtonStyle,
+            width: isMobile ? '100%' : 'auto',
+            gridColumn: isMobile ? 'span 2' : 'auto',
+            textAlign: 'center',
+          }}
           onClick={onCreateTask}
         >
           + Create Task

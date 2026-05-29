@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { Card } from '../ui';
 
@@ -19,6 +20,13 @@ const getProgressColor = (progress: number) => {
 };
 
 export function ProjectProgressChart({ data, loading }: ProjectProgressChartProps) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   if (loading) {
     return (
       <Card padding="md">
@@ -52,25 +60,25 @@ export function ProjectProgressChart({ data, loading }: ProjectProgressChartProp
       </h3>
       <div style={{ width: '100%', height: '300px' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
+          <BarChart data={data} margin={isMobile ? { top: 10, right: 5, left: -25, bottom: 5 } : undefined}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey="name" 
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: isMobile ? 10 : 12 }}
               angle={-45}
               textAnchor="end"
-              height={80}
+              height={isMobile ? 65 : 80}
             />
             <YAxis 
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: isMobile ? 10 : 12 }}
               domain={[0, 100]}
-              label={{ value: 'Progress (%)', angle: -90, position: 'insideLeft' }}
+              label={isMobile ? undefined : { value: 'Progress (%)', angle: -90, position: 'insideLeft' }}
             />
             <Tooltip 
               formatter={(value: number) => `${value}%`}
               labelStyle={{ color: '#1a1a1a' }}
             />
-            <Legend />
+            <Legend wrapperStyle={isMobile ? { fontSize: '11px' } : undefined} />
             <Bar dataKey="progress" name="Completion %" radius={[8, 8, 0, 0]}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getProgressColor(entry.progress)} />

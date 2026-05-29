@@ -80,6 +80,7 @@ const InvoiceForm = (props: Props) => {
       ? existing.items.map((i) => ({
           description: i.description,
           quantity:    String(i.quantity),
+          valueColor:  undefined,
           unitPrice:   String(i.unitPrice),
         }))
       : [{ ...EMPTY_ITEM }],
@@ -97,9 +98,15 @@ const InvoiceForm = (props: Props) => {
 
   const [formError,  setFormError]  = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // ── Derived totals preview (useMemo — no state, no re-render loops) ─────────
-  // These are display-only. The backend is the authoritative source of truth.
   const previewSubtotal = useMemo(
     () => items.reduce((sum, r) => sum + (parseFloat(r.quantity) || 0) * (parseFloat(r.unitPrice) || 0), 0),
     [items],
@@ -111,11 +118,9 @@ const InvoiceForm = (props: Props) => {
   // ── Fetch dropdowns ─────────────────────────────────────────────────────────
   useEffect(() => {
     getProjectOptions().then(setProjects).catch(() => {})
-    // Fetch unlinked revenues (for linking to invoice)
     getRevenues().then(setRevenues).catch(() => {})
   }, [])
 
-  // Revenues available for linking: unlinked ones + the currently linked one
   const availableRevenues = revenues.filter(
     (r) => !r.invoice || r.id === existing?.revenueId,
   )
@@ -203,9 +208,8 @@ const InvoiceForm = (props: Props) => {
     }
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e5e5', padding: '28px' }}>
+    <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e5e5', padding: isMobile ? '16px' : '28px' }}>
       {/* Title */}
       <div style={{ fontSize: '15px', fontWeight: 600, color: '#1a1a1a', marginBottom: '20px' }}>
         {isEdit ? `Edit ${existing!.invoiceNo}` : 'New Invoice'}
@@ -219,7 +223,7 @@ const InvoiceForm = (props: Props) => {
 
       <form onSubmit={handleSubmit}>
         {/* Row 1: Project + Revenue link */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
           <div>
             <label style={labelStyle}>Project *</label>
             <select
@@ -291,7 +295,7 @@ const InvoiceForm = (props: Props) => {
               />
             </div>
             {/* Row: GST Percentage + GST Type */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '14px' }}>
               <div>
                 <label style={labelStyle}>GST Percentage (%)</label>
                 <input
@@ -334,7 +338,7 @@ const InvoiceForm = (props: Props) => {
         </div>
 
         {/* Row 4: Issue Date + Due Date + Status (edit only) */}
-        <div style={{ display: 'grid', gridTemplateColumns: isEdit ? '1fr 1fr 1fr' : '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isEdit ? '1fr 1fr 1fr' : '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
           <div>
             <label style={labelStyle}>Issue Date *</label>
             <input
@@ -394,7 +398,8 @@ const InvoiceForm = (props: Props) => {
           }}>
             <div style={{
               background: '#f8fafc', borderRadius: '10px',
-              border: '1px solid #e5e5e5', padding: '14px 20px', minWidth: '240px',
+              border: '1px solid #e5e5e5', padding: '14px 20px', minWidth: isMobile ? '100%' : '240px',
+              boxSizing: 'border-box',
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <span style={{ fontSize: '13px', color: '#666' }}>Subtotal</span>
@@ -439,13 +444,15 @@ const InvoiceForm = (props: Props) => {
         </div>
 
         {/* Actions */}
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+        <div style={isMobile ? { display: 'flex', flexDirection: 'column', gap: '8px' } : { display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
           <button
             type="button"
             onClick={props.onCancel}
             style={{
               padding: '9px 18px', borderRadius: '8px', border: '1px solid #e5e5e5',
               background: '#fff', color: '#666', fontSize: '13px', fontWeight: 500, cursor: 'pointer',
+              width: isMobile ? '100%' : 'auto',
+              textAlign: 'center',
             }}
           >
             Cancel
@@ -457,6 +464,8 @@ const InvoiceForm = (props: Props) => {
               padding: '9px 18px', borderRadius: '8px', border: 'none',
               background: submitting ? '#666' : '#1a1a1a', color: '#fff',
               fontSize: '13px', fontWeight: 500, cursor: submitting ? 'not-allowed' : 'pointer',
+              width: isMobile ? '100%' : 'auto',
+              textAlign: 'center',
             }}
           >
             {submitting ? 'Saving...' : isEdit ? 'Update Invoice' : 'Create Invoice'}

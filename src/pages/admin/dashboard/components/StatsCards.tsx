@@ -14,9 +14,13 @@ const StatsCards = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
     fetchDashboardStats();
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const fetchDashboardStats = async () => {
@@ -57,14 +61,46 @@ const StatsCards = () => {
 
   if (loading) {
     return (
-      <div className="stats-grid">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="stat-card skeleton">
-            <div className="stat-title skeleton-text"></div>
-            <div className="stat-value skeleton-text"></div>
-          </div>
-        ))}
-      </div>
+      <>
+        {isMobile && (
+          <style>{`
+            .admin-stats-container::-webkit-scrollbar {
+              display: none;
+            }
+            .admin-stats-container {
+              scrollbar-width: none;
+              -ms-overflow-style: none;
+            }
+          `}</style>
+        )}
+        <div 
+          className={isMobile ? "admin-stats-container" : "stats-grid"}
+          style={isMobile ? {
+            display: 'flex',
+            overflowX: 'auto',
+            gap: '12px',
+            paddingBottom: '10px',
+            width: '100%',
+            WebkitOverflowScrolling: 'touch',
+          } : undefined}
+        >
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div 
+              key={i} 
+              className="stat-card skeleton"
+              style={isMobile ? {
+                flex: '0 0 130px',
+                padding: '12px 14px',
+                borderRadius: '12px',
+                height: '76px',
+              } : undefined}
+            >
+              <div className="stat-title skeleton-text"></div>
+              <div className="stat-value skeleton-text"></div>
+            </div>
+          ))}
+        </div>
+      </>
     );
   }
 
@@ -83,14 +119,46 @@ const StatsCards = () => {
   }
 
   return (
-    <div className="stats-grid">
-      {statsCardsData.map((item, index) => (
-        <div key={index} className="stat-card">
-          <div className="stat-title">{item.title}</div>
-          <div className="stat-value">{item.value}</div>
-        </div>
-      ))}
-    </div>
+    <>
+      {isMobile && (
+        <style>{`
+          .admin-stats-container::-webkit-scrollbar {
+            display: none;
+          }
+          .admin-stats-container {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+          }
+        `}</style>
+      )}
+      <div 
+        className={isMobile ? "admin-stats-container" : "stats-grid"}
+        style={isMobile ? {
+          display: 'flex',
+          overflowX: 'auto',
+          gap: '12px',
+          paddingBottom: '10px',
+          width: '100%',
+          WebkitOverflowScrolling: 'touch',
+        } : undefined}
+      >
+        {statsCardsData.map((item, index) => (
+          <div 
+            key={index} 
+            className="stat-card"
+            style={isMobile ? {
+              flex: '0 0 130px',
+              padding: '12px 14px',
+              borderRadius: '12px',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+            } : undefined}
+          >
+            <div className="stat-title" style={isMobile ? { fontSize: '11px', marginBottom: '4px' } : undefined}>{item.title}</div>
+            <div className="stat-value" style={isMobile ? { fontSize: '20px', fontWeight: 700 } : undefined}>{item.value}</div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 };
 

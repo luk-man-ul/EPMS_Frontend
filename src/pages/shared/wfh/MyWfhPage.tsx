@@ -18,6 +18,13 @@ const MyWfhPage = () => {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchRequests();
@@ -36,18 +43,29 @@ const MyWfhPage = () => {
   };
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: isMobile ? '16px' : '24px' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        justifyContent: 'space-between',
+        alignItems: isMobile ? 'stretch' : 'flex-start',
+        gap: isMobile ? '16px' : '0px',
+        marginBottom: '24px'
+      }}>
         <div>
-          <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>
+          <h1 style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>
             My WFH Requests
           </h1>
           <p style={{ fontSize: '14px', color: '#666666' }}>
             View all your Work From Home requests and their approval status
           </p>
         </div>
-        <Button variant="primary" onClick={() => setShowModal(true)}>
+        <Button
+          variant="primary"
+          onClick={() => setShowModal(true)}
+          style={isMobile ? { width: '100%', display: 'block', textAlign: 'center' } : undefined}
+        >
           + Request WFH
         </Button>
       </div>
@@ -63,6 +81,55 @@ const MyWfhPage = () => {
             No WFH requests yet
           </div>
         </Card>
+      ) : isMobile ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {requests.map((req) => {
+            const s = statusConfig[req.status] || statusConfig.PENDING;
+            return (
+              <div
+                key={req.id}
+                style={{
+                  background: '#ffffff',
+                  borderRadius: '16px',
+                  padding: '16px',
+                  border: '1px solid #f0f0f0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.03)',
+                }}
+              >
+                {/* Header: Date Range & Status */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                  <div>
+                    <div style={{ fontSize: '11px', color: '#888' }}>Date Range</div>
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937', marginTop: '2px' }}>
+                      {formatDate(req.fromDate)} – {formatDate(req.toDate)}
+                    </div>
+                  </div>
+                  <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, color: s.color, background: s.bg }}>
+                    {s.label}
+                  </span>
+                </div>
+
+                {/* Reason */}
+                <div style={{ borderTop: '1px solid #f5f5f5', paddingTop: '10px' }}>
+                  <div style={{ fontSize: '11px', color: '#888' }}>Reason</div>
+                  <div style={{ fontSize: '13px', color: '#374151', marginTop: '4px', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    {req.reason}
+                  </div>
+                </div>
+
+                {/* Submitted */}
+                <div style={{ borderTop: '1px solid #f5f5f5', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11px', color: '#888' }}>
+                    Submitted: {formatDate(req.createdAt)}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
       ) : (
         <Card padding="none">
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>

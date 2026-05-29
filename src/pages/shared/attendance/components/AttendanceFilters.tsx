@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AttendanceStatus, getEnumOptions } from '../../../../types/enums';
 import { todayLocalDateStr, daysAgoLocalDateStr } from '../../../../utils/date.util';
 
@@ -51,6 +51,16 @@ const AttendanceFilters = ({
   showUserFilter = false,
   users = [],
 }: AttendanceFiltersProps) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Tracks which quick-select preset is active.
   // Set to null whenever the user manually edits a date input.
   const [activePreset, setActivePreset] = useState<QuickPreset>(null);
@@ -74,7 +84,7 @@ const AttendanceFilters = ({
   const quickBtnStyle = (preset: QuickPreset): React.CSSProperties => {
     const active = activePreset === preset;
     return {
-      padding: '5px 14px',
+      padding: isMobile ? '6px 14px' : '5px 14px',
       borderRadius: '6px',
       border: active ? '1.5px solid #6366f1' : '1px solid #e5e7eb',
       background: active ? '#eef2ff' : '#fff',
@@ -90,12 +100,19 @@ const AttendanceFilters = ({
   const statusOptions = getEnumOptions(AttendanceStatus);
   const cols = showUserFilter ? 4 : 3;
 
+  const currentInputStyle = isMobile ? {
+    ...inputStyle,
+    padding: '10px 12px',
+    borderRadius: '10px',
+    border: '1px solid #cbd5e1',
+  } : inputStyle;
+
   return (
     <div style={{
       background: '#fff',
       borderRadius: '16px',
       border: '1px solid #f3f4f6',
-      padding: '20px 24px',
+      padding: isMobile ? '16px' : '20px 24px',
       marginBottom: '20px',
       boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
     }}>
@@ -127,8 +144,8 @@ const AttendanceFilters = ({
       {/* Date range + status + optional employee inputs */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: `repeat(${cols}, 1fr)`,
-        gap: '16px',
+        gridTemplateColumns: isMobile ? '1fr 1fr' : `repeat(${cols}, 1fr)`,
+        gap: isMobile ? '12px' : '16px',
         alignItems: 'end',
       }}>
         <div>
@@ -137,7 +154,7 @@ const AttendanceFilters = ({
             type="date"
             value={filters.startDate || ''}
             onChange={(e) => handleChange('startDate', e.target.value)}
-            style={inputStyle}
+            style={currentInputStyle}
           />
         </div>
 
@@ -147,7 +164,7 @@ const AttendanceFilters = ({
             type="date"
             value={filters.endDate || ''}
             onChange={(e) => handleChange('endDate', e.target.value)}
-            style={inputStyle}
+            style={currentInputStyle}
           />
         </div>
 
@@ -156,7 +173,7 @@ const AttendanceFilters = ({
           <select
             value={filters.status || ''}
             onChange={(e) => handleChange('status', e.target.value)}
-            style={inputStyle}
+            style={currentInputStyle}
           >
             <option value="">All Statuses</option>
             {statusOptions.map((opt) => (
@@ -171,7 +188,7 @@ const AttendanceFilters = ({
             <select
               value={filters.userId || ''}
               onChange={(e) => handleChange('userId', e.target.value)}
-              style={inputStyle}
+              style={currentInputStyle}
             >
               <option value="">All Employees</option>
               {users.map((u) => (
@@ -188,7 +205,19 @@ const AttendanceFilters = ({
             setActivePreset(null);
             onFilterChange({ startDate: undefined, endDate: undefined, status: undefined, userId: undefined });
           }}
-          style={{
+          style={isMobile ? {
+            padding: '10px 18px',
+            background: '#f1f5f9',
+            color: '#475569',
+            border: 'none',
+            borderRadius: '10px',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'background 0.15s',
+            width: '100%',
+            textAlign: 'center'
+          } : {
             padding: '8px 18px',
             background: '#f3f4f6',
             color: '#374151',
@@ -199,8 +228,14 @@ const AttendanceFilters = ({
             cursor: 'pointer',
             transition: 'background 0.15s',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = '#e5e7eb')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = '#f3f4f6')}
+          onMouseEnter={(e) => {
+            if (isMobile) return;
+            e.currentTarget.style.background = '#e5e7eb';
+          }}
+          onMouseLeave={(e) => {
+            if (isMobile) return;
+            e.currentTarget.style.background = '#f3f4f6';
+          }}
         >
           Clear Filters
         </button>

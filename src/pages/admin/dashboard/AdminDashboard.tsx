@@ -14,6 +14,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [chartsLoading, setChartsLoading] = useState(true)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   
   // Chart data states
   const [taskStatusData, setTaskStatusData] = useState({ completed: 0, inProgress: 0, pending: 0, overdue: 0 })
@@ -23,6 +24,9 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchDashboardData()
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
   }, [])
 
   const fetchDashboardData = async () => {
@@ -127,16 +131,16 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="dashboard">
+    <div className="dashboard" style={isMobile ? { gap: '16px' } : undefined}>
       <StatsCards />
 
       {/* Work Progress · Attendance Summary · Finance Snapshot
           Placed directly below KPI cards for immediate visibility */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '24px',
-        margin: '24px 0',
+        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: isMobile ? '16px' : '24px',
+        margin: isMobile ? '16px 0' : '24px 0',
       }}>
         <WorkProgress />
         <AttendanceWidget />
@@ -146,9 +150,9 @@ const AdminDashboard = () => {
       {/* Analytics Charts Section */}
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
-        gap: '24px',
-        margin: '24px 0'
+        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(400px, 1fr))', 
+        gap: isMobile ? '16px' : '24px',
+        margin: isMobile ? '16px 0' : '24px 0'
       }}>
         <TaskStatusChart data={taskStatusData} loading={chartsLoading} />
         <TicketStatusChart data={ticketStatusData} loading={chartsLoading} />
@@ -156,20 +160,20 @@ const AdminDashboard = () => {
 
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
-        gap: '24px',
-        marginBottom: '24px'
+        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(400px, 1fr))', 
+        gap: isMobile ? '16px' : '24px',
+        marginBottom: isMobile ? '16px' : '24px'
       }}>
         <ProjectProgressChart data={projectData} loading={chartsLoading} />
         <AttendanceTrendChart data={attendanceData} loading={chartsLoading} days={7} />
       </div>
 
       {/* Activity Feed */}
-      <div style={{ marginBottom: '24px' }}>
+      <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
         <ActivityFeed limit={20} title="Recent System Activity" />
       </div>
 
-      <div className="dashboard-grid">
+      <div className="dashboard-grid" style={isMobile ? { gridTemplateColumns: '1fr', gap: '16px' } : undefined}>
         <AlertsPanel />
       </div>
     </div>

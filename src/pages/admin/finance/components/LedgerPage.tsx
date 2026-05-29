@@ -77,9 +77,10 @@ const PaymentBadge = ({ method }: { method?: string | null }) => {
 
 interface SummaryBarProps {
   entries: LedgerEntry[]
+  isMobile: boolean
 }
 
-const SummaryBar = ({ entries }: SummaryBarProps) => {
+const SummaryBar = ({ entries, isMobile }: SummaryBarProps) => {
   const totalCredit = entries
     .filter((e) => e.type === 'CREDIT')
     .reduce((sum, e) => sum + e.amount, 0)
@@ -96,6 +97,7 @@ const SummaryBar = ({ entries }: SummaryBarProps) => {
       borderRadius: '10px',
       background: bg,
       border: '1px solid #e5e5e5',
+      flex: isMobile ? 'none' : 1,
       minWidth: '180px',
     }}>
       <div style={{ fontSize: '12px', color: '#666', fontWeight: 500, marginBottom: '6px' }}>{label}</div>
@@ -104,7 +106,7 @@ const SummaryBar = ({ entries }: SummaryBarProps) => {
   )
 
   return (
-    <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+    <div style={isMobile ? { display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' } : { display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
       {card('Total Credits', totalCredit, '#16a34a', '#f0fdf4')}
       {card('Total Debits',  totalDebit,  '#dc2626', '#fff5f5')}
       <div style={{
@@ -112,6 +114,7 @@ const SummaryBar = ({ entries }: SummaryBarProps) => {
         borderRadius: '10px',
         background: balance >= 0 ? '#f8fafc' : '#fff5f5',
         border: `1px solid ${balance >= 0 ? '#e5e5e5' : '#fecaca'}`,
+        flex: isMobile ? 'none' : 1,
         minWidth: '180px',
       }}>
         <div style={{ fontSize: '12px', color: '#666', fontWeight: 500, marginBottom: '6px' }}>Net Balance</div>
@@ -137,6 +140,13 @@ const LedgerPage = () => {
   const [filterRef,  setFilterRef]       = useState<'' | LedgerReferenceType>('')
   const [startDate,  setStartDate]       = useState('')
   const [endDate,    setEndDate]         = useState('')
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // ── Fetch ───────────────────────────────────────────────
   const fetchLedger = () => {
@@ -175,11 +185,16 @@ const LedgerPage = () => {
     <div>
       {/* ── Summary bar ── */}
       {!loading && !error && entries.length > 0 && (
-        <SummaryBar entries={entries} />
+        <SummaryBar entries={entries} isMobile={isMobile} />
       )}
 
       {/* ── Filters ── */}
-      <div style={{
+      <div style={isMobile ? {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        marginBottom: '20px',
+      } : {
         display: 'flex',
         gap: '10px',
         marginBottom: '20px',
@@ -190,7 +205,7 @@ const LedgerPage = () => {
         <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value as '' | LedgerEntryType)}
-          style={selectStyle}
+          style={{ ...selectStyle, width: isMobile ? '100%' : 'auto' }}
         >
           <option value="">All Types</option>
           <option value="CREDIT">Credit</option>
@@ -201,7 +216,7 @@ const LedgerPage = () => {
         <select
           value={filterRef}
           onChange={(e) => setFilterRef(e.target.value as '' | LedgerReferenceType)}
-          style={selectStyle}
+          style={{ ...selectStyle, width: isMobile ? '100%' : 'auto' }}
         >
           <option value="">All References</option>
           <option value="REVENUE">Revenue</option>
@@ -209,23 +224,25 @@ const LedgerPage = () => {
         </select>
 
         {/* Date range */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '13px', color: '#666' }}>From</span>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            style={inputStyle}
-          />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '13px', color: '#666' }}>To</span>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            style={inputStyle}
-          />
+        <div style={isMobile ? { display: 'flex', flexDirection: 'column', gap: '8px' } : { display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: isMobile ? '100%' : 'auto' }}>
+            <span style={{ fontSize: '13px', color: '#666', width: isMobile ? '40px' : 'auto' }}>From</span>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: isMobile ? '100%' : 'auto' }}>
+            <span style={{ fontSize: '13px', color: '#666', width: isMobile ? '40px' : 'auto' }}>To</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
+            />
+          </div>
         </div>
 
         {/* Clear filters */}
@@ -240,6 +257,7 @@ const LedgerPage = () => {
               fontSize: '13px',
               color: '#666',
               cursor: 'pointer',
+              width: isMobile ? '100%' : 'auto',
             }}
           >
             Clear filters
@@ -248,7 +266,7 @@ const LedgerPage = () => {
 
         {/* Entry count */}
         {!loading && !error && (
-          <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#999' }}>
+          <span style={{ marginLeft: isMobile ? '0' : 'auto', fontSize: '13px', color: '#999', marginTop: isMobile ? '4px' : '0' }}>
             {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
           </span>
         )}
@@ -273,6 +291,69 @@ const LedgerPage = () => {
             <div style={{ fontSize: '13px', color: '#999' }}>
               Entries are created automatically when revenue or expense records are added.
             </div>
+          </div>
+        ) : isMobile ? (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {entriesWithBalance.map((entry, idx) => {
+              const isCredit = entry.type === 'CREDIT'
+              const balanceNegative = entry.runningBalance < 0
+
+              return (
+                <div
+                  key={entry.id}
+                  style={{
+                    padding: '16px',
+                    borderBottom: idx < entriesWithBalance.length - 1 ? '1px solid #e5e5e5' : 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                        <TypeBadge type={entry.type} />
+                        <RefBadge refType={entry.referenceType} />
+                        {entry.category && (
+                          <span style={{ fontSize: '11px', color: '#666', background: '#fafafa', padding: '2px 6px', borderRadius: '4px', border: '1px solid #e5e5e5' }}>
+                            {entry.category.name}
+                          </span>
+                        )}
+                        <span style={{ fontSize: '12px', color: '#999' }}>
+                          📅 {formatDate(entry.date)}
+                        </span>
+                      </div>
+
+                      {entry.description && (
+                        <div style={{ fontSize: '13px', color: '#555', lineHeight: 1.4, marginTop: '2px' }}>
+                          {entry.description}
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                        {entry.paymentMethod && (
+                          <span style={{ fontSize: '11px', fontWeight: 500, color: '#555', background: '#f5f5f5', padding: '2px 6px', borderRadius: '4px' }}>
+                            💳 {entry.paymentMethod} {entry.bankAccount ? `(${entry.bankAccount.name})` : ''}
+                          </span>
+                        )}
+                        <span style={{ fontSize: '11px', color: '#999' }}>
+                          By {entry.createdBy.firstName} {entry.createdBy.lastName}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: isCredit ? '#16a34a' : '#dc2626' }}>
+                        {isCredit ? '+' : '-'}{formatCurrency(entry.amount)}
+                      </div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: balanceNegative ? '#dc2626' : '#1a1a1a', background: '#f8fafc', padding: '2px 8px', borderRadius: '4px', border: '1px solid #e5e5e5' }}>
+                        Bal: {balanceNegative && '−'}{formatCurrency(Math.abs(entry.runningBalance))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>

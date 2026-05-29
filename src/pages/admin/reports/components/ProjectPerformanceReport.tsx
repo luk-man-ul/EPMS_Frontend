@@ -27,6 +27,13 @@ const ProjectPerformanceReport = () => {
   const [filtered, setFiltered] = useState<ProjectRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Filter state
   const [statusFilter, setStatusFilter] = useState('')
@@ -194,34 +201,102 @@ const ProjectPerformanceReport = () => {
       </div>
 
       {/* ── Summary Cards (4 cards) ────────────────────────────────────────── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '16px',
-        marginBottom: '24px',
-      }}>
+      {isMobile && (
+        <style>{`
+          .project-perf-stats-container::-webkit-scrollbar {
+            display: none;
+          }
+          .project-perf-stats-container {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+          }
+        `}</style>
+      )}
+      <div 
+        className={isMobile ? "project-perf-stats-container" : undefined}
+        style={isMobile ? {
+          display: 'flex',
+          overflowX: 'auto',
+          gap: '12px',
+          paddingBottom: '10px',
+          marginBottom: '20px',
+          width: '100%',
+          WebkitOverflowScrolling: 'touch',
+        } : {
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '16px',
+          marginBottom: '24px',
+        }}
+      >
         {/* Total Projects */}
-        <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '20px' }}>
+        <div style={isMobile ? {
+          background: '#fff', 
+          border: '1px solid #e5e5e5', 
+          borderRadius: '12px', 
+          padding: '12px 14px',
+          flex: '0 0 130px',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+        } : {
+          background: '#fff', 
+          border: '1px solid #e5e5e5', 
+          borderRadius: '12px', 
+          padding: '20px',
+        }}>
           <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>Total Projects</div>
-          <div style={{ fontSize: '32px', fontWeight: 700, color: '#1a1a1a' }}>{totalProjects}</div>
+          <div style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: '#1a1a1a' }}>{totalProjects}</div>
         </div>
 
         {/* Avg Progress */}
-        <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '20px' }}>
+        <div style={isMobile ? {
+          background: '#fff', 
+          border: '1px solid #e5e5e5', 
+          borderRadius: '12px', 
+          padding: '12px 14px',
+          flex: '0 0 130px',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+        } : {
+          background: '#fff', 
+          border: '1px solid #e5e5e5', 
+          borderRadius: '12px', 
+          padding: '20px',
+        }}>
           <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>Avg Progress</div>
-          <div style={{ fontSize: '32px', fontWeight: 700, color: '#1a1a1a' }}>{avgProgress}%</div>
+          <div style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: '#1a1a1a' }}>{avgProgress}%</div>
         </div>
 
         {/* Active Projects */}
-        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '20px' }}>
+        <div style={isMobile ? {
+          background: '#f0fdf4', 
+          border: '1px solid #bbf7d0', 
+          borderRadius: '12px', 
+          padding: '12px 14px',
+          flex: '0 0 130px',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+        } : {
+          background: '#f0fdf4', 
+          border: '1px solid #bbf7d0', 
+          borderRadius: '12px', 
+          padding: '20px',
+        }}>
           <div style={{ fontSize: '13px', color: '#16a34a', marginBottom: '8px', fontWeight: 500 }}>Active Projects</div>
-          <div style={{ fontSize: '32px', fontWeight: 700, color: '#16a34a' }}>{activeProjects}</div>
+          <div style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: '#16a34a' }}>{activeProjects}</div>
         </div>
 
         {/* Completed Projects */}
-        <div style={{ background: '#1a1a1a', borderRadius: '12px', padding: '20px' }}>
+        <div style={isMobile ? {
+          background: '#1a1a1a', 
+          borderRadius: '12px', 
+          padding: '12px 14px',
+          flex: '0 0 130px',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+        } : {
+          background: '#1a1a1a', 
+          borderRadius: '12px', 
+          padding: '20px',
+        }}>
           <div style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '8px', fontWeight: 500 }}>Completed Projects</div>
-          <div style={{ fontSize: '32px', fontWeight: 700, color: '#fff' }}>{completedProjects}</div>
+          <div style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: '#fff' }}>{completedProjects}</div>
         </div>
       </div>
 

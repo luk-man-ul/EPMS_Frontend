@@ -19,6 +19,13 @@ const EmployeeProductivityReport = () => {
   const [searchFilter, setSearchFilter] = useState('')
   const [deptFilter, setDeptFilter] = useState('')
   const [departments, setDepartments] = useState<string[]>([])
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -205,28 +212,89 @@ const EmployeeProductivityReport = () => {
       </div>
 
       {/* ── Summary Cards ─────────────────────────────────────────────────── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '16px',
-        marginBottom: '24px',
-      }}>
-        <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '20px' }}>
+      {isMobile && (
+        <style>{`
+          .emp-prod-stats-container::-webkit-scrollbar {
+            display: none;
+          }
+          .emp-prod-stats-container {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+          }
+        `}</style>
+      )}
+      <div 
+        className={isMobile ? "emp-prod-stats-container" : undefined}
+        style={isMobile ? {
+          display: 'flex',
+          overflowX: 'auto',
+          gap: '12px',
+          paddingBottom: '10px',
+          marginBottom: '20px',
+          width: '100%',
+          WebkitOverflowScrolling: 'touch',
+        } : {
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '16px',
+          marginBottom: '24px',
+        }}
+      >
+        {/* Total Tasks Completed */}
+        <div style={isMobile ? {
+          background: '#fff', 
+          border: '1px solid #e5e5e5', 
+          borderRadius: '12px', 
+          padding: '12px 14px',
+          flex: '0 0 150px',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+        } : {
+          background: '#fff', 
+          border: '1px solid #e5e5e5', 
+          borderRadius: '12px', 
+          padding: '20px',
+        }}>
           <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>Total Tasks Completed</div>
-          <div style={{ fontSize: '32px', fontWeight: 700, color: '#1a1a1a' }}>{totalTasksCompleted}</div>
+          <div style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: '#1a1a1a' }}>{totalTasksCompleted}</div>
           {totalAssigned > 0 && (
             <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>
               out of {totalAssigned} assigned
             </div>
           )}
         </div>
-        <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '12px', padding: '20px' }}>
+
+        {/* Total Employees */}
+        <div style={isMobile ? {
+          background: '#fff', 
+          border: '1px solid #e5e5e5', 
+          borderRadius: '12px', 
+          padding: '12px 14px',
+          flex: '0 0 150px',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+        } : {
+          background: '#fff', 
+          border: '1px solid #e5e5e5', 
+          borderRadius: '12px', 
+          padding: '20px',
+        }}>
           <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>Total Employees</div>
-          <div style={{ fontSize: '32px', fontWeight: 700, color: '#1a1a1a' }}>{filtered.length}</div>
+          <div style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: '#1a1a1a' }}>{filtered.length}</div>
         </div>
-        <div style={{ background: '#1a1a1a', borderRadius: '12px', padding: '20px' }}>
+
+        {/* Avg Completion Rate */}
+        <div style={isMobile ? {
+          background: '#1a1a1a', 
+          borderRadius: '12px', 
+          padding: '12px 14px',
+          flex: '0 0 150px',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+        } : {
+          background: '#1a1a1a', 
+          borderRadius: '12px', 
+          padding: '20px',
+        }}>
           <div style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '8px' }}>Avg Completion Rate</div>
-          <div style={{ fontSize: '32px', fontWeight: 700, color: '#fff' }}>{avgCompletionRate}%</div>
+          <div style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: '#fff' }}>{avgCompletionRate}%</div>
         </div>
       </div>
 

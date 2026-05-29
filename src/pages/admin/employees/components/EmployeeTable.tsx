@@ -22,24 +22,30 @@ const EmployeeTable = ({
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement | null>(null)
   const navigate = useNavigate()
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
 
   useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (
-      menuRef.current &&
-      !menuRef.current.contains(event.target as Node)
-    ) {
-      setOpenMenuId(null)
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node)
+      ) {
+        setOpenMenuId(null)
+      }
     }
-  }
 
-  document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('mousedown', handleClickOutside)
 
-  return () => {
-    document.removeEventListener('mousedown', handleClickOutside)
-  }
-}, [])
-
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   if (!employees.length) {
     return (
@@ -79,6 +85,212 @@ const EmployeeTable = ({
       default:
         return { backgroundColor: '#f3f4f6', color: '#374151' }
     }
+  }
+
+  if (isMobile) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'transparent' }}>
+        {employees.map((emp) => {
+          const role = getPrimaryRole(emp)
+          const joinedDate = emp.joinedAt
+            ? new Date(emp.joinedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+            : '—'
+
+          return (
+            <div
+              key={emp.id}
+              onClick={() => navigate(`/admin/employees/${emp.id}`)}
+              style={{
+                background: '#ffffff',
+                borderRadius: '16px',
+                padding: '16px',
+                border: '1px solid #f0f0f0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.03)',
+                cursor: 'pointer',
+                position: 'relative',
+              }}
+            >
+              {/* Header: Avatar, Name & Actions */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      backgroundColor: '#e5e7eb',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 600,
+                      color: '#374151',
+                    }}
+                  >
+                    {emp.profilePhoto ? (
+                      <img
+                        src={emp.profilePhoto}
+                        alt="profile"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                          e.currentTarget.parentElement!.textContent =
+                            emp.firstName?.[0] ?? ''
+                        }}
+                      />
+                    ) : (
+                      emp.firstName?.[0]
+                    )}
+                  </div>
+
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '15px', color: '#1f2937' }}>
+                      {emp.firstName} {emp.lastName}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+                      {emp.email}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions Button */}
+                <div style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+                  <button
+                    style={dotsBtn}
+                    onClick={() =>
+                      setOpenMenuId(openMenuId === emp.id ? null : emp.id)
+                    }
+                  >
+                    ⋮
+                  </button>
+
+                  {openMenuId === emp.id && (
+                    <div ref={menuRef} style={{ ...dropdownStyle, right: '0%', top: '40px', bottom: 'auto' }} data-menu="true">
+                      {onEdit && (
+                        <div
+                          style={menuItem}
+                          onClick={() => {
+                            onEdit(emp)
+                            setOpenMenuId(null)
+                          }}
+                        >
+                          Edit
+                        </div>
+                      )}
+
+                      {emp.status === 'ACTIVE' &&
+                        role === 'EMPLOYEE' &&
+                        onPromote && (
+                          <div
+                            style={menuItem}
+                            onClick={() => {
+                              onPromote(emp.id)
+                              setOpenMenuId(null)
+                            }}
+                          >
+                            Promote
+                          </div>
+                        )}
+
+                      {emp.status === 'ACTIVE' &&
+                        role === 'TEAM_LEAD' &&
+                        onDemote && (
+                          <div
+                            style={menuItem}
+                            onClick={() => {
+                              onDemote(emp.id)
+                              setOpenMenuId(null)
+                            }}
+                          >
+                            Demote
+                          </div>
+                        )}
+
+                      {emp.status === 'ACTIVE' &&
+                        role !== 'ADMIN' &&
+                        onDeactivate && (
+                          <div
+                            style={{ ...menuItem, color: '#dc2626' }}
+                            onClick={() => {
+                              onDeactivate(emp.id)
+                              setOpenMenuId(null)
+                            }}
+                          >
+                            Deactivate
+                          </div>
+                        )}
+
+                      {emp.status === 'INACTIVE' &&
+                        onActivate && (
+                          <div
+                            style={{ ...menuItem, color: '#16a34a' }}
+                            onClick={() => {
+                              onActivate(emp.id)
+                              setOpenMenuId(null)
+                            }}
+                          >
+                            Activate
+                          </div>
+                        )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Roles & Status Row */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f5f5f5', paddingTop: '10px' }}>
+                <span
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    ...getRoleBadgeStyle(role),
+                  }}
+                >
+                  {role}
+                </span>
+                <span style={{ color: getStatusColor(emp.status), fontWeight: 600, fontSize: '13px' }}>
+                  {emp.status}
+                </span>
+              </div>
+
+              {/* Skills Row */}
+              {emp.skills && emp.skills.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {emp.skills.map((s) => (
+                    <span
+                      key={s.skill.id}
+                      style={{
+                        background: '#e0f2fe',
+                        color: '#0369a1',
+                        padding: '4px 8px',
+                        borderRadius: 6,
+                        fontSize: 12,
+                      }}
+                    >
+                      {s.skill.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Footer: Joined Date */}
+              <div style={{ borderTop: '1px solid #f5f5f5', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#888' }}>
+                <span>Joined {joinedDate}</span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
   }
 
   return (
@@ -191,25 +403,24 @@ const EmployeeTable = ({
                 </span>
               </td>
 
-<td style={tdStyle}>
-  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-    {emp.skills?.map((s) => (
-      <span
-        key={s.skill.id}
-        style={{
-          background: '#e0f2fe',
-          color: '#0369a1',
-          padding: '4px 8px',
-          borderRadius: 6,
-          fontSize: 12,
-        }}
-      >
-        {s.skill.name}
-      </span>
-    ))}
-  </div>
-</td>
-
+              <td style={tdStyle}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {emp.skills?.map((s) => (
+                    <span
+                      key={s.skill.id}
+                      style={{
+                        background: '#e0f2fe',
+                        color: '#0369a1',
+                        padding: '4px 8px',
+                        borderRadius: 6,
+                        fontSize: 12,
+                      }}
+                    >
+                      {s.skill.name}
+                    </span>
+                  ))}
+                </div>
+              </td>
 
               {/* Status */}
               <td style={tdStyle}>
@@ -241,10 +452,7 @@ const EmployeeTable = ({
                 </button>
 
                 {openMenuId === emp.id && (
-  <div ref={menuRef} style={dropdownStyle} data-menu="true">
-
-                    
-                    {/* Edit */}
+                  <div ref={menuRef} style={dropdownStyle} data-menu="true">
                     {onEdit && (
                       <div
                         style={menuItem}
@@ -257,7 +465,6 @@ const EmployeeTable = ({
                       </div>
                     )}
 
-                    {/* Promote */}
                     {emp.status === 'ACTIVE' &&
                       role === 'EMPLOYEE' &&
                       onPromote && (
@@ -272,7 +479,6 @@ const EmployeeTable = ({
                         </div>
                       )}
 
-                    {/* Demote */}
                     {emp.status === 'ACTIVE' &&
                       role === 'TEAM_LEAD' &&
                       onDemote && (
@@ -287,7 +493,6 @@ const EmployeeTable = ({
                         </div>
                       )}
 
-                    {/* Deactivate */}
                     {emp.status === 'ACTIVE' &&
                       role !== 'ADMIN' &&
                       onDeactivate && (
@@ -302,7 +507,6 @@ const EmployeeTable = ({
                         </div>
                       )}
 
-                    {/* Activate */}
                     {emp.status === 'INACTIVE' &&
                       onActivate && (
                         <div
@@ -359,7 +563,7 @@ const dotsBtn = {
 const dropdownStyle = {
   position: 'absolute' as const,
   right: '60%',          // 👈 move dropdown to left of button
-  bottom:10,                 // 👈 align vertically with button
+  bottom: 10,                 // 👈 align vertically with button
   background: '#fff',
   border: '1px solid #e5e5e5',
   borderRadius: 8,
@@ -368,7 +572,6 @@ const dropdownStyle = {
   boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
   zIndex: 9999,
 }
-
 
 const menuItem = {
   padding: '8px 10px',

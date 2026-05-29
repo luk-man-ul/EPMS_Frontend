@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Building2 } from 'lucide-react'
 import { NavigationGroup } from './NavigationGroup.tsx'
@@ -28,6 +28,15 @@ export function Sidebar({
   const activePath = currentPath || location.pathname
   const { state, toggleGroup } = useSidebarState()
   const [isExpanded, setIsExpanded] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Notify parent when expansion state changes
   const handleExpandChange = (expanded: boolean) => {
@@ -66,7 +75,7 @@ export function Sidebar({
 
   return (
     <aside
-      className={`sidebar-collapsible ${isOpen ? 'mobile-open' : ''} ${isExpanded ? 'expanded' : 'collapsed'}`}
+      className={`sidebar-collapsible ${isOpen ? 'mobile-open' : ''} ${isMobile ? 'mobile-sidebar' : (isExpanded ? 'expanded' : 'collapsed')}`}
       onMouseEnter={() => handleExpandChange(true)}
       onMouseLeave={() => handleExpandChange(false)}
       style={{
@@ -74,7 +83,7 @@ export function Sidebar({
         top: 0,
         left: 0,
         height: '100vh',
-        width: isExpanded ? '280px' : '70px',
+        width: isMobile ? '300px' : (isExpanded ? '280px' : '70px'),
         background: '#ffffff',
         borderRight: '1px solid #e5e5e5',
         display: 'flex',
@@ -88,7 +97,7 @@ export function Sidebar({
 
       {/* Header */}
       <div style={{
-        padding: '24px 15px',
+        padding: isMobile ? '24px 24px' : '24px 15px',
         borderBottom: '1px solid #f0f0f0',
         display: 'flex',
         alignItems: 'center',
@@ -99,7 +108,8 @@ export function Sidebar({
           alignItems: 'center',
           gap: '12px',
           width: '100%',
-          justifyContent: isExpanded ? 'flex-start' : 'center',
+          justifyContent: (isMobile || isExpanded) ? 'flex-start' : 'center',
+          paddingRight: isMobile ? '40px' : '0', // Leave room for absolute close button
         }}>
           <div style={{
             width: '40px',
@@ -120,8 +130,8 @@ export function Sidebar({
           </div>
           
           <div style={{
-            opacity: isExpanded ? 1 : 0,
-            transform: isExpanded ? 'translateX(0)' : 'translateX(-10px)',
+            opacity: (isMobile || isExpanded) ? 1 : 0,
+            transform: (isMobile || isExpanded) ? 'translateX(0)' : 'translateX(-10px)',
             transition: 'opacity 0.3s ease, transform 0.3s ease',
             whiteSpace: 'nowrap',
             overflow: 'hidden'
@@ -152,18 +162,20 @@ export function Sidebar({
             onClick={onClose}
             className="mobile-close-btn"
             style={{
-              display: 'none',
+              display: isMobile ? 'flex' : 'none',
               background: 'none',
               border: 'none',
-              fontSize: '20px',
+              fontSize: '24px',
               cursor: 'pointer',
               padding: '8px',
               color: '#666',
               borderRadius: '8px',
               transition: 'all 0.2s ease',
               position: 'absolute',
-              right: '10px',
-              top: '20px'
+              right: '16px',
+              top: '24px',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = '#f5f5f5'
@@ -196,7 +208,8 @@ export function Sidebar({
             onClose={onClose}
             isExpanded={state.expandedGroups[group.id]}
             onToggle={() => toggleGroup(group.id)}
-            sidebarExpanded={isExpanded}
+            sidebarExpanded={isMobile || isExpanded}
+            isMobile={isMobile}
           />
         ))}
       </nav>
@@ -204,4 +217,4 @@ export function Sidebar({
 
     </aside>
   )
-}
+}

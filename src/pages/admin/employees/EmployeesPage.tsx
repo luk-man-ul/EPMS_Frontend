@@ -16,24 +16,27 @@ const EmployeesPage = () => {
   const [skills, setSkills] = useState<any[]>([])
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
   const [departmentFilter, setDepartmentFilter] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
 
-
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     fetchEmployees()
     fetchSkills()
   }, [])
 
-const fetchSkills = async () => {
-  try {
-    const res = await api.get('/skills')
-    setSkills(res.data)
-  } catch (err) {
-    console.error('Failed to fetch skills')
+  const fetchSkills = async () => {
+    try {
+      const res = await api.get('/skills')
+      setSkills(res.data)
+    } catch (err) {
+      console.error('Failed to fetch skills')
+    }
   }
-}
-
-
 
   const fetchEmployees = async () => {
     try {
@@ -88,35 +91,34 @@ const fetchSkills = async () => {
     }
   }
 
- const filteredEmployees = employees.filter((emp) => {
-  const searchTerm = search.toLowerCase()
+  const filteredEmployees = employees.filter((emp) => {
+    const searchTerm = search.toLowerCase()
 
-  const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase()
-  const email = emp.email.toLowerCase()
+    const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase()
+    const email = emp.email.toLowerCase()
 
-  const skillMatch =
-    emp.skills?.some((s) =>
-      s.skill.name.toLowerCase().includes(searchTerm)
-    ) || false
+    const skillMatch =
+      emp.skills?.some((s) =>
+        s.skill.name.toLowerCase().includes(searchTerm)
+      ) || false
 
-  const matchesSearch = 
-    fullName.includes(searchTerm) ||
-    email.includes(searchTerm) ||
-    skillMatch
+    const matchesSearch = 
+      fullName.includes(searchTerm) ||
+      email.includes(searchTerm) ||
+      skillMatch
 
-  // Status filter
-  const matchesStatus = !statusFilter || emp.status === statusFilter
+    // Status filter
+    const matchesStatus = !statusFilter || emp.status === statusFilter
 
-  // Department filter
-  const matchesDepartment = !departmentFilter || emp.department === departmentFilter
+    // Department filter
+    const matchesDepartment = !departmentFilter || emp.department === departmentFilter
 
-  return matchesSearch && matchesStatus && matchesDepartment
-})
+    return matchesSearch && matchesStatus && matchesDepartment
+  })
 
   // Get unique departments for filter options
   const departments = Array.from(new Set(employees.map(emp => emp.department).filter(Boolean)))
   const departmentOptions = departments.map(dept => ({ value: dept!, label: dept! }))
-
 
   return (
     <div style={{ width: '100%' }}>
@@ -124,8 +126,10 @@ const fetchSkills = async () => {
       <div
         style={{
           display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
           justifyContent: 'space-between',
-          alignItems: 'center',
+          alignItems: isMobile ? 'stretch' : 'center',
+          gap: isMobile ? '16px' : '0px',
           marginBottom: '24px',
         }}
       >
@@ -151,13 +155,14 @@ const fetchSkills = async () => {
             setShowForm(true)
           }}
           style={{
-            padding: '10px 18px',
+            padding: '12px 18px',
             borderRadius: '10px',
             border: 'none',
             backgroundColor: '#1a1a1a',
             color: '#fff',
             fontWeight: 500,
             cursor: 'pointer',
+            textAlign: 'center',
           }}
         >
           + Add Employee
@@ -165,13 +170,18 @@ const fetchSkills = async () => {
       </div>
 
       {/* Search and Filters */}
-      <div style={{ 
+      <div style={isMobile ? { 
+        display: 'grid', 
+        gridTemplateColumns: '1fr',
+        gap: '12px', 
+        marginBottom: '16px',
+      } : { 
         display: 'flex', 
         gap: '16px', 
         marginBottom: '16px',
         alignItems: 'flex-end'
       }}>
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, width: '100%' }}>
           <input
             placeholder="Search by name, skill or email..."
             value={search}
@@ -182,11 +192,12 @@ const fetchSkills = async () => {
               borderRadius: '10px',
               border: '1px solid #e5e5e5',
               fontSize: '14px',
+              boxSizing: 'border-box',
             }}
           />
         </div>
         
-        <div style={{ minWidth: '180px' }}>
+        <div style={{ minWidth: isMobile ? '0' : '180px', width: '100%' }}>
           <FilterComponent
             label="Status"
             options={getEnumOptions(UserStatus)}
@@ -196,7 +207,7 @@ const fetchSkills = async () => {
         </div>
 
         {departmentOptions.length > 0 && (
-          <div style={{ minWidth: '180px' }}>
+          <div style={{ minWidth: isMobile ? '0' : '180px', width: '100%' }}>
             <FilterComponent
               label="Department"
               options={departmentOptions}
@@ -210,11 +221,11 @@ const fetchSkills = async () => {
       {/* Content */}
       <div
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: isMobile ? 'transparent' : '#fff',
           borderRadius: '12px',
-          border: '1px solid #e5e5e5',
+          border: isMobile ? 'none' : '1px solid #e5e5e5',
           overflow: 'hidden',
-          padding: '16px',
+          padding: isMobile ? '0px' : '16px',
         }}
       >
         {loading && <p>Loading employees...</p>}

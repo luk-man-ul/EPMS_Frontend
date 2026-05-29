@@ -25,6 +25,13 @@ const LeaveApprovalManagementPage = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedLeaveId, setSelectedLeaveId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchLeaveRequests();
@@ -125,7 +132,7 @@ const LeaveApprovalManagementPage = () => {
     <div style={{ width: '100%' }}>
       <h1
         style={{
-          fontSize: '28px',
+          fontSize: isMobile ? '24px' : '28px',
           fontWeight: 600,
           color: '#1a1a1a',
           marginBottom: '8px',
@@ -133,13 +140,13 @@ const LeaveApprovalManagementPage = () => {
       >
         Leave Approvals
       </h1>
-      <p style={{ fontSize: '14px', color: '#666666', marginBottom: '24px' }}>
+      <p style={{ fontSize: '14px', color: '#666666', marginBottom: isMobile ? '16px' : '24px' }}>
         Review and manage leave requests
       </p>
 
       {/* Filters */}
-      <Card padding="md">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+      <Card padding={isMobile ? 'sm' : 'md'}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: isMobile ? '12px' : '16px' }}>
           <Select
             label="Status"
             value={filters.status}
@@ -183,7 +190,7 @@ const LeaveApprovalManagementPage = () => {
 
       {/* Table */}
       <div style={{ marginTop: '16px' }}>
-      <Card padding="none">
+      <Card padding="none" style={isMobile ? { background: 'transparent', border: 'none', boxShadow: 'none' } : undefined}>
         {loading ? (
           <div style={{ padding: '48px' }}>
             <LoadingSpinner text="Loading leave requests..." />
@@ -192,7 +199,92 @@ const LeaveApprovalManagementPage = () => {
           <div style={{ padding: '48px', textAlign: 'center', color: '#666666' }}>
             No leave requests found
           </div>
+        ) : isMobile ? (
+          // Mobile Card List
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {leaveRequests.map((leave) => {
+              const isPending = leave.status === 'PENDING';
+              return (
+                <div 
+                  key={leave.id} 
+                  style={{
+                    background: '#ffffff',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    border: '1px solid #e5e5e5',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937' }}>
+                        {leave.user?.firstName} {leave.user?.lastName}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+                        {leave.user?.email}
+                      </div>
+                    </div>
+                    <LeaveStatusBadge status={leave.status} />
+                  </div>
+
+                  <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '10px' }}>
+                    <div style={{ display: 'flex', marginBottom: '6px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12px', color: '#6b7280', width: '80px', flexShrink: 0 }}>Type:</span>
+                      <LeaveTypeBadge type={leave.type} />
+                    </div>
+                    <div style={{ display: 'flex', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '12px', color: '#6b7280', width: '80px', flexShrink: 0 }}>Date Range:</span>
+                      <span style={{ fontSize: '12px', color: '#374151', fontWeight: 500 }}>
+                        {formatDate(leave.startDate)} - {formatDate(leave.endDate)}
+                        <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 400, marginLeft: '6px' }}>
+                          ({calculateDays(leave.startDate, leave.endDate)} days)
+                        </span>
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex' }}>
+                      <span style={{ fontSize: '12px', color: '#6b7280', width: '80px', flexShrink: 0 }}>Reason:</span>
+                      <span style={{ fontSize: '12px', color: '#374151', wordBreak: 'break-word' }}>{leave.reason || '—'}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '10px', display: 'flex', justifyContent: 'flex-end' }}>
+                    {isPending ? (
+                      <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleApprove(leave.id)}
+                          loading={actionLoading === leave.id}
+                          disabled={actionLoading === leave.id}
+                          style={{ flex: 1 }}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleRejectClick(leave.id)}
+                          disabled={actionLoading === leave.id}
+                          style={{ flex: 1 }}
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: '12px', color: '#6b7280', fontStyle: 'italic' }}>
+                        {leave.approvedBy ? `Approved by ${leave.approvedBy.firstName} ${leave.approvedBy.lastName}` : 'Processed'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
+          // Desktop Table Layout
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e5e5' }}>

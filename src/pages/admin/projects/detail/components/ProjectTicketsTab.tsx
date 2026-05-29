@@ -1,9 +1,18 @@
+import { useState, useEffect } from 'react'
+
 interface Props {
   project: any
 }
 
 const ProjectTicketsTab = ({ project }: Props) => {
   const tickets = project.tickets || []
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -103,8 +112,8 @@ const ProjectTicketsTab = ({ project }: Props) => {
       {tickets.length > 0 && (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
-          gap: '20px'
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(380px, 1fr))',
+          gap: isMobile ? '16px' : '20px'
         }}>
           {tickets.map((ticket: any) => {
             const typeStyle = getTypeStyle(ticket.type)

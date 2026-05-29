@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import type { Invoice, InvoiceStatus } from '../types/finance.types'
 import { formatCurrency, formatDate } from '../finance.utils'
 import InvoiceStatusBadge from './InvoiceStatusBadge'
@@ -48,14 +49,33 @@ const InvoiceList = ({
   invoices, loading, error, filters, onFiltersChange,
   onView, onEdit, onDelete,
 }: Props) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   return (
     <div>
       {/* ── Filters ── */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={isMobile ? {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        marginBottom: '20px',
+      } : {
+        display: 'flex',
+        gap: '10px',
+        marginBottom: '20px',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+      }}>
         <select
           value={filters.status}
           onChange={(e) => onFiltersChange({ ...filters, status: e.target.value })}
-          style={selectStyle}
+          style={{ ...selectStyle, width: isMobile ? '100%' : 'auto' }}
         >
           {STATUSES.map((s) => (
             <option key={s.value} value={s.value}>{s.label}</option>
@@ -73,22 +93,25 @@ const InvoiceList = ({
             border: '1px solid #e5e5e5',
             fontSize: '13px',
             outline: 'none',
-            width: '260px',
+            width: isMobile ? '100%' : '260px',
+            boxSizing: 'border-box',
           }}
         />
 
         {(filters.status || filters.search) && (
           <button
             onClick={() => onFiltersChange({ status: '', search: '' })}
-            style={{ ...selectStyle, color: '#666' }}
+            style={{ ...selectStyle, color: '#666', width: isMobile ? '100%' : 'auto' }}
           >
             Clear
           </button>
         )}
 
-        <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#999' }}>
-          {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'}
-        </span>
+        {!isMobile && (
+          <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#999' }}>
+            {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'}
+          </span>
+        )}
       </div>
 
       {/* ── Table ── */}
@@ -110,6 +133,91 @@ const InvoiceList = ({
             <div style={{ fontSize: '13px', color: '#999' }}>
               Create your first invoice using the button above.
             </div>
+          </div>
+        ) : isMobile ? (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {invoices.map((inv, idx) => {
+              const isPaid = inv.status === 'PAID'
+              const isOverdue = inv.status === 'OVERDUE'
+
+              return (
+                <div
+                  key={inv.id}
+                  style={{
+                    padding: '16px',
+                    borderBottom: idx < invoices.length - 1 ? '1px solid #e5e5e5' : 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                        <button
+                          onClick={() => onView(inv)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: '14px', fontWeight: 600, color: '#2563eb', textAlign: 'left' }}
+                        >
+                          {inv.invoiceNo}
+                        </button>
+                        <InvoiceStatusBadge status={inv.status as InvoiceStatus} />
+                      </div>
+
+                      <div style={{ fontSize: '14px', color: '#1a1a1a', fontWeight: 500 }}>
+                        Client: {inv.clientName}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#666' }}>
+                        Project: {inv.project.name}
+                      </div>
+                      <div style={{ fontSize: '12px', color: isOverdue ? '#dc2626' : '#1a1a1a', fontWeight: isOverdue ? 600 : 400 }}>
+                        Due Date: {formatDate(inv.dueDate)}
+                      </div>
+
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#1a1a1a', background: '#f5f5f5', padding: '2px 8px', borderRadius: '4px' }}>
+                          Amount: {formatCurrency(inv.totalAmount)}
+                        </span>
+                        {inv.revenue ? (
+                          <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 500 }}>
+                            Linked: {formatCurrency(inv.revenue.amount)}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '11px', color: '#999' }}>
+                            Unlinked
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
+                      <button
+                        onClick={() => onView(inv)}
+                        style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #e5e5e5', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#1a1a1a' }}
+                      >
+                        View
+                      </button>
+                      {!isPaid && (
+                        <button
+                          onClick={() => onEdit(inv)}
+                          style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #e5e5e5', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#1a1a1a' }}
+                        >
+                          Edit
+                        </button>
+                      )}
+                      {!isPaid && (
+                        <button
+                          onClick={() => onDelete(inv)}
+                          style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #fecaca', background: '#fff5f5', fontSize: '12px', cursor: 'pointer', color: '#dc2626' }}
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>

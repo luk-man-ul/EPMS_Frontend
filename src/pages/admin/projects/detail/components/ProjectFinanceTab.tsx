@@ -17,6 +17,13 @@ const ProjectFinanceTab = () => {
   const [data, setData] = useState<ProjectProfitData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     if (!projectId) return
@@ -57,13 +64,44 @@ const ProjectFinanceTab = () => {
   ]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '16px' : '24px' }}>
       {/* Summary Cards */}
-      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+      {isMobile && (
+        <style>{`
+          .project-finance-container::-webkit-scrollbar {
+            display: none;
+          }
+          .project-finance-container {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+          }
+        `}</style>
+      )}
+      <div 
+        className={isMobile ? "project-finance-container" : undefined}
+        style={isMobile ? {
+          display: 'flex',
+          overflowX: 'auto',
+          gap: '12px',
+          paddingBottom: '10px',
+          width: '100%',
+          WebkitOverflowScrolling: 'touch',
+        } : {
+          display: 'flex',
+          gap: '16px',
+          flexWrap: 'wrap'
+        }}
+      >
         {cards.map((card) => (
           <div
             key={card.label}
-            style={{
+            style={isMobile ? {
+              background: card.bg,
+              borderRadius: '12px',
+              padding: '12px 14px',
+              flex: '0 0 130px',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+            } : {
               background: card.bg,
               borderRadius: '14px',
               padding: '20px 24px',
@@ -72,13 +110,13 @@ const ProjectFinanceTab = () => {
               boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: card.color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '6px' : '12px' }}>
+              <span style={{ fontSize: isMobile ? '10px' : '12px', fontWeight: 700, color: card.color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 {card.label}
               </span>
-              <span style={{ fontSize: '20px' }}>{card.icon}</span>
+              <span style={{ fontSize: isMobile ? '16px' : '20px' }}>{card.icon}</span>
             </div>
-            <div style={{ fontSize: '26px', fontWeight: 700, color: card.color }}>{card.value}</div>
+            <div style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: card.color }}>{card.value}</div>
           </div>
         ))}
       </div>

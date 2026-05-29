@@ -24,6 +24,14 @@ const TicketDetailPage = () => {
   const [updatingStatus, setUpdatingStatus] = useState(false)
   const [selectedStatus, setSelectedStatus] = useState('')
   const [resolution, setResolution] = useState('')
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -93,7 +101,8 @@ const TicketDetailPage = () => {
     }
   }
 
-  const handleStatusChange = async (newStatus: string) => {    if (!ticketId) return
+  const handleStatusChange = async (newStatus: string) => {
+    if (!ticketId) return
 
     // Validate resolution is provided when transitioning to RESOLVED
     if (newStatus === 'RESOLVED' && !resolution.trim()) {
@@ -176,7 +185,7 @@ const TicketDetailPage = () => {
   }
 
   return (
-    <div style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ padding: isMobile ? '16px' : '32px', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Add pulse animation for loading indicator */}
       <style>{`
         @keyframes pulse {
@@ -187,33 +196,36 @@ const TicketDetailPage = () => {
 
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-          <button
-            onClick={handleBack}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '20px',
-              cursor: 'pointer',
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '8px' : '12px', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={handleBack}
+              style={{
+                background: 'none',
+                border: 'none',
+                fontSize: '20px',
+                cursor: 'pointer',
+                color: '#666',
+                padding: '4px'
+              }}
+            >
+              ←
+            </button>
+            <span style={{
+              fontWeight: 600,
               color: '#666',
-              padding: '4px'
-            }}
-          >
-            ←
-          </button>
-          <span style={{
-            fontWeight: 600,
-            color: '#666',
-            fontSize: '14px',
-            fontFamily: 'monospace'
-          }}>
-            {ticket.id.slice(0, 8).toUpperCase()}
-          </span>
+              fontSize: '14px',
+              fontFamily: 'monospace'
+            }}>
+              {ticket.id.slice(0, 8).toUpperCase()}
+            </span>
+          </div>
           <h1 style={{ 
-            fontSize: '24px', 
+            fontSize: isMobile ? '20px' : '24px', 
             fontWeight: 600,
             color: '#1a1a1a',
-            letterSpacing: '-0.01em'
+            letterSpacing: '-0.01em',
+            margin: 0
           }}>
             {ticket.title}
           </h1>
@@ -222,9 +234,11 @@ const TicketDetailPage = () => {
         <div style={{ 
           display: 'flex', 
           gap: '12px', 
-          alignItems: 'center',
-          marginLeft: '44px',
-          flexWrap: 'wrap'
+          alignItems: isMobile ? 'stretch' : 'center',
+          marginLeft: isMobile ? '0px' : '44px',
+          flexDirection: isMobile ? 'column' : 'row',
+          flexWrap: 'wrap',
+          width: isMobile ? '100%' : 'auto'
         }}>
           <span style={{
             padding: '6px 12px',
@@ -232,13 +246,14 @@ const TicketDetailPage = () => {
             fontSize: '12px',
             fontWeight: 500,
             border: '1px solid #e5e5e5',
+            textAlign: 'center',
             ...getPriorityStyle(ticket.priority)
           }}>
             {formatEnumLabel(ticket.priority)} Priority
           </span>
 
           {/* Status Dropdown - ADMIN can change to any status */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: isMobile ? '100%' : 'auto' }}>
             <select
               value={selectedStatus || ticket.status}
               disabled={updatingStatus}
@@ -260,6 +275,7 @@ const TicketDetailPage = () => {
                 fontWeight: 500,
                 border: '1px solid #e5e5e5',
                 cursor: updatingStatus ? 'wait' : 'pointer',
+                width: isMobile ? '100%' : 'auto',
                 ...getStatusStyle(selectedStatus || ticket.status)
               }}
             >
@@ -279,15 +295,15 @@ const TicketDetailPage = () => {
             </select>
           </div>
 
-          <span style={{ fontSize: '14px', color: '#666' }}>
+          <span style={{ fontSize: '14px', color: '#666', textAlign: isMobile ? 'left' : 'center' }}>
             {ticket.project?.name || 'No Project'}
           </span>
           
           {/* Assignment Dropdown - Only for ADMIN */}
           {user?.role === 'ADMIN' && (
             <>
-              <span style={{ fontSize: '14px', color: '#666' }}>•</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {!isMobile && <span style={{ fontSize: '14px', color: '#666' }}>•</span>}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between', width: isMobile ? '100%' : 'auto' }}>
                 <span style={{ fontSize: '14px', color: '#666' }}>
                   {assigningTicket ? 'Assigning...' : 'Assigned to:'}
                 </span>
@@ -306,6 +322,7 @@ const TicketDetailPage = () => {
                     color: assigningTicket ? '#999' : '#1a1a1a',
                     opacity: assigningTicket ? 0.7 : 1,
                     transition: 'all 0.2s ease',
+                    width: isMobile ? '100%' : 'auto',
                   }}
                 >
                   <option value="">Unassigned</option>
@@ -328,103 +345,103 @@ const TicketDetailPage = () => {
             </>
           )}
         </div>
-
-        {/* Resolution Input - Shows when RESOLVED is selected */}
-        {selectedStatus === 'RESOLVED' && (
-          <div style={{ 
-            marginLeft: '44px', 
-            marginTop: '16px',
-            background: '#fafafa',
-            padding: '16px',
-            borderRadius: '12px',
-            border: '1px solid #e5e5e5'
-          }}>
-            <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px', color: '#1a1a1a' }}>
-              Resolution Required
-            </div>
-            <textarea
-              value={resolution}
-              onChange={(e) => setResolution(e.target.value)}
-              placeholder="Describe how this ticket was resolved..."
-              disabled={updatingStatus}
-              style={{
-                width: '100%',
-                minHeight: '100px',
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid #e5e5e5',
-                fontSize: '14px',
-                fontFamily: 'inherit',
-                resize: 'vertical',
-                cursor: updatingStatus ? 'wait' : 'text',
-                background: '#fff'
-              }}
-            />
-            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-              <button
-                onClick={() => handleStatusChange('RESOLVED')}
-                disabled={updatingStatus || !resolution.trim()}
-                style={{
-                  padding: '10px 20px',
-                  background: updatingStatus || !resolution.trim() ? '#e5e5e5' : '#10b981',
-                  color: updatingStatus || !resolution.trim() ? '#999999' : '#ffffff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  cursor: updatingStatus || !resolution.trim() ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  if (!updatingStatus && resolution.trim()) {
-                    e.currentTarget.style.background = '#059669'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!updatingStatus && resolution.trim()) {
-                    e.currentTarget.style.background = '#10b981'
-                  }
-                }}
-              >
-                {updatingStatus ? 'Updating...' : 'Mark as Resolved'}
-              </button>
-              <button
-                onClick={() => {
-                  setSelectedStatus('')
-                  setResolution('')
-                }}
-                disabled={updatingStatus}
-                style={{
-                  padding: '10px 20px',
-                  background: '#fff',
-                  color: '#666',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  cursor: updatingStatus ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  if (!updatingStatus) {
-                    e.currentTarget.style.background = '#fafafa'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!updatingStatus) {
-                    e.currentTarget.style.background = '#fff'
-                  }
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
+      {/* Resolution Input - Shows when RESOLVED is selected */}
+      {selectedStatus === 'RESOLVED' && (
+        <div style={{ 
+          marginLeft: isMobile ? '0px' : '44px', 
+          marginTop: '16px',
+          background: '#fafafa',
+          padding: '16px',
+          borderRadius: '12px',
+          border: '1px solid #e5e5e5'
+        }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px', color: '#1a1a1a' }}>
+            Resolution Required
+          </div>
+          <textarea
+            value={resolution}
+            onChange={(e) => setResolution(e.target.value)}
+            placeholder="Describe how this ticket was resolved..."
+            disabled={updatingStatus}
+            style={{
+              width: '100%',
+              minHeight: '100px',
+              padding: '12px',
+              borderRadius: '8px',
+              border: '1px solid #e5e5e5',
+              fontSize: '14px',
+              fontFamily: 'inherit',
+              resize: 'vertical',
+              cursor: updatingStatus ? 'wait' : 'text',
+              background: '#fff'
+            }}
+          />
+          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+            <button
+              onClick={() => handleStatusChange('RESOLVED')}
+              disabled={updatingStatus || !resolution.trim()}
+              style={{
+                padding: '10px 20px',
+                background: updatingStatus || !resolution.trim() ? '#e5e5e5' : '#10b981',
+                color: updatingStatus || !resolution.trim() ? '#999999' : '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: updatingStatus || !resolution.trim() ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (!updatingStatus && resolution.trim()) {
+                  e.currentTarget.style.background = '#059669'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!updatingStatus && resolution.trim()) {
+                  e.currentTarget.style.background = '#10b981'
+                }
+              }}
+            >
+              {updatingStatus ? 'Updating...' : 'Mark as Resolved'}
+            </button>
+            <button
+              onClick={() => {
+                setSelectedStatus('')
+                setResolution('')
+              }}
+              disabled={updatingStatus}
+              style={{
+                padding: '10px 20px',
+                background: '#fff',
+                color: '#666',
+                border: '1px solid #e5e5e5',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: updatingStatus ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (!updatingStatus) {
+                  e.currentTarget.style.background = '#fafafa'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!updatingStatus) {
+                  e.currentTarget.style.background = '#fff'
+                }
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main Content Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginTop: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: '24px', marginTop: '24px' }}>
         {/* Left Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {/* Resolution Section - Show when ticket is RESOLVED or CLOSED */}

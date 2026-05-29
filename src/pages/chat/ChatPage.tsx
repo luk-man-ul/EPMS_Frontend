@@ -43,8 +43,8 @@ export default function ChatPage() {
       const loadedRooms = response.data || [];
       setRooms(loadedRooms);
 
-      // Auto-select first room if available and no room is currently selected
-      if (loadedRooms.length > 0 && !selectedRoomId) {
+      // Auto-select first room if available and no room is currently selected (desktop only)
+      if (loadedRooms.length > 0 && !selectedRoomId && window.innerWidth > 768) {
         setSelectedRoomId(loadedRooms[0].id);
       }
     } catch (err: any) {
@@ -76,7 +76,7 @@ export default function ChatPage() {
   return (
     <div className="chat-page">
       <Card padding="none" className="chat-container">
-        <div className="chat-layout">
+        <div className={`chat-layout${selectedRoomId ? ' room-selected' : ''}`}>
           <ChatSidebar
             rooms={rooms}
             selectedRoomId={selectedRoomId}
@@ -85,7 +85,11 @@ export default function ChatPage() {
 
           <div className="chat-main">
             {selectedRoom ? (
-              <ChatRoom roomId={selectedRoom.id} roomName={selectedRoom.name} />
+              <ChatRoom
+                roomId={selectedRoom.id}
+                roomName={selectedRoom.name}
+                onBack={() => setSelectedRoomId(null)}
+              />
             ) : (
               <div className="no-room-selected">
                 <span className="empty-icon">💬</span>

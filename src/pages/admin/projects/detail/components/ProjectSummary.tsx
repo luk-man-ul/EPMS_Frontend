@@ -8,6 +8,13 @@ interface Props {
 const ProjectSummary = ({ project }: Props) => {
   const [status, setStatus] = useState(project?.status)
   const [updating, setUpdating] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     setStatus(project?.status)
@@ -76,13 +83,13 @@ const ProjectSummary = ({ project }: Props) => {
   const owner = project.owner
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '20px' : '32px' }}>
       
       {/* Project Info Cards */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))',
-        gap: '24px'
+        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(420px, 1fr))',
+        gap: isMobile ? '16px' : '24px'
       }}>
 
         {/* Description Card */}
@@ -90,8 +97,8 @@ const ProjectSummary = ({ project }: Props) => {
           background: '#ffffff',
           border: '1px solid #e5e5e5',
           borderRadius: '12px',
-          padding: '24px',
-          minHeight: '160px'
+          padding: isMobile ? '16px' : '24px',
+          minHeight: isMobile ? 'auto' : '160px'
         }}>
           <div style={{
             display: 'flex',
@@ -124,7 +131,7 @@ const ProjectSummary = ({ project }: Props) => {
           background: '#ffffff',
           border: '1px solid #e5e5e5',
           borderRadius: '12px',
-          padding: '24px'
+          padding: isMobile ? '16px' : '24px'
         }}>
           <div style={{
             display: 'flex',
@@ -183,7 +190,7 @@ const ProjectSummary = ({ project }: Props) => {
           background: '#ffffff',
           border: '1px solid #e5e5e5',
           borderRadius: '12px',
-          padding: '24px'
+          padding: isMobile ? '16px' : '24px'
         }}>
           <div style={{
             display: 'flex',
@@ -296,7 +303,7 @@ const ProjectSummary = ({ project }: Props) => {
           background: '#ffffff',
           border: '1px solid #e5e5e5',
           borderRadius: '12px',
-          padding: '24px'
+          padding: isMobile ? '16px' : '24px'
         }}>
           <div style={{
             display: 'flex',
@@ -452,7 +459,7 @@ const ProjectSummary = ({ project }: Props) => {
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))',
             gap: '16px'
           }}>
             {members.map((m: any) => (

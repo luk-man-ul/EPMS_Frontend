@@ -19,6 +19,13 @@ const ProjectDetailPage = () => {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabType>('summary')
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   ////////////////////////////////////////////////////////////
   // HANDLE TAB FROM URL QUERY PARAMETER
@@ -97,47 +104,60 @@ const ProjectDetailPage = () => {
     <div style={{ width: '100%' }}>
       
       {/* Header */}
-      <div style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button
-              onClick={() => navigate(-1)}
-              style={{
-                background: 'none',
-                border: 'none',
-                fontSize: '20px',
-                cursor: 'pointer',
-                color: '#666',
-                padding: '4px'
-              }}
-            >
-              ←
-            </button>
+      <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: 'space-between',
+          alignItems: isMobile ? 'stretch' : 'flex-start',
+          gap: isMobile ? '16px' : '12px',
+          marginBottom: '8px'
+        }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button
+                onClick={() => navigate(-1)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '20px',
+                  cursor: 'pointer',
+                  color: '#666',
+                  padding: '4px'
+                }}
+              >
+                ←
+              </button>
 
-            <h1 style={{ fontSize: '24px', fontWeight: 600, margin: 0 }}>
-              {project.name}
-            </h1>
+              <h1 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 600, margin: 0 }}>
+                {project.name}
+              </h1>
+            </div>
+            <p style={{ color: '#666', fontSize: '13px', marginLeft: '44px', marginTop: '4px', margin: 0 }}>
+              Project Dashboard
+            </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '8px', width: isMobile ? '100%' : 'auto' }}>
             <button
               onClick={handleEdit}
               style={{
-                padding: '10px 18px',
+                padding: isMobile ? '8px 12px' : '10px 18px',
                 borderRadius: '10px',
                 border: '1px solid #e5e5e5',
                 backgroundColor: '#fff',
                 color: '#1a1a1a',
                 fontWeight: 500,
                 cursor: 'pointer',
-                fontSize: '14px',
-                transition: 'all 0.2s ease'
+                fontSize: '13px',
+                transition: 'all 0.2s ease',
+                flex: isMobile ? 1 : 'none'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#f5f5f5'
+                if (!isMobile) e.currentTarget.style.backgroundColor = '#f5f5f5'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#fff'
+                if (!isMobile) e.currentTarget.style.backgroundColor = '#fff'
               }}
             >
               Edit Project
@@ -146,55 +166,74 @@ const ProjectDetailPage = () => {
             <button
               onClick={handleDelete}
               style={{
-                padding: '10px 18px',
+                padding: isMobile ? '8px 12px' : '10px 18px',
                 borderRadius: '10px',
                 border: '1px solid #fecaca',
                 backgroundColor: '#fff',
                 color: '#dc2626',
                 fontWeight: 500,
                 cursor: 'pointer',
-                fontSize: '14px',
-                transition: 'all 0.2s ease'
+                fontSize: '13px',
+                transition: 'all 0.2s ease',
+                flex: isMobile ? 1 : 'none'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#fef2f2'
+                if (!isMobile) e.currentTarget.style.backgroundColor = '#fef2f2'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#fff'
+                if (!isMobile) e.currentTarget.style.backgroundColor = '#fff'
               }}
             >
               Delete Project
             </button>
           </div>
         </div>
-
-        <p style={{ color: '#666', fontSize: '14px', marginLeft: '44px', margin: 0 }}>
-          Project Dashboard
-        </p>
       </div>
 
       {/* Tabs */}
-      <div style={{ borderBottom: '1px solid #e5e5e5', marginBottom: '32px' }}>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                padding: '12px 20px',
-                border: 'none',
-                background: 'none',
-                fontSize: '14px',
-                fontWeight: 500,
-                color: activeTab === tab.id ? '#1a1a1a' : '#666',
-                cursor: 'pointer',
-                borderBottom: activeTab === tab.id ? '2px solid #1a1a1a' : '2px solid transparent',
-                marginBottom: '-1px'
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
+      <div style={{ borderBottom: '1px solid #e5e5e5', marginBottom: isMobile ? '20px' : '32px' }}>
+        {isMobile && (
+          <style>{`
+            .project-tabs-container::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+        )}
+        <div 
+          className="project-tabs-container"
+          style={{ 
+            display: 'flex', 
+            gap: isMobile ? '2px' : '4px',
+            overflowX: isMobile ? 'auto' : 'visible',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            paddingBottom: isMobile ? '4px' : '0px',
+            marginBottom: isMobile ? '-4px' : '0px',
+          }}
+        >
+          <div style={{ display: 'flex', gap: isMobile ? '2px' : '4px', width: isMobile ? 'auto' : '100%' }}>
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  padding: isMobile ? '10px 12px' : '12px 20px',
+                  border: 'none',
+                  background: 'none',
+                  fontSize: isMobile ? '13px' : '14px',
+                  fontWeight: 500,
+                  color: activeTab === tab.id ? '#1a1a1a' : '#666',
+                  cursor: 'pointer',
+                  borderBottom: activeTab === tab.id ? '2px solid #1a1a1a' : '2px solid transparent',
+                  marginBottom: '-1px',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

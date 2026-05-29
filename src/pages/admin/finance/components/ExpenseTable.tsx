@@ -7,6 +7,7 @@ import type { ProjectOption, EmployeeOption } from '../lookup.api'
 import { useToast } from '../../../../context/ToastContext'
 import { AddPaymentMethodModal } from './AddPaymentMethodModal'
 import { AddExpenseCategoryModal } from './AddExpenseCategoryModal'
+import { formatCurrency, formatDate } from '../finance.utils'
 
 interface Props {
   showForm?: boolean
@@ -65,6 +66,13 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
   // ── Filter state ────────────────────────────────────────
   const [filterCategory, setFilterCategory] = useState('')
   const [filterSearch,   setFilterSearch]   = useState('')
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // ── Fetch expenses ──────────────────────────────────────
   const fetchExpenses = () => {
@@ -92,9 +100,6 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
     const newIsSalary = cat?.name?.toLowerCase() === 'salary'
     setForm({ ...form, categoryId, employeeId: newIsSalary ? form.employeeId : '' })
   }
-
-  // ── Clear bankAccountId when switching away from ONLINE ─
- 
 
   // ── Form submit ─────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
@@ -175,7 +180,7 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
 
       {/* ── Create Expense Form ── */}
       {showForm && (
-        <div style={{ padding: '24px', borderBottom: '1px solid #e5e5e5', background: '#fafafa' }}>
+        <div style={{ padding: isMobile ? '16px' : '24px', borderBottom: '1px solid #e5e5e5', background: '#fafafa' }}>
           <div style={{ fontSize: '14px', fontWeight: 600, color: '#1a1a1a', marginBottom: '16px' }}>
             Add Expense
           </div>
@@ -188,7 +193,7 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
 
           <form onSubmit={handleSubmit}>
             {/* Row 1: Category · Amount · Date · Employee (salary) or Project */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', alignItems: 'end' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 1fr', gap: '12px', alignItems: 'end' }}>
 
               {/* Category — required, drives salary logic */}
               <div>
@@ -280,94 +285,94 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
             </div>
 
             {/* Row 2: Payment Method · Bank Account (conditional) · Description */}
-          {/* Row 2: Payment Method · Description */}
-<div
-  style={{
-    display: 'grid',
-    gridTemplateColumns: '1fr 2fr',
-    gap: '12px',
-    marginTop: '12px',
-    alignItems: 'end',
-  }}
->
-  <div>
-    <label
-      style={{
-        display: 'block',
-        fontSize: '12px',
-        fontWeight: 500,
-        color: '#666',
-        marginBottom: '6px',
-      }}
-    >
-      Payment Method
-    </label>
+            {/* Row 2: Payment Method · Description */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : '1fr 2fr',
+                gap: '12px',
+                marginTop: '12px',
+                alignItems: 'end',
+              }}
+            >
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    color: '#666',
+                    marginBottom: '6px',
+                  }}
+                >
+                  Payment Method
+                </label>
 
-    <select
-      value={form.bankAccountId}
-      onChange={(e) => {
-        if (e.target.value === '__add_new__') {
-          setShowPaymentModal(true)
-          return
-        }
+                <select
+                  value={form.bankAccountId}
+                  onChange={(e) => {
+                    if (e.target.value === '__add_new__') {
+                      setShowPaymentModal(true)
+                      return
+                    }
 
-        setForm({
-          ...form,
-          bankAccountId: e.target.value,
-        })
-      }}
-      style={{
-        ...inputStyle,
-        background: '#fff',
-        cursor: 'pointer',
-      }}
-    >
-      <option value="">Select payment method</option>
+                    setForm({
+                      ...form,
+                      bankAccountId: e.target.value,
+                    })
+                  }}
+                  style={{
+                    ...inputStyle,
+                    background: '#fff',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="">Select payment method</option>
 
-      {bankAccounts.map((b) => (
-        <option key={b.id} value={b.id}>
-          {b.name}
-          {b.bankName ? ` — ${b.bankName}` : ''}
-        </option>
-      ))}
+                  {bankAccounts.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                      {b.bankName ? ` — ${b.bankName}` : ''}
+                    </option>
+                  ))}
 
-      <option value="__add_new__">
-        + Add Payment Method
-      </option>
-    </select>
-  </div>
+                  <option value="__add_new__">
+                    + Add Payment Method
+                  </option>
+                </select>
+              </div>
 
-  <div>
-    <label
-      style={{
-        display: 'block',
-        fontSize: '12px',
-        fontWeight: 500,
-        color: '#666',
-        marginBottom: '6px',
-      }}
-    >
-      Description
-    </label>
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    color: '#666',
+                    marginBottom: '6px',
+                  }}
+                >
+                  Description
+                </label>
 
-    <input
-      type="text"
-      placeholder="Optional note"
-      value={form.description}
-      onChange={(e) =>
-        setForm({
-          ...form,
-          description: e.target.value,
-        })
-      }
-      style={inputStyle}
-    />
-  </div>
-</div>
+                <input
+                  type="text"
+                  placeholder="Optional note"
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      description: e.target.value,
+                    })
+                  }
+                  style={inputStyle}
+                />
+              </div>
+            </div>
               
             {/* Project row for Salary (optional project link) */}
             {isSalary && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '12px', marginTop: '12px', alignItems: 'end' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 3fr', gap: '12px', marginTop: '12px', alignItems: 'end' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#666', marginBottom: '6px' }}>
                     Project
@@ -391,14 +396,14 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
               <button
                 type="button"
                 onClick={handleCancel}
-                style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #e5e5e5', background: '#fff', color: '#666', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}
+                style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #e5e5e5', background: '#fff', color: '#666', fontSize: '13px', fontWeight: 500, cursor: 'pointer', flex: isMobile ? 1 : 'none', textAlign: 'center' }}
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: submitting ? '#666' : '#1a1a1a', color: '#fff', fontSize: '13px', fontWeight: 500, cursor: submitting ? 'not-allowed' : 'pointer' }}
+                style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: submitting ? '#666' : '#1a1a1a', color: '#fff', fontSize: '13px', fontWeight: 500, cursor: submitting ? 'not-allowed' : 'pointer', flex: isMobile ? 1 : 'none', textAlign: 'center' }}
               >
                 {submitting ? 'Saving...' : 'Save Expense'}
               </button>
@@ -409,11 +414,33 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
 
       {/* ── Filters ── */}
       {!showForm && (
-        <div style={{ display: 'flex', gap: '10px', padding: '16px 20px', borderBottom: '1px solid #e5e5e5', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={isMobile ? {
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+          padding: '16px',
+          borderBottom: '1px solid #e5e5e5',
+        } : {
+          display: 'flex',
+          gap: '10px',
+          padding: '16px 20px',
+          borderBottom: '1px solid #e5e5e5',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+        }}>
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', fontSize: '13px', background: '#fff', outline: 'none', cursor: 'pointer' }}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: '1px solid #e5e5e5',
+              fontSize: '13px',
+              background: '#fff',
+              outline: 'none',
+              cursor: 'pointer',
+              width: isMobile ? '100%' : 'auto',
+            }}
           >
             <option value="">All Categories</option>
             {categories.map((c) => (
@@ -425,12 +452,29 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
             placeholder="Search by category, employee or project..."
             value={filterSearch}
             onChange={(e) => setFilterSearch(e.target.value)}
-            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', fontSize: '13px', outline: 'none', width: '280px' }}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: '1px solid #e5e5e5',
+              fontSize: '13px',
+              outline: 'none',
+              width: isMobile ? '100%' : '280px',
+              boxSizing: 'border-box',
+            }}
           />
           {(filterCategory || filterSearch) && (
             <button
               onClick={() => { setFilterCategory(''); setFilterSearch('') }}
-              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e5e5', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#666' }}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid #e5e5e5',
+                background: '#fff',
+                fontSize: '13px',
+                cursor: 'pointer',
+                color: '#666',
+                width: isMobile ? '100%' : 'auto',
+              }}
             >
               Clear
             </button>
@@ -446,6 +490,85 @@ const ExpenseTable = ({ showForm = false, onFormClose }: Props) => {
       ) : filteredExpenses.length === 0 ? (
         <div style={{ padding: '32px 20px', textAlign: 'center', color: '#999', fontSize: '14px' }}>
           {expenses.length === 0 ? 'No expense records found.' : 'No records match your filters.'}
+        </div>
+      ) : isMobile ? (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {filteredExpenses.map((expense, idx) => {
+            const employeeLabel = expense.employee
+              ? `${expense.employee.firstName} ${expense.employee.lastName}`
+              : null
+            const projectLabel = expense.project?.name ?? null
+            const isSal = expense.category.name.toLowerCase() === 'salary'
+
+            return (
+              <div
+                key={expense.id}
+                style={{
+                  padding: '16px',
+                  borderBottom: idx < filteredExpenses.length - 1 ? '1px solid #f5f5f5' : 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                      <span style={{
+                        padding: '3px 8px',
+                        borderRadius: '5px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        background: isSal ? '#eff6ff' : '#f0fdf4',
+                        color: isSal ? '#2563eb' : '#16a34a',
+                      }}>
+                        {expense.category.name}
+                      </span>
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: '#1a1a1a' }}>
+                        {formatCurrency(expense.amount)}
+                      </span>
+                      <span style={{ fontSize: '12px', color: '#666' }}>
+                        📅 {formatDate(expense.expenseDate)}
+                      </span>
+                    </div>
+                    
+                    {(employeeLabel || projectLabel) && (
+                      <div style={{ fontSize: '13px', color: '#1a1a1a', fontWeight: 500 }}>
+                        {employeeLabel && `Employee: ${employeeLabel}`}
+                        {employeeLabel && projectLabel && ' · '}
+                        {projectLabel && `Project: ${projectLabel}`}
+                      </div>
+                    )}
+
+                    {expense.description && (
+                      <div style={{ fontSize: '13px', color: '#555', lineHeight: 1.4 }}>
+                        {expense.description}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                      {expense.paymentMethod && (
+                        <span style={{ fontSize: '11px', fontWeight: 500, color: '#555', background: '#f5f5f5', padding: '2px 6px', borderRadius: '4px' }}>
+                          💳 {expense.paymentMethod} {expense.bankAccount ? `(${expense.bankAccount.name})` : ''}
+                        </span>
+                      )}
+                      <span style={{ fontSize: '11px', color: '#999' }}>
+                        Recorded by {expense.createdBy.firstName} {expense.createdBy.lastName}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                    <button
+                      style={{ border: '1px solid #e5e5e5', background: '#fff', cursor: 'pointer', fontSize: '12px', padding: '6px 12px', borderRadius: '8px', color: '#1a1a1a', fontWeight: 500 }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </div>
       ) : (
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>

@@ -20,6 +20,13 @@ const WfhManagementPage = () => {
   const [filters, setFilters] = useState({ status: '', fromDate: '', toDate: '', page: 1, limit: 10 });
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, totalPages: 0 });
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchRequests();
@@ -74,7 +81,7 @@ const WfhManagementPage = () => {
 
   return (
     <div style={{ width: '100%' }}>
-      <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>
+      <h1 style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>
         WFH Requests
       </h1>
       <p style={{ fontSize: '14px', color: '#666666', marginBottom: '24px' }}>
@@ -82,7 +89,16 @@ const WfhManagementPage = () => {
       </p>
 
       {/* Filters */}
-      <div style={{
+      <div style={isMobile ? {
+        background: '#fff',
+        borderRadius: '12px',
+        border: '1px solid #e5e7eb',
+        padding: '16px',
+        marginBottom: '16px',
+        display: 'grid',
+        gridTemplateColumns: '1fr',
+        gap: '16px',
+      } : {
         background: '#fff',
         borderRadius: '12px',
         border: '1px solid #e5e7eb',
@@ -93,7 +109,7 @@ const WfhManagementPage = () => {
         gap: '12px',
         flexWrap: 'wrap',
       }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '180px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', minWidth: isMobile ? '0' : '180px' }}>
           <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</label>
           <select
             value={filters.status}
@@ -107,6 +123,7 @@ const WfhManagementPage = () => {
               background: '#fff',
               cursor: 'pointer',
               outline: 'none',
+              width: '100%',
             }}
           >
             <option value="">All Statuses</option>
@@ -116,7 +133,7 @@ const WfhManagementPage = () => {
           </select>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '160px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', minWidth: isMobile ? '0' : '160px' }}>
           <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>From Date</label>
           <input
             type="date"
@@ -131,11 +148,12 @@ const WfhManagementPage = () => {
               background: '#fff',
               cursor: 'pointer',
               outline: 'none',
+              width: '100%',
             }}
           />
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '160px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', minWidth: isMobile ? '0' : '160px' }}>
           <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>To Date</label>
           <input
             type="date"
@@ -150,6 +168,7 @@ const WfhManagementPage = () => {
               background: '#fff',
               cursor: 'pointer',
               outline: 'none',
+              width: '100%',
             }}
           />
         </div>
@@ -158,7 +177,7 @@ const WfhManagementPage = () => {
           <button
             onClick={clearFilters}
             style={{
-              padding: '8px 14px',
+              padding: '10px 14px',
               borderRadius: '8px',
               border: '1px solid #e5e7eb',
               background: '#fff',
@@ -166,6 +185,8 @@ const WfhManagementPage = () => {
               color: '#6b7280',
               cursor: 'pointer',
               fontWeight: 500,
+              width: isMobile ? '100%' : 'auto',
+              textAlign: 'center',
             }}
           >
             Clear
@@ -175,7 +196,7 @@ const WfhManagementPage = () => {
 
       {/* Table */}
       <div style={{ marginTop: '16px' }}>
-      <Card padding="none">
+      <Card padding={isMobile ? 'none' : undefined} style={isMobile ? { border: 'none', background: 'transparent', boxShadow: 'none' } : undefined}>
         {loading ? (
           <div style={{ padding: '48px' }}>
             <LoadingSpinner text="Loading WFH requests..." />
@@ -183,6 +204,103 @@ const WfhManagementPage = () => {
         ) : requests.length === 0 ? (
           <div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}>
             No WFH requests found
+          </div>
+        ) : isMobile ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {requests.map((req) => {
+              const s = statusConfig[req.status] || statusConfig.PENDING;
+              return (
+                <div
+                  key={req.id}
+                  style={{
+                    background: '#ffffff',
+                    borderRadius: '16px',
+                    padding: '16px',
+                    border: '1px solid #f0f0f0',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.03)',
+                  }}
+                >
+                  {/* Header: Employee Name & Status */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                    <div>
+                      <div style={{ fontSize: '15px', fontWeight: 600, color: '#1f2937' }}>
+                        {req.user?.firstName} {req.user?.lastName}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+                        {req.user?.email}
+                      </div>
+                    </div>
+                    <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, color: s.color, background: s.bg }}>
+                      {s.label}
+                    </span>
+                  </div>
+
+                  {/* Dates & Reason */}
+                  <div style={{ borderTop: '1px solid #f5f5f5', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '11px', color: '#888' }}>From Date</div>
+                        <div style={{ fontSize: '13px', fontWeight: 500, color: '#374151', marginTop: '2px' }}>
+                          {formatDate(req.fromDate)}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '11px', color: '#888' }}>To Date</div>
+                        <div style={{ fontSize: '13px', fontWeight: 500, color: '#374151', marginTop: '2px' }}>
+                          {formatDate(req.toDate)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: '11px', color: '#888' }}>Reason</div>
+                      <div style={{ fontSize: '13px', color: '#374151', marginTop: '4px', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        {req.reason}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer/Actions */}
+                  <div style={{ borderTop: '1px solid #f5f5f5', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11px', color: '#888' }}>
+                      Submitted: {formatDate(req.createdAt)}
+                    </span>
+                    <div>
+                      {req.status === 'PENDING' ? (
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => handleAction(req.id, 'APPROVED')}
+                            loading={actionLoading === req.id}
+                            disabled={actionLoading === req.id}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleAction(req.id, 'REJECTED')}
+                            disabled={actionLoading === req.id}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '12px', color: '#6b7280', fontStyle: 'italic' }}>
+                          {req.approvedBy
+                            ? `By ${req.approvedBy.firstName} ${req.approvedBy.lastName}`
+                            : '—'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
