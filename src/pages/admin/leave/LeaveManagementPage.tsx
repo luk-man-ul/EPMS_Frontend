@@ -98,14 +98,11 @@ const LeaveManagementPage = () => {
             fontSize: '28px',
             fontWeight: 600,
             color: '#1a1a1a',
-            marginBottom: '8px',
+            marginBottom: 0,
           }}
         >
           Leave Management
         </h1>
-        <p style={{ fontSize: '14px', color: '#666666' }}>
-          Manage and review all leave requests across the organization
-        </p>
       </div>
 
       {/* Statistics Cards */}

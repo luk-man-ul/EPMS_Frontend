@@ -12,6 +12,32 @@ const statusConfig: Record<string, { color: string; bg: string; label: string }>
 const formatDate = (dateString: string) =>
   new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
+const pillStyle = (isActive: boolean, isSelect: boolean = false): React.CSSProperties => ({
+  flexShrink: 0,
+  padding: isSelect ? '8px 28px 8px 14px' : '8px 14px',
+  borderRadius: '9999px',
+  border: isActive ? '1px solid #4f46e5' : '1px solid #cbd5e1',
+  background: isActive 
+    ? (isSelect 
+        ? '#eef2ff url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%234f46e5\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center / 12px' 
+        : '#eef2ff')
+    : (isSelect 
+        ? '#fff url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%234b5563\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center / 12px' 
+        : '#fff'),
+  color: isActive ? '#4f46e5' : '#374151',
+  fontSize: '13px',
+  fontWeight: 600,
+  cursor: 'pointer',
+  outline: 'none',
+  display: 'inline-flex',
+  alignItems: 'center',
+  fontFamily: 'inherit',
+  WebkitAppearance: 'none',
+  MozAppearance: 'none',
+  appearance: 'none',
+  boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+});
+
 const WfhManagementPage = () => {
   const { showToast } = useToast();
 
@@ -81,118 +107,183 @@ const WfhManagementPage = () => {
 
   return (
     <div style={{ width: '100%' }}>
-      <h1 style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>
+      <h1 style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: '24px' }}>
         WFH Requests
       </h1>
-      <p style={{ fontSize: '14px', color: '#666666', marginBottom: '24px' }}>
-        Review and manage Work From Home requests
-      </p>
 
       {/* Filters */}
-      <div style={isMobile ? {
-        background: '#fff',
-        borderRadius: '12px',
-        border: '1px solid #e5e7eb',
-        padding: '16px',
-        marginBottom: '16px',
-        display: 'grid',
-        gridTemplateColumns: '1fr',
-        gap: '16px',
-      } : {
-        background: '#fff',
-        borderRadius: '12px',
-        border: '1px solid #e5e7eb',
-        padding: '16px 20px',
-        marginBottom: '16px',
-        display: 'flex',
-        alignItems: 'flex-end',
-        gap: '12px',
-        flexWrap: 'wrap',
-      }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', minWidth: isMobile ? '0' : '180px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</label>
-          <select
-            value={filters.status}
-            onChange={(e) => setStatusFilter(e.target.value)}
+      {isMobile ? (
+        <>
+          <style>{`
+            .wfh-filters-pills::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+          <div 
+            className="wfh-filters-pills"
             style={{
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb',
-              fontSize: '14px',
-              color: '#1a1a1a',
-              background: '#fff',
-              cursor: 'pointer',
-              outline: 'none',
+              display: 'flex',
+              gap: '8px',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              paddingBottom: '8px',
+              marginBottom: '16px',
+              alignItems: 'center',
               width: '100%',
             }}
           >
-            <option value="">All Statuses</option>
-            <option value="PENDING">Pending</option>
-            <option value="APPROVED">Approved</option>
-            <option value="REJECTED">Rejected</option>
-          </select>
-        </div>
+            {/* Status Selector Pill */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <select
+                value={filters.status}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                style={pillStyle(!!filters.status, true)}
+              >
+                <option value="">Status: All</option>
+                <option value="PENDING">Status: Pending</option>
+                <option value="APPROVED">Status: Approved</option>
+                <option value="REJECTED">Status: Rejected</option>
+              </select>
+            </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', minWidth: isMobile ? '0' : '160px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>From Date</label>
-          <input
-            type="date"
-            value={filters.fromDate}
-            onChange={(e) => setFilters({ ...filters, fromDate: e.target.value, page: 1 })}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb',
-              fontSize: '14px',
-              color: '#1a1a1a',
-              background: '#fff',
-              cursor: 'pointer',
-              outline: 'none',
-              width: '100%',
-            }}
-          />
-        </div>
+            {/* From Date Pill */}
+            <div style={{ position: 'relative', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600 }}>FROM</span>
+              <input
+                type="date"
+                value={filters.fromDate}
+                onChange={(e) => setFilters({ ...filters, fromDate: e.target.value, page: 1 })}
+                style={pillStyle(!!filters.fromDate)}
+              />
+            </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', minWidth: isMobile ? '0' : '160px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>To Date</label>
-          <input
-            type="date"
-            value={filters.toDate}
-            onChange={(e) => setFilters({ ...filters, toDate: e.target.value, page: 1 })}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb',
-              fontSize: '14px',
-              color: '#1a1a1a',
-              background: '#fff',
-              cursor: 'pointer',
-              outline: 'none',
-              width: '100%',
-            }}
-          />
-        </div>
+            {/* To Date Pill */}
+            <div style={{ position: 'relative', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600 }}>TO</span>
+              <input
+                type="date"
+                value={filters.toDate}
+                onChange={(e) => setFilters({ ...filters, toDate: e.target.value, page: 1 })}
+                style={pillStyle(!!filters.toDate)}
+              />
+            </div>
 
-        {hasActiveFilters && (
-          <button
-            onClick={clearFilters}
-            style={{
-              padding: '10px 14px',
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb',
-              background: '#fff',
-              fontSize: '13px',
-              color: '#6b7280',
-              cursor: 'pointer',
-              fontWeight: 500,
-              width: isMobile ? '100%' : 'auto',
-              textAlign: 'center',
-            }}
-          >
-            Clear
-          </button>
-        )}
-      </div>
+            {/* Clear Button Pill */}
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                style={{
+                  ...pillStyle(false),
+                  background: '#f1f5f9',
+                  borderColor: '#cbd5e1',
+                  color: '#475569',
+                  flexShrink: 0,
+                }}
+              >
+                Clear ✕
+              </button>
+            )}
+          </div>
+        </>
+      ) : (
+        <div style={{
+          background: '#fff',
+          borderRadius: '12px',
+          border: '1px solid #e5e7eb',
+          padding: '16px 20px',
+          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: '12px',
+          flexWrap: 'wrap',
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', minWidth: '180px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</label>
+            <select
+              value={filters.status}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb',
+                fontSize: '14px',
+                color: '#1a1a1a',
+                background: '#fff',
+                cursor: 'pointer',
+                outline: 'none',
+                width: '100%',
+              }}
+            >
+              <option value="">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', minWidth: '160px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>From Date</label>
+            <input
+              type="date"
+              value={filters.fromDate}
+              onChange={(e) => setFilters({ ...filters, fromDate: e.target.value, page: 1 })}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb',
+                fontSize: '14px',
+                color: '#1a1a1a',
+                background: '#fff',
+                cursor: 'pointer',
+                outline: 'none',
+                width: '100%',
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', minWidth: '160px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>To Date</label>
+            <input
+              type="date"
+              value={filters.toDate}
+              onChange={(e) => setFilters({ ...filters, toDate: e.target.value, page: 1 })}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb',
+                fontSize: '14px',
+                color: '#1a1a1a',
+                background: '#fff',
+                cursor: 'pointer',
+                outline: 'none',
+                width: '100%',
+              }}
+            />
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb',
+                background: '#fff',
+                fontSize: '13px',
+                color: '#6b7280',
+                cursor: 'pointer',
+                fontWeight: 500,
+                width: 'auto',
+                textAlign: 'center',
+              }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Table */}
       <div style={{ marginTop: '16px' }}>

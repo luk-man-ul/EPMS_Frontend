@@ -4,6 +4,32 @@ import LeaveStatusBadge from './components/LeaveStatusBadge';
 import LeaveTypeBadge from './components/LeaveTypeBadge';
 import { Button, Card, Input, Select, Modal, LoadingSpinner } from '../../../components/ui';
 
+const pillStyle = (isActive: boolean, isSelect: boolean = false): React.CSSProperties => ({
+  flexShrink: 0,
+  padding: isSelect ? '8px 28px 8px 14px' : '8px 14px',
+  borderRadius: '9999px',
+  border: isActive ? '1px solid #4f46e5' : '1px solid #cbd5e1',
+  background: isActive 
+    ? (isSelect 
+        ? '#eef2ff url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%234f46e5\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center / 12px' 
+        : '#eef2ff')
+    : (isSelect 
+        ? '#fff url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%234b5563\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center / 12px' 
+        : '#fff'),
+  color: isActive ? '#4f46e5' : '#374151',
+  fontSize: '13px',
+  fontWeight: 600,
+  cursor: 'pointer',
+  outline: 'none',
+  display: 'inline-flex',
+  alignItems: 'center',
+  fontFamily: 'inherit',
+  WebkitAppearance: 'none',
+  MozAppearance: 'none',
+  appearance: 'none',
+  boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+});
+
 const LeaveApprovalManagementPage = () => {
   const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,58 +161,147 @@ const LeaveApprovalManagementPage = () => {
           fontSize: isMobile ? '24px' : '28px',
           fontWeight: 600,
           color: '#1a1a1a',
-          marginBottom: '8px',
+          marginBottom: isMobile ? '16px' : '24px',
         }}
       >
         Leave Approvals
       </h1>
-      <p style={{ fontSize: '14px', color: '#666666', marginBottom: isMobile ? '16px' : '24px' }}>
-        Review and manage leave requests
-      </p>
 
       {/* Filters */}
-      <Card padding={isMobile ? 'sm' : 'md'}>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: isMobile ? '12px' : '16px' }}>
-          <Select
-            label="Status"
-            value={filters.status}
-            onChange={(value) => setFilters({ ...filters, status: value as string, page: 1 })}
-            options={[
-              { value: '', label: 'All Statuses' },
-              { value: 'PENDING', label: 'Pending' },
-              { value: 'APPROVED', label: 'Approved' },
-              { value: 'REJECTED', label: 'Rejected' },
-            ]}
-          />
+      {isMobile ? (
+        <>
+          <style>{`
+            .leave-filters-pills::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+          <div 
+            className="leave-filters-pills"
+            style={{
+              display: 'flex',
+              gap: '8px',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              paddingBottom: '8px',
+              marginBottom: '16px',
+              alignItems: 'center',
+              width: '100%',
+            }}
+          >
+            {/* Status Pill */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
+                style={pillStyle(!!filters.status, true)}
+              >
+                <option value="">Status: All</option>
+                <option value="PENDING">Status: Pending</option>
+                <option value="APPROVED">Status: Approved</option>
+                <option value="REJECTED">Status: Rejected</option>
+              </select>
+            </div>
 
-          <Select
-            label="Leave Type"
-            value={filters.type}
-            onChange={(value) => setFilters({ ...filters, type: value as string, page: 1 })}
-            options={[
-              { value: '', label: 'All Types' },
-              { value: 'SICK', label: 'Sick' },
-              { value: 'CASUAL', label: 'Casual' },
-              { value: 'VACATION', label: 'Vacation' },
-              { value: 'UNPAID', label: 'Unpaid' },
-            ]}
-          />
+            {/* Leave Type Pill */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <select
+                value={filters.type}
+                onChange={(e) => setFilters({ ...filters, type: e.target.value, page: 1 })}
+                style={pillStyle(!!filters.type, true)}
+              >
+                <option value="">Type: All</option>
+                <option value="SICK">Type: Sick</option>
+                <option value="CASUAL">Type: Casual</option>
+                <option value="VACATION">Type: Vacation</option>
+                <option value="UNPAID">Type: Unpaid</option>
+              </select>
+            </div>
 
-          <Input
-            type="date"
-            label="Start Date"
-            value={filters.startDate}
-            onChange={(value) => setFilters({ ...filters, startDate: value, page: 1 })}
-          />
+            {/* Start Date Pill */}
+            <div style={{ position: 'relative', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600 }}>FROM</span>
+              <input
+                type="date"
+                value={filters.startDate}
+                onChange={(e) => setFilters({ ...filters, startDate: e.target.value, page: 1 })}
+                style={pillStyle(!!filters.startDate)}
+              />
+            </div>
 
-          <Input
-            type="date"
-            label="End Date"
-            value={filters.endDate}
-            onChange={(value) => setFilters({ ...filters, endDate: value, page: 1 })}
-          />
-        </div>
-      </Card>
+            {/* End Date Pill */}
+            <div style={{ position: 'relative', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600 }}>TO</span>
+              <input
+                type="date"
+                value={filters.endDate}
+                onChange={(e) => setFilters({ ...filters, endDate: e.target.value, page: 1 })}
+                style={pillStyle(!!filters.endDate)}
+              />
+            </div>
+
+            {/* Clear Button Pill */}
+            {(filters.status || filters.type || filters.startDate || filters.endDate) && (
+              <button
+                onClick={() => setFilters({ ...filters, status: '', type: '', startDate: '', endDate: '', page: 1 })}
+                style={{
+                  ...pillStyle(false),
+                  background: '#f1f5f9',
+                  borderColor: '#cbd5e1',
+                  color: '#475569',
+                  flexShrink: 0,
+                }}
+              >
+                Clear ✕
+              </button>
+            )}
+          </div>
+        </>
+      ) : (
+        <Card padding={isMobile ? 'sm' : 'md'}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: isMobile ? '12px' : '16px' }}>
+            <Select
+              label="Status"
+              value={filters.status}
+              onChange={(value) => setFilters({ ...filters, status: value as string, page: 1 })}
+              options={[
+                { value: '', label: 'All Statuses' },
+                { value: 'PENDING', label: 'Pending' },
+                { value: 'APPROVED', label: 'Approved' },
+                { value: 'REJECTED', label: 'Rejected' },
+              ]}
+            />
+
+            <Select
+              label="Leave Type"
+              value={filters.type}
+              onChange={(value) => setFilters({ ...filters, type: value as string, page: 1 })}
+              options={[
+                { value: '', label: 'All Types' },
+                { value: 'SICK', label: 'Sick' },
+                { value: 'CASUAL', label: 'Casual' },
+                { value: 'VACATION', label: 'Vacation' },
+                { value: 'UNPAID', label: 'Unpaid' },
+              ]}
+            />
+
+            <Input
+              type="date"
+              label="Start Date"
+              value={filters.startDate}
+              onChange={(value) => setFilters({ ...filters, startDate: value, page: 1 })}
+            />
+
+            <Input
+              type="date"
+              label="End Date"
+              value={filters.endDate}
+              onChange={(value) => setFilters({ ...filters, endDate: value, page: 1 })}
+            />
+          </div>
+        </Card>
+      )}
 
       {/* Table */}
       <div style={{ marginTop: '16px' }}>

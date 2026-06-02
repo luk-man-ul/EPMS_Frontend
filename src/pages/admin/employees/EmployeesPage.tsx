@@ -138,15 +138,12 @@ const EmployeesPage = () => {
             style={{
               fontSize: '24px',
               fontWeight: 600,
-              marginBottom: 4,
+              marginBottom: 0,
               color: '#1a1a1a',
             }}
           >
             Employees
           </h1>
-          <p style={{ color: '#666', fontSize: '14px' }}>
-            Manage all employees in your organization
-          </p>
         </div>
 
         <button

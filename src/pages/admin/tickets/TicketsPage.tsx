@@ -176,16 +176,13 @@ const TicketsPage = () => {
             style={{
               fontSize: '24px',
               fontWeight: 600,
-              marginBottom: 4,
+              marginBottom: 0,
               color: '#1a1a1a',
               letterSpacing: '-0.01em',
             }}
           >
             Tickets
           </h1>
-          <p style={{ color: '#666', fontSize: '14px' }}>
-            Manage and resolve support tickets
-          </p>
         </div>
 
         {/* Only show Create Ticket button if user is not ADMIN */}

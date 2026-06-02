@@ -126,12 +126,9 @@ const ProjectsPage = () => {
         }}
       >
         <div>
-          <h1 style={{ fontSize: isMobile ? '22px' : '24px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
+          <h1 style={{ fontSize: isMobile ? '22px' : '24px', fontWeight: 700, color: '#111827', marginBottom: 0 }}>
             Projects
           </h1>
-          <p style={{ color: '#6b7280', fontSize: '13px' }}>
-            Manage all projects and track progress
-          </p>
         </div>
 
         <button

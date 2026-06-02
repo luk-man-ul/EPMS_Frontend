@@ -263,12 +263,9 @@ const AttendanceDashboardPage = () => {
         {/* Header */}
         <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: 0 }}>
               Attendance Dashboard
             </h1>
-            <p style={{ fontSize: '14px', color: '#6b7280' }}>
-              Monitor and manage attendance records across the organization
-            </p>
           </div>
         </div>
 

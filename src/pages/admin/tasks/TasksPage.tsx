@@ -175,12 +175,9 @@ const TasksPage = () => {
         }}
       >
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 600 }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 600, marginBottom: 0 }}>
             Tasks
           </h1>
-          <p style={{ color: '#666', fontSize: '14px' }}>
-            Manage and track all tasks across projects
-          </p>
         </div>
 
         <button

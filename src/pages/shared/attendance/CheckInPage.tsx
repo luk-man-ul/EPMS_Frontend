@@ -254,8 +254,7 @@ const CheckInPage = () => {
     <div className="h-full flex flex-col max-h-full overflow-hidden pb-4">
       {/* Header */}
       <div className="mb-4 shrink-0">
-        <h1 className="text-[28px] font-semibold text-gray-900 tracking-tight mb-1">Attendance Check-In</h1>
-        <p className="text-gray-500 text-sm">Record your daily attendance - multiple sessions supported</p>
+        <h1 className="text-[28px] font-semibold text-gray-900 tracking-tight mb-0">Attendance Check-In</h1>
       </div>
 
       {!locationSupported && (

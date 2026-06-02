@@ -39,6 +39,32 @@ const inputStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 };
 
+const pillStyle = (isActive: boolean, isSelect: boolean = false): React.CSSProperties => ({
+  flexShrink: 0,
+  padding: isSelect ? '8px 28px 8px 14px' : '8px 14px',
+  borderRadius: '9999px',
+  border: isActive ? '1px solid #4f46e5' : '1px solid #cbd5e1',
+  background: isActive 
+    ? (isSelect 
+        ? '#eef2ff url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%234f46e5\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center / 12px' 
+        : '#eef2ff')
+    : (isSelect 
+        ? '#fff url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%234b5563\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center / 12px' 
+        : '#fff'),
+  color: isActive ? '#4f46e5' : '#374151',
+  fontSize: '13px',
+  fontWeight: 600,
+  cursor: 'pointer',
+  outline: 'none',
+  display: 'inline-flex',
+  alignItems: 'center',
+  fontFamily: 'inherit',
+  WebkitAppearance: 'none',
+  MozAppearance: 'none',
+  appearance: 'none',
+  boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+});
+
 // Returns the first day of the current month as YYYY-MM-DD in local time
 function startOfMonthLocalDateStr(): string {
   const d = new Date();
@@ -61,13 +87,29 @@ const AttendanceFilters = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Tracks which quick-select preset is active.
-  // Set to null whenever the user manually edits a date input.
-  const [activePreset, setActivePreset] = useState<QuickPreset>(null);
-
   const today      = todayLocalDateStr();
   const last7Start = daysAgoLocalDateStr(6); // 6 days ago + today = 7 days
   const monthStart = startOfMonthLocalDateStr();
+
+  // Tracks which quick-select preset is active.
+  const [activePreset, setActivePreset] = useState<QuickPreset>(() => {
+    if (filters.startDate === today && filters.endDate === today) return 'today';
+    if (filters.startDate === last7Start && filters.endDate === today) return '7days';
+    if (filters.startDate === monthStart && filters.endDate === today) return 'month';
+    return 'custom';
+  });
+
+  useEffect(() => {
+    if (filters.startDate === today && filters.endDate === today) {
+      setActivePreset('today');
+    } else if (filters.startDate === last7Start && filters.endDate === today) {
+      setActivePreset('7days');
+    } else if (filters.startDate === monthStart && filters.endDate === today) {
+      setActivePreset('month');
+    } else {
+      setActivePreset('custom');
+    }
+  }, [filters.startDate, filters.endDate, today, last7Start, monthStart]);
 
   // Manual input change — clear the active preset so buttons de-highlight
   const handleChange = (field: string, value: string) => {
@@ -106,6 +148,134 @@ const AttendanceFilters = ({
     borderRadius: '10px',
     border: '1px solid #cbd5e1',
   } : inputStyle;
+
+  if (isMobile) {
+    const showCustomDatePills = activePreset === 'custom';
+    const isAnyFilterActive = activePreset !== 'today' || !!filters.status || !!filters.userId;
+
+    return (
+      <>
+        <style>{`
+          .attendance-filters-pills::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+        <div 
+          className="attendance-filters-pills"
+          style={{
+            display: 'flex',
+            gap: '8px',
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            paddingBottom: '8px',
+            marginBottom: '16px',
+            alignItems: 'center',
+            width: '100%',
+          }}
+        >
+          {/* Quick Preset Dropdown Pill */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <select
+              value={activePreset || 'today'}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === 'today') {
+                  applyQuickRange('today', today, today);
+                } else if (val === '7days') {
+                  applyQuickRange('7days', last7Start, today);
+                } else if (val === 'month') {
+                  applyQuickRange('month', monthStart, today);
+                } else {
+                  setActivePreset('custom');
+                }
+              }}
+              style={pillStyle(activePreset !== 'today', true)}
+            >
+              <option value="today">Range: Today</option>
+              <option value="7days">Range: Last 7 Days</option>
+              <option value="month">Range: This Month</option>
+              <option value="custom">Range: Custom</option>
+            </select>
+          </div>
+
+          {/* Custom Date Pickers */}
+          {showCustomDatePills && (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600 }}>FROM</span>
+                <input
+                  type="date"
+                  value={filters.startDate || ''}
+                  onChange={(e) => handleChange('startDate', e.target.value)}
+                  style={pillStyle(true)}
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600 }}>TO</span>
+                <input
+                  type="date"
+                  value={filters.endDate || ''}
+                  onChange={(e) => handleChange('endDate', e.target.value)}
+                  style={pillStyle(true)}
+                />
+              </div>
+            </>
+          )}
+
+          {/* Status Selector Pill */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <select
+              value={filters.status || ''}
+              onChange={(e) => handleChange('status', e.target.value)}
+              style={pillStyle(!!filters.status, true)}
+            >
+              <option value="">Status: All</option>
+              {statusOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>Status: {opt.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Employee Selector Pill */}
+          {showUserFilter && (
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <select
+                value={filters.userId || ''}
+                onChange={(e) => handleChange('userId', e.target.value)}
+                style={pillStyle(!!filters.userId, true)}
+              >
+                <option value="">Employee: All</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>Employee: {u.firstName} {u.lastName}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Clear Filters Pill */}
+          {isAnyFilterActive && (
+            <button
+              onClick={() => {
+                setActivePreset('today');
+                onFilterChange({ startDate: undefined, endDate: undefined, status: undefined, userId: undefined });
+              }}
+              style={{
+                ...pillStyle(false),
+                background: '#f1f5f9',
+                borderColor: '#cbd5e1',
+                color: '#475569',
+                flexShrink: 0,
+              }}
+            >
+              Clear ✕
+            </button>
+          )}
+        </div>
+      </>
+    );
+  }
 
   return (
     <div style={{

@@ -54,12 +54,9 @@ const MyWfhPage = () => {
         marginBottom: '24px'
       }}>
         <div>
-          <h1 style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>
+          <h1 style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: 0 }}>
             My WFH Requests
           </h1>
-          <p style={{ fontSize: '14px', color: '#666666' }}>
-            View all your Work From Home requests and their approval status
-          </p>
         </div>
         <Button
           variant="primary"

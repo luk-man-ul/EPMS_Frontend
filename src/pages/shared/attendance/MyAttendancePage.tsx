@@ -56,12 +56,9 @@ const MyAttendancePage = () => {
 
         {/* Header */}
         <div style={{ marginBottom: '20px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: 0 }}>
             My Attendance
           </h1>
-          <p style={{ fontSize: '14px', color: '#6b7280' }}>
-            View your attendance history and daily records
-          </p>
         </div>
 
         {/* View Tabs */}

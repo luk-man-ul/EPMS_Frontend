@@ -319,6 +319,32 @@ function StatGrid({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+const pillStyle = (isActive: boolean, isSelect: boolean = false): React.CSSProperties => ({
+  flexShrink: 0,
+  padding: isSelect ? '8px 28px 8px 14px' : '8px 14px',
+  borderRadius: '9999px',
+  border: isActive ? '1px solid #4f46e5' : '1px solid #cbd5e1',
+  background: isActive 
+    ? (isSelect 
+        ? '#eef2ff url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%234f46e5\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center / 12px' 
+        : '#eef2ff')
+    : (isSelect 
+        ? '#fff url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%234b5563\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center / 12px' 
+        : '#fff'),
+  color: isActive ? '#4f46e5' : '#374151',
+  fontSize: '13px',
+  fontWeight: 600,
+  cursor: 'pointer',
+  outline: 'none',
+  display: 'inline-flex',
+  alignItems: 'center',
+  fontFamily: 'inherit',
+  WebkitAppearance: 'none',
+  MozAppearance: 'none',
+  appearance: 'none',
+  boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+});
+
 const AttendanceSummaryReport = () => {
   const [months, setMonths]           = useState<MonthStats[]>([])
   const [loading, setLoading]         = useState(true)
@@ -328,6 +354,13 @@ const AttendanceSummaryReport = () => {
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd]     = useState('')
   const [customError, setCustomError] = useState<string | null>(null)
+  const [isMobile, setIsMobile]       = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // ── Data loading ───────────────────────────────────────────────────────────
 
@@ -433,114 +466,215 @@ const AttendanceSummaryReport = () => {
   return (
     <div>
       {/* ── Filter bar ────────────────────────────────────────────────────── */}
-      <div style={{
-        background: '#fff',
-        border: '1px solid #e5e5e5',
-        borderRadius: '12px',
-        padding: '16px 20px',
-        marginBottom: '20px',
-      }}>
-        {/* Preset buttons + module CTA */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-          {PRESETS.map(p => (
-            <button
-              key={p.key}
-              onClick={() => handlePresetChange(p.key)}
-              style={{
-                padding: '7px 14px',
-                borderRadius: '8px',
-                border: activePreset === p.key ? '2px solid #1a1a1a' : '1px solid #e5e5e5',
-                background: activePreset === p.key ? '#1a1a1a' : '#fff',
-                color: activePreset === p.key ? '#fff' : '#374151',
-                fontSize: '13px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              {p.label}
-            </button>
-          ))}
+      {isMobile ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', marginBottom: '20px' }}>
+          <style>{`
+            .attendance-rep-filters-pills::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+          <div 
+            className="attendance-rep-filters-pills"
+            style={{
+              display: 'flex',
+              gap: '8px',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              paddingBottom: '8px',
+              alignItems: 'center',
+              width: '100%',
+            }}
+          >
+            {/* Quick Preset Dropdown Pill */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <select
+                value={activePreset}
+                onChange={(e) => handlePresetChange(e.target.value as PresetKey)}
+                style={pillStyle(activePreset !== 'last3Months', true)}
+              >
+                {PRESETS.map(p => (
+                  <option key={p.key} value={p.key}>
+                    Range: {p.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* CTA — same style as Financial Analytics "Open Finance module →" */}
+            {/* Custom Date Pickers */}
+            {activePreset === 'custom' && (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                  <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600 }}>FROM</span>
+                  <input
+                    type="date"
+                    value={customStart}
+                    onChange={e => setCustomStart(e.target.value)}
+                    style={pillStyle(true)}
+                  />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                  <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 600 }}>TO</span>
+                  <input
+                    type="date"
+                    value={customEnd}
+                    onChange={e => setCustomEnd(e.target.value)}
+                    style={pillStyle(true)}
+                  />
+                </div>
+                <button
+                  onClick={applyCustomRange}
+                  style={{
+                    ...pillStyle(true),
+                    background: '#111827',
+                    color: '#fff',
+                    border: 'none',
+                  }}
+                >
+                  Apply
+                </button>
+              </>
+            )}
+          </div>
+
+          {activePreset === 'custom' && customError && (
+            <div style={{ width: '100%', fontSize: '12px', color: '#dc2626', marginTop: '2px' }}>
+              {customError}
+            </div>
+          )}
+
+          {/* Attendance Module CTA link on mobile */}
           <a
             href="/admin/attendance"
             style={{
-              marginLeft: 'auto',
-              padding: '7px 14px',
-              borderRadius: '8px',
-              border: '1px solid #e5e5e5',
+              padding: '10px 16px',
+              borderRadius: '10px',
+              border: '1px solid #cbd5e1',
               background: '#fff',
               color: '#1a1a1a',
               fontSize: '13px',
-              fontWeight: 500,
+              fontWeight: 600,
               textDecoration: 'none',
-              whiteSpace: 'nowrap',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = '#f5f5f5'
-              e.currentTarget.style.borderColor = '#d4d4d4'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = '#fff'
-              e.currentTarget.style.borderColor = '#e5e5e5'
+              textAlign: 'center',
+              width: '100%',
+              display: 'block',
+              boxSizing: 'border-box',
             }}
           >
             Open Attendance module →
           </a>
         </div>
+      ) : (
+        <div style={{
+          background: '#fff',
+          border: '1px solid #e5e5e5',
+          borderRadius: '12px',
+          padding: '16px 20px',
+          marginBottom: '20px',
+        }}>
+          {/* Preset buttons + module CTA */}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            {PRESETS.map(p => (
+              <button
+                key={p.key}
+                onClick={() => handlePresetChange(p.key)}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: '8px',
+                  border: activePreset === p.key ? '2px solid #1a1a1a' : '1px solid #e5e5e5',
+                  background: activePreset === p.key ? '#1a1a1a' : '#fff',
+                  color: activePreset === p.key ? '#fff' : '#374151',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
 
-        {/* Custom range inputs */}
-        {activePreset === 'custom' && (
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '14px', flexWrap: 'wrap' }}>
-            <input
-              type="date"
-              value={customStart}
-              onChange={e => setCustomStart(e.target.value)}
+            {/* CTA — same style as Financial Analytics "Open Finance module →" */}
+            <a
+              href="/admin/attendance"
               style={{
-                padding: '7px 12px',
+                marginLeft: 'auto',
+                padding: '7px 14px',
                 borderRadius: '8px',
                 border: '1px solid #e5e5e5',
+                background: '#fff',
+                color: '#1a1a1a',
                 fontSize: '13px',
-                outline: 'none',
-              }}
-            />
-            <span style={{ fontSize: '13px', color: '#9ca3af' }}>to</span>
-            <input
-              type="date"
-              value={customEnd}
-              onChange={e => setCustomEnd(e.target.value)}
-              style={{
-                padding: '7px 12px',
-                borderRadius: '8px',
-                border: '1px solid #e5e5e5',
-                fontSize: '13px',
-                outline: 'none',
-              }}
-            />
-            <button
-              onClick={applyCustomRange}
-              style={{
-                padding: '7px 16px',
-                borderRadius: '8px',
-                border: 'none',
-                background: '#1a1a1a',
-                color: '#fff',
-                fontSize: '13px',
-                fontWeight: 600,
+                fontWeight: 500,
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
                 cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = '#f5f5f5'
+                e.currentTarget.style.borderColor = '#d4d4d4'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = '#fff'
+                e.currentTarget.style.borderColor = '#e5e5e5'
               }}
             >
-              Apply
-            </button>
-            {customError && (
-              <span style={{ fontSize: '12px', color: '#dc2626' }}>{customError}</span>
-            )}
+              Open Attendance module →
+            </a>
           </div>
-        )}
-      </div>
+
+          {/* Custom range inputs */}
+          {activePreset === 'custom' && (
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '14px', flexWrap: 'wrap' }}>
+              <input
+                type="date"
+                value={customStart}
+                onChange={e => setCustomStart(e.target.value)}
+                style={{
+                  padding: '7px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #e5e5e5',
+                  fontSize: '13px',
+                  outline: 'none',
+                }}
+              />
+              <span style={{ fontSize: '13px', color: '#9ca3af' }}>to</span>
+              <input
+                type="date"
+                value={customEnd}
+                onChange={e => setCustomEnd(e.target.value)}
+                style={{
+                  padding: '7px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #e5e5e5',
+                  fontSize: '13px',
+                  outline: 'none',
+                }}
+              />
+              <button
+                onClick={applyCustomRange}
+                style={{
+                  padding: '7px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: '#1a1a1a',
+                  color: '#fff',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Apply
+              </button>
+              {customError && (
+                <span style={{ fontSize: '12px', color: '#dc2626' }}>{customError}</span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Loading state ─────────────────────────────────────────────────── */}
       {loading && (

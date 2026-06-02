@@ -79,12 +79,9 @@ const HolidaysPage = () => {
 
         {/* Header */}
         <div style={{ marginBottom: '28px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: 0 }}>
             Holiday Management
           </h1>
-          <p style={{ fontSize: '14px', color: '#6b7280' }}>
-            Define company holidays. These affect attendance finalization and the calendar view.
-          </p>
         </div>
 
         {/* Add Holiday Form */}

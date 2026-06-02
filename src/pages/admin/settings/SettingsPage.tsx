@@ -21,15 +21,12 @@ const SettingsPage = () => {
         <h1 style={{ 
           fontSize: '24px', 
           fontWeight: 600, 
-          marginBottom: 4,
+          marginBottom: 0,
           color: '#de1515ff',
           letterSpacing: '-0.01em'
         }}>
           Settings (MOCK DATA)
         </h1>
-        <p style={{ color: '#666', fontSize: '14px' }}>
-          Manage your system configuration and preferences
-        </p>
       </div>
 
       {/* Tab Navigation */}

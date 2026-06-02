@@ -42,15 +42,12 @@ const FinancePage = () => {
           <h1 style={{ 
             fontSize: '24px', 
             fontWeight: 600, 
-            marginBottom: 4,
+            marginBottom: 0,
             color: '#1a1a1a',
             letterSpacing: '-0.01em'
           }}>
             Finance Management
           </h1>
-          <p style={{ color: '#666', fontSize: '14px' }}>
-            Track income, expenses, and financial performance
-          </p>
         </div>
 
         <div style={{ display: 'flex', gap: '12px', width: isMobile ? '100%' : 'auto' }}>

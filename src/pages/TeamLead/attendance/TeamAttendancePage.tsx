@@ -69,14 +69,11 @@ const TeamAttendancePage = () => {
             fontSize: '28px',
             fontWeight: 600,
             color: '#1a1a1a',
-            marginBottom: '8px',
+            marginBottom: 0,
           }}
         >
           Team Attendance
         </h1>
-        <p style={{ fontSize: '14px', color: '#666666' }}>
-          View and monitor attendance records for your team members
-        </p>
       </div>
 
       <AttendanceFilters

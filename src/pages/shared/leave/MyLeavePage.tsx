@@ -32,12 +32,9 @@ const MyLeavePage = () => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
-          <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#1a1a1a', marginBottom: 0 }}>
             My Leave Requests
           </h1>
-          <p style={{ fontSize: '14px', color: '#666666' }}>
-            View all your leave requests and their approval status
-          </p>
         </div>
         <Button variant="primary" onClick={() => setShowModal(true)}>
           + Request Leave

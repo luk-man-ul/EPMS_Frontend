@@ -122,12 +122,9 @@ const WorkApprovalPage = () => {
   return (
     <div style={{ width: '100%' }}>
       <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
-        <h1 style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: 700, color: '#1a1a1a', marginBottom: '8px' }}>
+        <h1 style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: 700, color: '#1a1a1a', marginBottom: 0 }}>
           Self-Work Approval
         </h1>
-        <p style={{ fontSize: '14px', color: '#666666' }}>
-          Review and approve employee-submitted personal work
-        </p>
       </div>
 
       {/* Stats Cards */}
